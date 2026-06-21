@@ -1,0 +1,19 @@
+line-length = 120
+
+[format]
+preview = true
+
+[lint]
+preview = true
+select = ["E", "W", "F", "I", "B", "C4", "UP", "E401", "ISC001", "ISC002", "ERA", "FAST", "YTT", "ANN", "S", "EM102"]
+ignore = ["W191", "E111", "E114", "E117", "D206", "D300", "Q000", "Q001", "Q002", "Q003", "COM812", "COM819", "UP045"]
+
+[lint.per-file-ignores]
+# Allow assert statements (S101), temporary paths (S108), and hard-coded passwords (S105, S106) in test files.
+"**/test/**/test_*.py" = ["S101", "S108", "S105", "S106"]
+
+[lint.isort]
+force-single-line = true
+
+[lint.flake8-implicit-str-concat]
+allow-multiline = false
