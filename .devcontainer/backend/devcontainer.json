@@ -1,0 +1,21 @@
+{
+  "name": "Backend",
+  "dockerComposeFile": [
+    "../../compose.yaml"
+  ],
+  "service": "backend",
+  "workspaceFolder": "/workspace/backend",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "shutdownAction": "none",
+  "overrideCommand": false,
+  "customizations": {
+    "jetbrains": {
+      "backend": "PyCharm",
+      "plugins": [
+        "com.jetbrains.sh",
+        "com.github.copilot",
+        "com.insyncwithfoo.pyright"
+      ]
+    }
+  }
+}

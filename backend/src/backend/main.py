@@ -1,13 +1,10 @@
-import asyncio
-import logging
+from typing import Final
 
-_LOGGER = logging.getLogger(__name__)
+from fastapi import FastAPI
 
-
-async def main() -> None:
-    _LOGGER.info("Hello, world!")
+app: Final = FastAPI()
 
 
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)  # pragma: no cover
-    asyncio.run(main())  # pragma: no cover
+@app.get("/")
+async def root() -> dict[str, str]:
+    return {"message": "Hello, world!"}

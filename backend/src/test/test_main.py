@@ -1,12 +1,9 @@
-import logging
-
 import pytest
 
-from backend.main import main
+from backend.main import root
 
 
 @pytest.mark.asyncio
-async def test_main(caplog: pytest.LogCaptureFixture) -> None:
-    caplog.set_level(logging.INFO)
-    await main()
-    assert "Hello, world!" in caplog.text
+async def test_root() -> None:
+    response = await root()
+    assert response == {"message": "Hello, world!"}
