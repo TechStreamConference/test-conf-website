@@ -2,7 +2,7 @@
   <configuration default="false" name="Run" type="Python.FastAPI">
     <option name="additionalOptions" value="--host 0.0.0.0 --port 8000 --reload" />
     <option name="appName" value="app" />
-    <option name="file" value="\\wsl.localhost\Ubuntu-24.04\home\coder2k\dev\test-conf-website\backend\src\backend\main.py" />
+    <option name="file" value="$PROJECT_DIR$\src\backend\main.py" />
     <module name="backend" />
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
