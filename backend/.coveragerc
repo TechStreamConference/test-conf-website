@@ -1,6 +1,8 @@
 [run]
 branch = True
 relative_files = True
+omit =
+    src/backend/seed/**
 
 [report]
 show_missing = True
