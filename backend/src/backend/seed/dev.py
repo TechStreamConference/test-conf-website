@@ -1,5 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.models import Global
+from backend.models import GlobalKey
 from backend.models import User
 
 
@@ -10,5 +12,15 @@ async def seed_dev(session: AsyncSession, *, num_users: int, seed: int) -> None:
 
     for _ in range(num_users):
         session.add(User())
+
+    session.add(
+        Global(
+            key=GlobalKey.FOOTER_TEXT,
+            value=(
+                "TECH STREAM CONFERENCE – Online-Konferenz mit Vorträgen aus den "
+                + "Bereichen Programmierung, Maker-Szene und Spieleentwicklung"
+            ),
+        )
+    )
 
     await session.commit()

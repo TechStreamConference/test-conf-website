@@ -1,6 +1,18 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.models import Global
+from backend.models import GlobalKey
+
 
 async def seed_prod(session: AsyncSession) -> None:
-    # Intentionally empty for now.
+    session.add(
+        Global(
+            key=GlobalKey.FOOTER_TEXT,
+            value=(
+                "TECH STREAM CONFERENCE – Online-Konferenz mit Vorträgen aus den "
+                + "Bereichen Programmierung, Maker-Szene und Spieleentwicklung"
+            ),
+        )
+    )
+
     await session.commit()
