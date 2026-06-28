@@ -13,13 +13,18 @@ pkgs.mkShell {
   shellHook = ''
     echo "==========| Fontend Shell |=========="
     echo "Frontend environment:"
-    echo "Node version:"
+    ''
+    +
+    common.shellHook
+    +
+    ''
+    echo "Specific Frontend Versions:"
+    echo "Node Version:"
         node --version
-    echo "pnpm version:"
+    echo "pnpm Version:"
         pnpm --version
     echo ""
+    echo ""
   ''
-  +
-  common.shellHook
   ;
 }

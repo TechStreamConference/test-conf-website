@@ -7,9 +7,10 @@
   ];
 
   shellHook = ''
-    echo "common versions"
+    echo "Common Versions:"
         git --version
         just --version
+    echo ""
   '';
 }
 
