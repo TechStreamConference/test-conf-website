@@ -13,8 +13,16 @@
           inherit system;
         };
 
-        backend = import ./nix/backend.nix { inherit pkgs; };
-        frontend = import ./nix/frontend.nix { inherit pkgs; };
+        common = import ./nix/common.nix {
+          inherit pkgs;
+        };
+
+        backend = import ./nix/backend.nix {
+           inherit pkgs common; 
+        };
+        frontend = import ./nix/frontend.nix { 
+          inherit pkgs common; 
+        };
 
       in {
         devShells = {

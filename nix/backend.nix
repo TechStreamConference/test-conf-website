@@ -1,18 +1,24 @@
-{ pkgs }:
+{ pkgs, common }:
 
 pkgs.mkShell {
   name = "backend";
 
-  packages = with pkgs; [
+  packages = common.packages
+    ++
+    (with pkgs; [
     python313
     uv
-  ];
+  ]);
 
   shellHook = ''
-    echo "==========| End Backend Nix Script |=========="
+    echo "==========| Backend Shell |=========="
     echo "Backend environment:"
+
         python --version
         uv --version
     echo ""
-  '';
+  ''
+  +
+  common.shellHook
+  ;
 }

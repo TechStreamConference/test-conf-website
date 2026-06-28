@@ -1,18 +1,25 @@
-{ pkgs }:
+{ pkgs, common }:
 
 pkgs.mkShell {
   name = "frontend";
 
-  packages = with pkgs; [
+  packages = common.packages
+    ++
+    (with pkgs; [
     nodejs_22
     pnpm
-  ];
+  ]);
 
   shellHook = ''
-    echo "==========| End Fontend Nix Script |=========="
+    echo "==========| Fontend Shell |=========="
     echo "Frontend environment:"
+    echo "Node version:"
         node --version
+    echo "pnpm version:"
         pnpm --version
     echo ""
-  '';
+  ''
+  +
+  common.shellHook
+  ;
 }
