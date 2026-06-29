@@ -1,10 +1,17 @@
+from typing import Annotated
 from typing import Final
 
+from fastapi import Depends
 from fastapi import FastAPI
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.database import get_session
 
 app: Final = FastAPI()
 
 
-@app.get("/")
-async def root() -> dict[str, str]:
-    return {"message": "Hello, world!"}
+@app.get("/health/database")
+async def database_health(session: Annotated[AsyncSession, Depends(get_session)]) -> dict[str, bool]:
+    _ = await session.execute(text("select 1"))
+    return {"ok": True}

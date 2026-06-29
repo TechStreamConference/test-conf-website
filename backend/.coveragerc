@@ -1,6 +1,9 @@
 [run]
 branch = True
 relative_files = True
+omit =
+    src/backend/seed/**
+    src/backend/models.py
 
 [report]
 show_missing = True
