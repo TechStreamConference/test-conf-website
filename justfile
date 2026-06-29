@@ -1,4 +1,9 @@
 backend_dir := "backend"
+frontend_dir := "frontend"
+
+#
+# General
+# 
 
 # Shows a list of available commands in this Justfile.
 default:
@@ -12,10 +17,43 @@ up:
 down:
     docker compose down
 
-# Resets the database by stopping the postgres service, removing its volume, and starting it again.
-db-reset:
-    docker compose down -v postgres
-    docker compose up -d --wait postgres
+# Runs formatters, linters, and type checkers on both the backend and the frontend codebases, applying automatic fixes where possible.
+fix: backend-fix frontend-fix
+
+# Runs both the backend and the frontend test suites, measuring code coverage.
+test: backend-test frontend-test
+
+# Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
+init-dev: backend-init backend-db-reset-dev frontend-init
+
+# Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
+run: backend-run  frontend-run
+
+
+#
+# Frontend
+#
+
+# Runs the formatter, linter, and type checker on the backend codebase, applying automatic fixes where possible.
+frontend-fix:
+    @echo "TODO: FRONTEND FIX"
+
+# Runs the test suite for the frontend codebase, measuring code coverage.
+frontend-test:
+    @echo "TODO: FRONTEND TEST"
+
+# Runs frontend application
+frontend-run:
+    @echo "TODO: FRONTEND RUN"
+
+# Initializes the frontend workspace
+frontend-init:
+    cd {{frontend_dir}}
+    pnpm install
+
+#
+# Backend
+#
 
 # Runs the database migrations using Alembic.
 backend-migrate:
@@ -48,14 +86,15 @@ backend-test:
 backend-run:
     uv run --directory {{backend_dir}} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
 
-# Runs formatters, linters, and type checkers on both the backend and the frontend codebases, applying automatic fixes where possible.
-fix: backend-fix # TODO: Add frontend-fix
+# Initializes the backend workspace
+backend-init:
+    uv sync --directory {{backend_dir}} --dev
 
-# Runs both the backend and the frontend test suites, measuring code coverage.
-test: backend-test # TODO: Add frontend-test
+#
+# Database
+#
 
-# Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
-init-dev: backend-db-reset-dev
-
-# Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
-run: backend-run  # TODO: Start frontend as well.
+# Resets the database by stopping the postgres service, removing its volume, and starting it again.
+db-reset:
+    docker compose down -v postgres
+    docker compose up -d --wait postgres
