@@ -28,11 +28,17 @@ backend-seed-dev num-users="10" seed="12345":
 backend-db-reset-dev num-users="10" seed="12345": db-reset backend-migrate (backend-seed-dev num-users seed)
 
 backend-fix:
-    uv run --directory {{backend_dir}} ruff format
-    uv run --directory {{backend_dir}} ruff check --fix
+    uv run --directory {{backend_dir}} poe fix
+
+backend-test:
+    uv run --directory {{backend_dir}} poe test
 
 backend-run:
     uv run --directory {{backend_dir}} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
+
+fix: backend-fix
+
+test: backend-test
 
 init-dev: backend-db-reset-dev
 
