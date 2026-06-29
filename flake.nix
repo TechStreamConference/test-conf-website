@@ -44,7 +44,7 @@
     echo "Frontend: pnpm"
     echo "Backend : uv"
     echo ""
-    echo "'just --list' for availabe commands."
+    echo "'just' for availabe commands."
     echo "Note: This may vary within different directories."
     echo "============================================="
     echo ""
