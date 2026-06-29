@@ -46,7 +46,7 @@ frontend-test:
 frontend-run:
     @echo "TODO: FRONTEND RUN"
 
-# Initilizes the frontend workspace
+# Initializes the frontend workspace
 frontend-init:
     cd {{frontend_dir}}
     pnpm install
@@ -86,7 +86,7 @@ backend-test:
 backend-run:
     uv run --directory {{backend_dir}} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
 
-# Initilizes the backend workspace
+# Initializes the backend workspace
 backend-init:
     uv sync --directory {{backend_dir}} --dev
 
