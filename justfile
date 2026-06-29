@@ -1,5 +1,6 @@
 backend_dir := "backend"
 
+# Shows a list of available commands in this Justfile.
 default:
     @just --list
 
