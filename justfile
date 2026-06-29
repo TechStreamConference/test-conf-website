@@ -27,7 +27,7 @@ test: backend-test frontend-test
 init-dev: backend-init backend-db-reset-dev frontend-init
 
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
-run: backend-run  frontend-run
+run: backend-run frontend-run
 
 
 #
