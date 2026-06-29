@@ -34,7 +34,7 @@ run: backend-run frontend-run
 # Frontend
 #
 
-# Runs the formatter, linter, and type checker on the backend codebase, applying automatic fixes where possible.
+# Runs the formatter, linter, and type checker on the frontend codebase, applying automatic fixes where possible.
 frontend-fix:
     @echo "TODO: FRONTEND FIX"
 
