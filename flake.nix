@@ -30,22 +30,17 @@
           inherit backend frontend;
 
           default = pkgs.mkShell {
-            name = "fullstack";
+            name = "root";
 
-            inputsFrom = [
-              backend
-              frontend
-            ];
+            packages = common.packages;
 
-            shellHook = ''
+            shellHook = common.shellHook + ''
     echo ""
-    echo "==========| End Global Nix Script |=========="
+    echo "==========| Root Shell |=========="
     echo "Development environment ready"
-    echo "Frontend: pnpm"
-    echo "Backend : uv"
     echo ""
-    echo "'just' for availabe commands."
-    echo "Note: This may vary within different directories."
+    echo "'just' for available commands."
+    echo "Note: Enter backend/ or frontend/ for their respective tools."
     echo "============================================="
     echo ""
   '';
