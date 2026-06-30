@@ -23,18 +23,40 @@ fix: backend-fix frontend-fix
 # Runs both the backend and the frontend test suites, measuring code coverage.
 test: backend-test frontend-test
 
+# Initializes direnv by allowing the root, backend, and frontend directories, and adds the direnv shell hook to your shell config if not already present.
+init-direnv:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    direnv allow
+    (cd {{backend_dir}} && direnv allow)
+    (cd {{frontend_dir}} && direnv allow)
+    case "$SHELL" in
+        */zsh)  rc="$HOME/.zshrc";  hook='eval "$(direnv hook zsh)"'  ;;
+        */bash) rc="$HOME/.bashrc"; hook='eval "$(direnv hook bash)"' ;;
+        *)
+            echo "Unknown shell '$SHELL'. Add the direnv hook to your shell config manually."
+            exit 0
+            ;;
+    esac
+    if grep -qF "$hook" "$rc" 2>/dev/null; then
+        echo "direnv hook already present in $rc"
+    else
+        printf '%s\n' "$hook" >> "$rc"
+        echo "Added direnv hook to $rc — open a new terminal or run: source $rc"
+    fi
+
 # Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
 init-dev: backend-init backend-db-reset-dev frontend-init
 
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
-run: backend-run  frontend-run
+run: backend-run frontend-run
 
 
 #
 # Frontend
 #
 
-# Runs the formatter, linter, and type checker on the backend codebase, applying automatic fixes where possible.
+# Runs the formatter, linter, and type checker on the frontend codebase, applying automatic fixes where possible.
 frontend-fix:
     @echo "TODO: FRONTEND FIX"
 
