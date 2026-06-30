@@ -6,7 +6,6 @@ pkgs.mkShell {
   packages = common.packages
     ++
     (with pkgs; [
-    python313
     uv
   ]);
 
@@ -19,7 +18,6 @@ pkgs.mkShell {
     +
     ''
     echo "Specific Backend Versions:"
-        python --version
         uv --version
     echo ""
     echo ""
