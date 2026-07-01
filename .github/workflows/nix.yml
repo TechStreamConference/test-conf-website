@@ -1,0 +1,28 @@
+name: CI-NIX
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          - check
+          - test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Install project dependencies
+        run: nix develop --command just init-ci
+
+      - name: Run ${{ matrix.command }}
+        run: nix develop --command just ${{ matrix.command }}
