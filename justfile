@@ -17,6 +17,9 @@ up:
 down:
     docker compose down
 
+# This just failes when the checks not working but it will not make changes on both codebases.
+check: backend-check frontend-check
+
 # Runs formatters, linters, and type checkers on both the backend and the frontend codebases, applying automatic fixes where possible.
 fix: backend-fix frontend-fix
 
@@ -26,12 +29,19 @@ test: backend-test frontend-test
 # Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
 init-dev: backend-init backend-db-reset-dev frontend-init
 
+# Initializes the ci enviroment
+init-ci: backend-init frontend-init
+
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
 run: backend-run frontend-run
 
 #
 # Frontend
 #
+
+# This just failes when the checks not working but it will not make changes on the frontend.
+frontend-check:
+    pnpm --dir {{ frontend_dir }} run check 
 
 # Runs the formatter, linter, and type checker on the backend codebase, applying automatic fixes where possible.
 frontend-fix:
@@ -71,6 +81,10 @@ backend-seed-dev num-users="10" seed="12345":
 
 # Resets the database, runs migrations, and seeds the database with development data.
 backend-db-reset-dev num-users="10" seed="12345": db-reset backend-migrate (backend-seed-dev num-users seed)
+
+# This just failes when the checks not working but it will not make changes on the backend.
+backend-check:
+    uv run --directory {{ backend_dir }} poe check
 
 # Runs the formatter, linter, and type checker on the backend codebase, applying automatic fixes where possible.
 backend-fix:
