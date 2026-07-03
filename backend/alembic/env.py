@@ -5,8 +5,8 @@ from sqlalchemy import pool
 from sqlmodel import SQLModel
 
 from alembic import context
-from backend import models  # type: ignore[reportUnusedImport]  # noqa: F401
 from backend.config import SETTINGS
+from backend.models import tables  # type: ignore[reportUnusedImport]  # noqa: F401
 
 config = context.config
 

@@ -1,8 +1,8 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.models import Global
-from backend.models import GlobalKey
-from backend.models import User
+from backend.models.tables import Global
+from backend.models.tables import GlobalKey
+from backend.models.tables import User
 
 
 async def seed_dev(session: AsyncSession, *, num_users: int, seed: int) -> None:
