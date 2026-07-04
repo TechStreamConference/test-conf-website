@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.models import Global
-from backend.models import GlobalKey
+from backend.models.tables import Global
+from backend.models.tables import GlobalKey
 
 
 async def seed_prod(session: AsyncSession) -> None:
