@@ -1,17 +1,16 @@
 services:
   postgres:
-    image: postgres:18
-    container_name: postgres_db
+    image: postgres:18.4-alpine3.24
+    container_name: postgres
     env_file:
       - ../.env
     environment:
       POSTGRES_DB: ${DATABASE_NAME}
       POSTGRES_USER: ${DATABASE_USER}
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-    ports:
-      - "${DATABASE_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
+    network_mode: host
     healthcheck:
       test: [ "CMD", "pg_isready", "-q", "-d", "${DATABASE_NAME}", "-U", "${DATABASE_USER}" ]
       timeout: 45s
