@@ -14,8 +14,10 @@ app: Final = FastAPI()
 app.include_router(v1_api.ROUTER)
 
 
-@app.get("/health/database",
-operation_id="backend health check",)
+@app.get(
+    "/health/database",
+    operation_id="backend health check",
+)
 async def database_health(session: Annotated[AsyncSession, Depends(get_session)]) -> dict[str, bool]:
     _ = await session.execute(text("select 1"))
     return {"ok": True}
