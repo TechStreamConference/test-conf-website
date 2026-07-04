@@ -33,6 +33,7 @@ init-dev: backend-init backend-db-reset-dev frontend-init
 init-ci: backend-init frontend-init
 
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
+[parallel]
 run: backend-run frontend-run
 
 #
