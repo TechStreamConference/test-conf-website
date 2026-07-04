@@ -1,11 +1,10 @@
-name: CI-NIX
-
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
   ci:
+    name: CI-NIX-${{ matrix.project-part }}-${{ matrix.command }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -14,6 +13,9 @@ jobs:
         command:
           - check
           - test
+        project-part:
+          - frontend
+          - backend
 
     steps:
       - uses: actions/checkout@v4
@@ -21,8 +23,8 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
-      - name: Install project dependencies
-        run: nix develop --command just init-ci
+      - name: Install ${{ matrix.project-part}} project dependencies
+        run: nix develop .#${{ matrix.project-part }} --command just ${{ matrix.project-part }}-init
 
-      - name: Run ${{ matrix.command }}
-        run: nix develop --command just ${{ matrix.command }}
+      - name: Run ${{ matrix.project-part }} ${{ matrix.command }}
+        run: nix develop .#${{ matrix.project-part }} --command just ${{ matrix.project-part }}-${{ matrix.command }}

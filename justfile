@@ -123,7 +123,7 @@ backend-run:
 
 # Initializes the backend workspace
 backend-init:
-    uv sync --directory {{ backend_dir }} --dev
+    uv sync --directory {{backend_dir}} --dev
 
 #
 # Database
