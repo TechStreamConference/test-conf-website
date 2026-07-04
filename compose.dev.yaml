@@ -1,2 +1,3 @@
 include:
 - ops/postgres.compose.yaml
+- ops/nginx.compose.yaml
