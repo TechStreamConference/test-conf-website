@@ -31,8 +31,8 @@ init-direnv:
     #!/usr/bin/env bash
     set -euo pipefail
     direnv allow
-    (cd {{backend_dir}} && direnv allow)
-    (cd {{frontend_dir}} && direnv allow)
+    (cd {{ backend_dir }} && direnv allow)
+    (cd {{ frontend_dir }} && direnv allow)
     case "$SHELL" in
         */zsh)  rc="$HOME/.zshrc";  hook='eval "$(direnv hook zsh)"'  ;;
         */bash) rc="$HOME/.bashrc"; hook='eval "$(direnv hook bash)"' ;;
@@ -49,7 +49,7 @@ init-direnv:
     fi
 
 # Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
-init-dev: backend-init backend-db-reset-dev frontend-init
+init-dev: backend-init frontend-init gen-types backend-db-reset-dev
 
 # Initializes the ci enviroment
 init-ci: backend-init frontend-init
@@ -57,6 +57,9 @@ init-ci: backend-init frontend-init
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
 [parallel]
 run: backend-run frontend-run
+
+# Generates Open API from backend and then Frontend Types.
+gen-types: backend-generate-types frontend-generate-types
 
 #
 # Frontend
@@ -81,6 +84,10 @@ frontend-run:
 # Initializes the frontend workspace
 frontend-init:
     pnpm --dir {{ frontend_dir }} install
+
+# Generate Frontend types from OpenAPI
+frontend-generate-types:
+    cd {{ frontend_dir }} && node scripts/gen-types.ts -i ../generated/api.json -o src/generated
 
 #
 # Backend
@@ -123,7 +130,11 @@ backend-run:
 
 # Initializes the backend workspace
 backend-init:
-    uv sync --directory {{backend_dir}} --dev
+    uv sync --directory {{ backend_dir }} --dev
+
+# Generate OpenAPI from backend.
+backend-generate-types:
+    uv run --directory {{ backend_dir }}  scripts/dump-fast-api.py -o ../generated/api.json
 
 #
 # Database
