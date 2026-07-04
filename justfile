@@ -17,7 +17,7 @@ up:
 down:
     docker compose down
 
-# This just fails if the checks are not working but it will not make changes on both codebases.
+# Runs the formatter, linter, and type checker on both the backend and the frontend codebase without making any changes, reporting issues only.
 check: backend-check frontend-check
 
 # Runs formatters, linters, and type checkers on both the backend and the frontend codebases, applying automatic fixes where possible.
@@ -40,7 +40,7 @@ run: backend-run frontend-run
 # Frontend
 #
 
-# This just failes when the checks not working but it will not make changes on the frontend.
+# Runs the formatter, linter, and type checker on the frontend codebase without making any changes, reporting issues only.
 frontend-check:
     pnpm --dir {{ frontend_dir }} run check 
 
@@ -83,7 +83,7 @@ backend-seed-dev num-users="10" seed="12345":
 # Resets the database, runs migrations, and seeds the database with development data.
 backend-db-reset-dev num-users="10" seed="12345": db-reset backend-migrate (backend-seed-dev num-users seed)
 
-# This just failes when the checks not working but it will not make changes on the backend.
+# Runs the formatter, linter, and type checker on the backend codebase without making any changes, reporting issues only.
 backend-check:
     uv run --directory {{ backend_dir }} poe check
 
