@@ -1,2 +1,5 @@
 **/.env
 .direnv/
+
+**/generated/**
+!**/generated/.gitkeep
