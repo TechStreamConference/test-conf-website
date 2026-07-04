@@ -3,7 +3,7 @@ frontend_dir := "frontend"
 
 #
 # General
-# 
+#
 
 # Shows a list of available commands in this Justfile.
 default:
@@ -16,6 +16,9 @@ up:
 # Stops the Docker Compose stack.
 down:
     docker compose down
+
+# Runs the formatter, linter, and type checker on both the backend and the frontend codebase without making any changes, reporting issues only.
+check: backend-check frontend-check
 
 # Runs formatters, linters, and type checkers on both the backend and the frontend codebases, applying automatic fixes where possible.
 fix: backend-fix frontend-fix
@@ -48,30 +51,36 @@ init-direnv:
 # Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
 init-dev: backend-init backend-db-reset-dev frontend-init
 
-# Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
-run: backend-run frontend-run
+# Initializes the ci enviroment
+init-ci: backend-init frontend-init
 
+# Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
+[parallel]
+run: backend-run frontend-run
 
 #
 # Frontend
 #
 
+# Runs the formatter, linter, and type checker on the frontend codebase without making any changes, reporting issues only.
+frontend-check:
+    pnpm --dir {{ frontend_dir }} run check 
+
 # Runs the formatter, linter, and type checker on the frontend codebase, applying automatic fixes where possible.
 frontend-fix:
-    @echo "TODO: FRONTEND FIX"
+    pnpm --dir {{ frontend_dir }} run fix
 
 # Runs the test suite for the frontend codebase, measuring code coverage.
 frontend-test:
-    @echo "TODO: FRONTEND TEST"
+    pnpm --dir {{ frontend_dir }} run test
 
 # Runs frontend application
 frontend-run:
-    @echo "TODO: FRONTEND RUN"
+    pnpm --dir {{ frontend_dir }} dev
 
 # Initializes the frontend workspace
 frontend-init:
-    cd {{frontend_dir}}
-    pnpm install
+    pnpm --dir {{ frontend_dir }} install
 
 #
 # Backend
@@ -79,34 +88,38 @@ frontend-init:
 
 # Runs the database migrations using Alembic.
 backend-migrate:
-    uv run --directory {{backend_dir}} alembic upgrade head
+    uv run --directory {{ backend_dir }} alembic upgrade head
 
 # Creates a new Alembic migration with the given message.
 backend-migration message:
-    uv run --directory {{backend_dir}} alembic revision --autogenerate -m "{{message}}"
+    uv run --directory {{ backend_dir }} alembic revision --autogenerate -m "{{ message }}"
 
 # Seeds the database with production data.
 backend-seed-prod:
-    uv run --directory {{backend_dir}} -m backend.seed.cli prod
+    uv run --directory {{ backend_dir }} -m backend.seed.cli prod
 
 # Seeds the database with development data.
 backend-seed-dev num-users="10" seed="12345":
-    uv run --directory {{backend_dir}} -m backend.seed.cli dev --num-users {{num-users}} --seed {{seed}}
+    uv run --directory {{ backend_dir }} -m backend.seed.cli dev --num-users {{ num-users }} --seed {{ seed }}
 
 # Resets the database, runs migrations, and seeds the database with development data.
 backend-db-reset-dev num-users="10" seed="12345": db-reset backend-migrate (backend-seed-dev num-users seed)
 
+# Runs the formatter, linter, and type checker on the backend codebase without making any changes, reporting issues only.
+backend-check:
+    uv run --directory {{ backend_dir }} poe check
+
 # Runs the formatter, linter, and type checker on the backend codebase, applying automatic fixes where possible.
 backend-fix:
-    uv run --directory {{backend_dir}} poe fix
+    uv run --directory {{ backend_dir }} poe fix
 
 # Runs the test suite for the backend codebase, measuring code coverage.
 backend-test:
-    uv run --directory {{backend_dir}} poe test
+    uv run --directory {{ backend_dir }} poe test
 
 # Runs the backend application using Uvicorn, with hot-reloading enabled for development.
 backend-run:
-    uv run --directory {{backend_dir}} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
+    uv run --directory {{ backend_dir }} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
 
 # Initializes the backend workspace
 backend-init:
