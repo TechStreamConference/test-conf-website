@@ -17,7 +17,7 @@ up:
 down:
     docker compose down
 
-# This just failes when the checks not working but it will not make changes on both codebases.
+# This just fails if the checks are not working but it will not make changes on both codebases.
 check: backend-check frontend-check
 
 # Runs formatters, linters, and type checkers on both the backend and the frontend codebases, applying automatic fixes where possible.
@@ -44,7 +44,7 @@ run: backend-run frontend-run
 frontend-check:
     pnpm --dir {{ frontend_dir }} run check 
 
-# Runs the formatter, linter, and type checker on the backend codebase, applying automatic fixes where possible.
+# Runs the formatter, linter, and type checker on the frontend codebase, applying automatic fixes where possible.
 frontend-fix:
     pnpm --dir {{ frontend_dir }} run fix
 
