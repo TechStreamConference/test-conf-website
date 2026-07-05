@@ -5,9 +5,7 @@
 
 import { parseArgs } from 'node:util';
 import { createClient } from '@hey-api/openapi-ts';
-import { access } from 'node:fs';
 import { existsSync } from 'node:fs';
-
 
 const {
 	values: { input, output, generateOutput }
@@ -33,10 +31,9 @@ if (!input || !output) {
 	process.exit(1);
 }
 
-if (!generateOutput
-	&& !existsSync(output)) {
-	console.error(`Output directory "${output}" does not exist. use -g to generate it.`)
-	process.exit(1)
+if (!generateOutput && !existsSync(output)) {
+	console.error(`Output directory "${output}" does not exist. use -g to generate it.`);
+	process.exit(1);
 }
 
 await createClient({
@@ -48,6 +45,6 @@ await createClient({
 	plugins: [
 		'@hey-api/typescript',
 		'@hey-api/sdk',
-		'@hey-api/client-fetch'
+		'@hey-api/client-fetch',
 	]
 });
