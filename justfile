@@ -51,9 +51,6 @@ init-direnv:
 # Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
 init-dev: backend-init frontend-init gen-types backend-db-reset-dev
 
-# Initializes the ci enviroment
-init-ci: backend-init frontend-init
-
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
 [parallel]
 run: backend-run frontend-run
@@ -144,3 +141,26 @@ backend-generate-types:
 db-reset:
     docker compose down -v postgres
     docker compose up -d --wait postgres
+
+
+# 
+# CI
+# 
+
+# Note: All temp dirs are ignored within the .gitignore. That's why they are used here.
+open_api_file_path := "../temp/open_api/api.json"
+frontend_client_dir := "../temp/client"
+
+# CI: Initializes the ci enviroment
+ci-init: backend-init frontend-init
+
+# CI: Generates Open API from backend and then Frontend types explicitly in a temp directory.
+ci-gen-types: ci-backend-generate-types ci-frontend-generate-types
+
+# CI: Generate OpenAPI from backend explicitly in a temp directory.
+ci-backend-generate-types:
+    uv run --directory {{ backend_dir }}  scripts/dump-fast-api.py -o {{ open_api_file_path }} -g
+
+# CI: Generate Frontend types from OpenAPI explicitly within a temp directory.
+ci-frontend-generate-types:
+    cd {{ frontend_dir }} && node scripts/gen-types.js -i {{ open_api_file_path }} -o {{ frontend_client_dir }} -g
