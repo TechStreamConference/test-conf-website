@@ -42,9 +42,5 @@ await createClient({
 		clean: false,
 		path: output
 	},
-	plugins: [
-		'@hey-api/typescript',
-		'@hey-api/sdk',
-		'@hey-api/client-fetch',
-	]
+	plugins: ['@hey-api/typescript', '@hey-api/sdk', '@hey-api/client-fetch']
 });
