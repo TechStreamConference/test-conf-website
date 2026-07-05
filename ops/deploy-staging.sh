@@ -25,4 +25,5 @@ cd /var/www/vhosts/test-conf.de/staging.test-conf.de
 
 ENVIRONMENT=staging docker compose pull
 ENVIRONMENT=staging docker compose up -d --wait
+ENVIRONMENT=staging docker compose exec backend alembic upgrade head
 docker image prune -f
