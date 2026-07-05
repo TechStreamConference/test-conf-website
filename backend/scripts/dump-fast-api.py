@@ -11,7 +11,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if args.generate_directory:
-        args.output_file.parent.mkdir()
+        args.output_file.parent.mkdir(parents=True, exist_ok=True)
 
     with open(args.output_file, "w") as f:
         json.dump(app.openapi(), f, indent=2)
