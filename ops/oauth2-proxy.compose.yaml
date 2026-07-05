@@ -7,7 +7,7 @@ services:
       - --provider=oidc
       - --provider-display-name=ZITADEL
       - --oidc-issuer-url=https://id.test-conf.de
-      - --redirect-url=https://staging.test-conf.de/oauth2/callback
+      - --redirect-url=https://${ENVIRONMENT}.test-conf.de/oauth2/callback
 
       - --http-address=0.0.0.0:4180
       - --reverse-proxy=true
