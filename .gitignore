@@ -1,7 +1,4 @@
 **/.env
 .direnv/
 
-**/generated/**
-!**/generated/.gitkeep
-
 **/temp/**

@@ -1,0 +1,67 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/globals": {
+      "get": {
+        "summary": "Get global configuration values",
+        "description": "Retrieve all global key-value configuration pairs stored in the database.",
+        "operationId": "get globals v1",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlobalsResponseV1"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/database": {
+      "get": {
+        "summary": "Database Health",
+        "operationId": "backend health check",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "boolean"
+                  },
+                  "type": "object",
+                  "title": "Response Backend Health Check"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "GlobalsResponseV1": {
+        "properties": {
+          "footer_text": {
+            "type": "string",
+            "title": "Footer Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "footer_text"
+        ],
+        "title": "GlobalsResponseV1"
+      }
+    }
+  }
+}
