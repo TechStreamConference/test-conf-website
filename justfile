@@ -87,7 +87,7 @@ frontend-init:
 
 # Generate Frontend types from OpenAPI
 frontend-generate-types:
-    cd {{ frontend_dir }} && node scripts/gen-types.ts -i ../generated/api.json -o src/generated
+    cd {{ frontend_dir }} && node scripts/gen-types.js -i ../generated/api.json -o src/generated
 
 #
 # Backend
