@@ -13,9 +13,8 @@
 		"lint:fix": "eslint . --fix",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && pnpm run lint",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"fix": "pnpm run format && pnpm run lint:fix && pnpm run check && pnpm run lint",
-		"test:unit": "vitest --run",
-		"test": "pnpm run test:unit"
+		"fix": "pnpm run format && pnpm run lint:fix",
+		"test": "vitest --run"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
