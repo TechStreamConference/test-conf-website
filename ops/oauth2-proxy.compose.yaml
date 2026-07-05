@@ -1,0 +1,24 @@
+services:
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.0
+    container_name: oauth2-proxy-${ENVIRONMENT}
+    restart: unless-stopped
+    command:
+      - --provider=oidc
+      - --provider-display-name=ZITADEL
+      - --oidc-issuer-url=https://id.test-conf.de
+      - --redirect-url=https://staging.test-conf.de/oauth2/callback
+
+      - --http-address=0.0.0.0:4180
+      - --reverse-proxy=true
+      - --cookie-secure=true
+      - --cookie-samesite=lax
+      - --upstream=static://200
+
+      - --scope=openid email profile
+      - --email-domain=*
+      - --allowed-group=staging-access
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET}
