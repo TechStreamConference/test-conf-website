@@ -27,7 +27,7 @@ jobs:
       - name: Generate frontend client
         working-directory: "frontend"
         run: nix develop --command 
-             node /scripts/gen-types.js 
+             node scripts/gen-types.js 
               -i ../temp/openapi/api.json 
               -o ../temp/client 
               -g

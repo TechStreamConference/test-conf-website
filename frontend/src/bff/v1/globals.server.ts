@@ -12,7 +12,7 @@ export async function loadGlobals(): Promise<GlobalsResponseV1> {
 	}
 
 	if (data == undefined) {
-		throw new UndefinedDataError("loadGlobals")
+		throw new UndefinedDataError('loadGlobals');
 	}
 
 	return data;
