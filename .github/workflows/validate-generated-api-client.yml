@@ -1,9 +1,6 @@
 name: validate-api-client
 
 on:
-  push: # REMOVE: this lets this CI appear in GitHub
-    branch:
-      - 128-add-script-for-generating-frontend-types
   pull_request:
   workflow_dispatch:
 
