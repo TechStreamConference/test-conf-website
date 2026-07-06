@@ -1,0 +1,6 @@
+include:
+- ops/nginx.staging.compose.yaml
+- ops/oauth2-proxy.compose.yaml
+- ops/postgres.compose.yaml
+- ops/backend.compose.yaml
+- ops/frontend.compose.yaml

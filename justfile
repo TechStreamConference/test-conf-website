@@ -26,13 +26,11 @@ fix: backend-fix frontend-fix
 # Runs both the backend and the frontend test suites, measuring code coverage.
 test: backend-test frontend-test
 
-# Initializes direnv by allowing the root, backend, and frontend directories, and adds the direnv shell hook to your shell config if not already present.
+# Initializes direnv by allowing the root directory and adds the direnv shell hook to your shell config if not already present.
 init-direnv:
     #!/usr/bin/env bash
     set -euo pipefail
     direnv allow
-    (cd {{ backend_dir }} && direnv allow)
-    (cd {{ frontend_dir }} && direnv allow)
     case "$SHELL" in
         */zsh)  rc="$HOME/.zshrc";  hook='eval "$(direnv hook zsh)"'  ;;
         */bash) rc="$HOME/.bashrc"; hook='eval "$(direnv hook bash)"' ;;

@@ -12,39 +12,33 @@
         pkgs = import nixpkgs {
           inherit system;
         };
-
-        common = import ./nix/common.nix {
-          inherit pkgs;
-        };
-
-        backend = import ./nix/backend.nix {
-           inherit pkgs common; 
-        };
-        frontend = import ./nix/frontend.nix { 
-          inherit pkgs common; 
-        };
-
       in {
-        devShells = {
+        devShells.default = pkgs.mkShell {
+          name = "dev";
 
-          inherit backend frontend;
+          packages = with pkgs; [
+            git
+            just
+            nodejs_22
+            pnpm
+            uv
+          ];
 
-          default = pkgs.mkShell {
-            name = "root";
-
-            packages = common.packages;
-
-            shellHook = common.shellHook + ''
-    echo ""
-    echo "==========| Root Shell |=========="
-    echo "Development environment ready"
-    echo ""
-    echo "'just' for available commands."
-    echo "Note: Enter backend/ or frontend/ for their respective tools."
-    echo "============================================="
-    echo ""
-  '';
-          };
+          shellHook = ''
+            echo ""
+            echo "==========| Dev Shell |=========="
+            echo "Development environment ready"
+            echo ""
+            git --version
+            just --version
+            node --version
+            pnpm --version
+            uv --version
+            echo ""
+            echo "'just' for available commands."
+            echo "================================="
+            echo ""
+          '';
         };
       });
 }

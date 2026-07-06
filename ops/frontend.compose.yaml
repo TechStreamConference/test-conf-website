@@ -1,0 +1,8 @@
+services:
+  frontend:
+    image: ghcr.io/techstreamconference/test-conf-website/frontend:${ENVIRONMENT}
+    container_name: frontend-${ENVIRONMENT}
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      ORIGIN: https://${ENVIRONMENT}.test-conf.de
