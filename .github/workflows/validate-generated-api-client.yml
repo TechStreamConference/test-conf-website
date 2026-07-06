@@ -14,39 +14,26 @@ jobs:
       - name: Install Nix
         uses: cachix/install-nix-action@v31
 
-      - name: Initialize development environment
-        run: |
-          nix develop
-        
-      - name: Initialize backend environment
-        working-directory: backend
-        run: nix develop .#backend --command just backend-init
-
-      - name: Initialize frontend environment
-        working-directory: frontend
-        run: nix develop .#frontend --command just frontend-init
+      - name: Initialize development environment 
+        run: nix develop --command just init-ci
 
       - name: Generate OpenAPI schema
-        working-directory: backend
-        run: |
-          nix develop .#backend --command \
-            uv run scripts/dump-fast-api.py \
-              -o ../temp/openapi/api.json \
+        working-directory: "backend"
+        run: nix develop --command 
+             uv run scripts/dump-fast-api.py 
+              -o ../temp/openapi/api.json 
               -g
 
       - name: Generate frontend client
-        working-directory: frontend
-        run: |
-          nix develop .#frontend --command \
-            node scripts/gen-types.js \
-              -i ../temp/openapi/api.json \
-              -o ../temp/client \
+        working-directory: "frontend"
+        run: nix develop --command 
+             node /scripts/gen-types.js 
+              -i ../temp/openapi/api.json 
+              -o ../temp/client 
               -g
 
       - name: Compare generated OpenAPI schema
-        run: |
-          diff -u generated/api.json temp/openapi/api.json
+        run: diff -u generated/api.json temp/openapi/api.json
 
       - name: Compare generated frontend client
-        run: |
-          diff -ru frontend/src/generated temp/client
+        run: diff -ru frontend/src/generated temp/client
