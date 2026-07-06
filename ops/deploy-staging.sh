@@ -24,6 +24,6 @@ set -euo pipefail
 cd /var/www/vhosts/test-conf.de/staging.test-conf.de
 
 ENVIRONMENT=staging docker compose pull
-ENVIRONMENT=staging docker compose up -d --wait
+ENVIRONMENT=staging docker compose up -d --wait --force-recreate
 ENVIRONMENT=staging docker compose exec -T backend alembic upgrade head
 docker image prune -f
