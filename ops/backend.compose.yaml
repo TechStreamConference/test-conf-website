@@ -1,0 +1,9 @@
+services:
+  backend:
+    image: ghcr.io/techstreamconference/test-conf-website/backend:${ENVIRONMENT}
+    container_name: backend-${ENVIRONMENT}
+    restart: unless-stopped
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_HOST: postgres

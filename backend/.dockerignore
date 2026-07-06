@@ -1,0 +1,8 @@
+.venv/
+.direnv/
+.pytest_cache/
+.ruff_cache/
+coverage_html/
+__pycache__/
+*.pyc
+.env

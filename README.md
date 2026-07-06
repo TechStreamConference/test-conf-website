@@ -22,9 +22,7 @@ You can also use the HTTPS URL from the [repository page](https://github.com/Tec
 ### 3. Enter a Development Shell
 
 ```sh
-nix develop             # whole project
-nix develop .#frontend  # frontend only
-nix develop .#backend   # backend only
+nix develop
 ```
 
 ### 4. Install dependencies
@@ -51,33 +49,19 @@ just setup
 
 If you use VS Code, also install a direnv extension (e.g. [mkhl.direnv](https://marketplace.visualstudio.com/items?itemName=mkhl.direnv)).
 
-The repository includes the following `.envrc` files:
-
-**`.envrc`** (repo root):
+The repository includes a single `.envrc` at the root:
 
 ```envrc
 use flake
 ```
 
-**`backend/.envrc`**:
-
-```envrc
-use flake ..#backend
-```
-
-**`frontend/.envrc`**:
-
-```envrc
-use flake ..#frontend
-```
-
-Each `.envrc` must be allowed individually. The `just init-direnv` command does this for all three directories at once. Because `just` is provided by the Nix shell, enter it manually the first time, then run the command:
+Run `just init-direnv` to allow it and add the direnv shell hook to your shell config. Because `just` is provided by the Nix shell, enter it manually the first time:
 
 ```sh
-nix develop  # Enter Nix shell.
+nix develop       # Enter Nix shell.
 just init-direnv  # Setup direnv.
 ```
 
-After that, direnv will activate the correct shell automatically whenever you enter the repository or one of its subdirectories.
+After that, direnv will activate the shell automatically whenever you enter the repository.
 
-If you prefer not to use direnv, you can always enter a shell manually with `nix develop`, `nix develop .#frontend`, or `nix develop .#backend`.
+If you prefer not to use direnv, you can always enter the shell manually with `nix develop`.
