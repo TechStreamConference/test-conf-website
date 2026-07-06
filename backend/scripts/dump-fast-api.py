@@ -1,19 +1,22 @@
 import argparse
 import json
 from pathlib import Path
+from typing import Final
 
 from backend.main import app
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    _ = parser.add_argument("-o", "--output-file", type=Path)
+    parser: Final = argparse.ArgumentParser()
+    _ = parser.add_argument("-o", "--output-file", type=Path, required=True)
     _ = parser.add_argument("-g", "--generate-directory", action="store_true")
-    args = parser.parse_args()
+    args: Final = parser.parse_args()
 
     if args.generate_directory:
         args.output_file.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(args.output_file, "w") as f:
-        json.dump(app.openapi(), f, indent=2)
+    args.output_file.write_text(
+        json.dumps(app.openapi(), indent=2),
+        encoding="utf-8",
+    )
 
     print(args.output_file, " generated")
