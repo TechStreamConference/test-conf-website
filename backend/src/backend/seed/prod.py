@@ -5,14 +5,7 @@ from backend.models.tables import GlobalKey
 
 
 async def seed_prod(session: AsyncSession) -> None:
-    session.add(
-        Global(
-            key=GlobalKey.FOOTER_TEXT,
-            value=(
-                "TECH STREAM CONFERENCE – Online-Konferenz mit Vorträgen aus den "
-                + "Bereichen Programmierung, Maker-Szene und Spieleentwicklung"
-            ),
-        )
-    )
+    session.add(Global(key=GlobalKey.FOOTER_TEXT, value="Footer"))
+    session.add(Global(key=GlobalKey.IMPRINT_TEXT, value="Imprint"))
 
     await session.commit()
