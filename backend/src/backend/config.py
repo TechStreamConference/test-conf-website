@@ -13,6 +13,8 @@ _ROOT_ENV_FILE = _REPO_ROOT / ".env"
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=_ROOT_ENV_FILE, extra="ignore")
 
+    backend_root_uri: str = "http://localhost/api"
+
     database_host: str = "localhost"
     database_port: int = 5432
     database_name: str = "postgres"
