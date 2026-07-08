@@ -27,4 +27,5 @@ async def get_globals(session: Annotated[AsyncSession, Depends(get_session)]) ->
     globals_map: Final = {row.key: row.value for row in result.scalars().all()}
     return GlobalsResponseV1(
         footer_text=globals_map[GlobalKey.FOOTER_TEXT],
+        imprint_text=globals_map[GlobalKey.IMPRINT_TEXT],
     )
