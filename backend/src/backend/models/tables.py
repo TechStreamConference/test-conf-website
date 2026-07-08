@@ -19,6 +19,7 @@ class User(SQLModel, table=True):
 @final
 class GlobalKey(StrEnum):
     FOOTER_TEXT = auto()
+    IMPRINT_TEXT = auto()
 
 
 @final
