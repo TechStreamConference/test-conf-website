@@ -1,9 +1,9 @@
-// the client should only be imported from this file otherwise the config is missing.
-
 import { client } from '$gen/client.gen';
 
+var BACKEND_URL: string = 'http://localhost/api'; // replace with docker variable
+
 client.setConfig({
-	baseUrl: '/api'
-});
+	baseUrl: BACKEND_URL,
+})
 
 export { client };
