@@ -23,7 +23,12 @@ set -euo pipefail
 
 cd /var/www/vhosts/test-conf.de/staging.test-conf.de
 
+# Stop database and remove its volume to completely wipe its contents:
+ENVIRONMENT=staging docker compose down postgres -v
 ENVIRONMENT=staging docker compose pull
 ENVIRONMENT=staging docker compose up -d --wait --force-recreate
+# Run database migrations:
 ENVIRONMENT=staging docker compose exec -T backend alembic upgrade head
+# Seed database with dev data:
+ENVIRONMENT=staging docker compose exec -T backend python -m backend.seed.cli dev
 docker image prune -f
