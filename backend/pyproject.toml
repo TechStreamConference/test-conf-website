@@ -24,7 +24,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "faker>=40.28.1",
-    "poethepoet>=0.47.1",
+    "poethepoet>=0.48.0",
     "pyright[nodejs]>=1.1.411",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
