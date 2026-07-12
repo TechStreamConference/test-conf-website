@@ -1,11 +1,12 @@
 <script lang="ts">
 	import type { GlobalsResponseV1 } from '$gen/types.gen';
+	import type { PageProps } from './$types';
 
-	let { data } = $props<{
+	let { data }: PageProps = $props<{
 		data: {
 			globals: GlobalsResponseV1;
 		};
 	}>();
 </script>
 
-<h1>{data.globals.title}</h1>
+<h1>{data.globals.footer_text}</h1>

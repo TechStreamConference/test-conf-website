@@ -4,6 +4,7 @@ import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 import ts from 'typescript-eslint';
 import { defineConfig, includeIgnoreFile } from 'eslint/config';
+import svelte from 'eslint-plugin-svelte';
 
 const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
@@ -11,14 +12,20 @@ export default defineConfig(
 	includeIgnoreFile(gitignorePath),
 
 	{
-		ignores: ['src/generated/**', '**/*.svelte']
+		ignores: ['src/generated/**']
 	},
 
 	js.configs.recommended,
 	ts.configs.recommended,
+
+	// Register the Svelte parser and recommended rules.
+	...svelte.configs.recommended,
+
 	prettier,
 
-	// TypeScript (strict)
+	// ---------------------------------------------------------------------
+	// TypeScript
+	// ---------------------------------------------------------------------
 	{
 		files: ['{src,scripts}/**/*.ts'],
 
@@ -47,7 +54,9 @@ export default defineConfig(
 		}
 	},
 
+	// ---------------------------------------------------------------------
 	// JavaScript (Node scripts)
+	// ---------------------------------------------------------------------
 	{
 		files: ['scripts/**/*.js'],
 
@@ -66,15 +75,41 @@ export default defineConfig(
 		},
 
 		rules: {
-			// Still forbid explicit any in JSDoc.
 			'@typescript-eslint/no-explicit-any': 'error',
 
-			// Disable the rules that tend to produce noise in checked JS.
 			'@typescript-eslint/no-unsafe-assignment': 'off',
 			'@typescript-eslint/no-unsafe-call': 'off',
 			'@typescript-eslint/no-unsafe-member-access': 'off',
 			'@typescript-eslint/no-unsafe-return': 'off',
 			'@typescript-eslint/no-unsafe-argument': 'off'
+		}
+	},
+
+	// ---------------------------------------------------------------------
+	// Svelte
+	// ---------------------------------------------------------------------
+	{
+		files: ['src/**/*.svelte'],
+
+		languageOptions: {
+			parserOptions: {
+				parser: ts.parser,
+				projectService: true,
+				extraFileExtensions: ['.svelte']
+			},
+			globals: {
+				...globals.browser,
+				...globals.node
+			}
+		},
+
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'error',
+			'@typescript-eslint/no-unsafe-assignment': 'error',
+			'@typescript-eslint/no-unsafe-call': 'error',
+			'@typescript-eslint/no-unsafe-member-access': 'error',
+			'@typescript-eslint/no-unsafe-return': 'error',
+			'@typescript-eslint/no-unsafe-argument': 'error'
 		}
 	}
 );
