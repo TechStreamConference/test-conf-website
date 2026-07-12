@@ -1,7 +1,9 @@
+import type { PageServerLoad } from './$types';
+
 import { loadGlobals } from '$bff/v1/globals.server';
 
-export async function load() {
+export const load: PageServerLoad = async ({ fetch }) => {
 	return {
-		globals: await loadGlobals()
-	};
+		globals: await loadGlobals(fetch)
+	}
 }
