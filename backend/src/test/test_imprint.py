@@ -5,7 +5,7 @@ from unittest.mock import Mock
 import pytest
 from fastapi import HTTPException
 
-from backend.models.responses import ImprintResponse
+from backend.models.responses import ImprintResponseV1
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
 from backend.routes.v1.imprint import get_imprint
@@ -22,7 +22,7 @@ async def test_imprint_returns_content() -> None:
     )
 
     result: Final = await get_imprint(session)
-    assert isinstance(result, ImprintResponse)
+    assert isinstance(result, ImprintResponseV1)
     assert result.content == "Imprint"
 
 

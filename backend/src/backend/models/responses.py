@@ -5,15 +5,15 @@ from pydantic import BaseModel
 
 
 @final
-class GlobalsResponse(BaseModel):
+class GlobalsResponseV1(BaseModel):
     footer_text: str
 
 
 @final
-class ImprintResponse(BaseModel):
+class ImprintResponseV1(BaseModel):
     content: str
 
 
 @final
-class ImprintPageContentNotFoundResponse(BaseModel):
+class ImprintPageContentNotFoundResponseV1(BaseModel):
     detail: Literal["Imprint page not found in the database."] = "Imprint page not found in the database."
