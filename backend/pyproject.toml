@@ -39,7 +39,6 @@ dev = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-
 [tool.poe.tasks]
 check = { cmd = "scripts/check.py" }
 fix = { cmd = "scripts/check.py --fix" }
