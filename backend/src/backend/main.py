@@ -6,10 +6,11 @@ from fastapi import FastAPI
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.config import SETTINGS
 from backend.database import get_session
 from backend.routes import v1_api
 
-app: Final = FastAPI()
+app: Final = FastAPI(root_path=SETTINGS.backend_root_uri)
 
 app.include_router(v1_api.ROUTER)
 
