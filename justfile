@@ -54,7 +54,9 @@ init-dev: backend-init frontend-init gen-types backend-db-reset-dev
 run: backend-run frontend-run
 
 # Generates Open API from backend and then Frontend Types.
-gen-types: backend-generate-types frontend-generate-types
+gen-types:
+    uv run --directory {{ backend_dir }} scripts/dump-fast-api.py
+    cd {{ frontend_dir }} && node scripts/gen-types.js
 
 #
 # Frontend
@@ -79,10 +81,6 @@ frontend-run:
 # Initializes the frontend workspace
 frontend-init:
     pnpm --dir {{ frontend_dir }} install
-
-# Generate Frontend types from OpenAPI
-frontend-generate-types:
-    cd {{ frontend_dir }} && node scripts/gen-types.js -i ../generated/api.json -o src/generated
 
 #
 # Backend
@@ -126,10 +124,6 @@ backend-run:
 # Initializes the backend workspace
 backend-init:
     uv sync --directory {{ backend_dir }} --dev
-
-# Generate OpenAPI from backend.
-backend-generate-types:
-    uv run --directory {{ backend_dir }}  scripts/dump-fast-api.py -o ../generated/api.json
 
 #
 # Database

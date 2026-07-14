@@ -5,39 +5,41 @@
 
 import { parseArgs } from 'node:util';
 import { createClient } from '@hey-api/openapi-ts';
-import { existsSync } from 'node:fs';
+import { existsSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const {
-	values: { input, output, generateOutput }
+	values: { temp }
 } = parseArgs({
 	options: {
-		input: {
-			type: 'string',
-			short: 'i'
-		},
-		output: {
-			type: 'string',
-			short: 'o'
-		},
-		generateOutput: {
+		temp: {
 			type: 'boolean',
-			short: 'g'
+			short: 't'
 		}
 	}
 });
 
-if (!input || !output) {
-	console.error('Usage: generate -i <input> -o <output>');
+// Must match the output location of the backend generator.
+const input = join(tmpdir(), 'backend', 'openapi.json');
+
+// Repository output.
+const generatedOutput = 'src/generated';
+
+// Temporary output used by CI.
+const tempOutput = join(tmpdir(), 'frontend', 'generated');
+
+const output = temp ? tempOutput : generatedOutput;
+
+if (!existsSync(input)) {
+	console.error(`Input file "${input}" does not exist.`);
 	process.exit(1);
 }
 
-if (!generateOutput && !existsSync(output)) {
-	console.error(`Output directory "${output}" does not exist. use -g to generate it.`);
-	process.exit(1);
-}
+mkdirSync(output, { recursive: true });
 
 await createClient({
-	input: input,
+	input,
 	output: {
 		clean: false,
 		path: output,
@@ -49,3 +51,5 @@ await createClient({
 	},
 	plugins: ['@hey-api/typescript', '@hey-api/sdk', '@hey-api/client-fetch']
 });
+
+console.log(output);
