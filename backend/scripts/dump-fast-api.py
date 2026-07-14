@@ -6,6 +6,8 @@ from typing import Final
 from backend.main import app
 
 if __name__ == "__main__":
+    print(tempfile.gettempdir())
+
     output_file: Final = Path(tempfile.gettempdir()) / "backend" / "openapi.json"
 
     output_file.parent.mkdir(parents=True, exist_ok=True)

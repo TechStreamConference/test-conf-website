@@ -20,6 +20,8 @@ const {
 	}
 });
 
+console.log(tmpdir())
+
 // Must match the output location of the backend generator.
 const input = join(tmpdir(), 'backend', 'openapi.json');
 
