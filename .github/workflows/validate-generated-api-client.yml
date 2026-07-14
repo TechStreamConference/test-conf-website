@@ -8,8 +8,6 @@ jobs:
   generated-api:
     runs-on: ubuntu-latest
 
-
-
     steps:
       - uses: actions/checkout@v4
 
@@ -21,11 +19,15 @@ jobs:
 
       - name: Generate OpenAPI schema
         working-directory: "backend"
+        env:
+          CI_TMP_DIR: ${{ runner.temp }}
         run: nix develop --command uv run scripts/dump-fast-api.py
 
       - name: Generate frontend client
         working-directory: "frontend"
+        env:
+          CI_TMP_DIR: ${{ runner.temp }}
         run: nix develop --command node scripts/gen-types.js --temp
 
       - name: Compare generated frontend client
-        run: diff -ru frontend/src/generated "$CI_TMP_DIR/frontend/generated"
+        run: diff -ru frontend/src/generated "$RUNNER_TEMP/frontend/generated"
