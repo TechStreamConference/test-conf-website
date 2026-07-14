@@ -8,8 +8,7 @@ jobs:
   generated-api:
     runs-on: ubuntu-latest
 
-    env:
-      CI_TMP_DIR: ${{ runner.temp }}
+
 
     steps:
       - uses: actions/checkout@v4
