@@ -19,21 +19,11 @@ jobs:
 
       - name: Generate OpenAPI schema
         working-directory: "backend"
-        run: nix develop --command 
-             uv run scripts/dump-fast-api.py 
-              -o ../temp/openapi/api.json 
-              -g
+        run: nix develop --command uv run scripts/dump-fast-api.py
 
       - name: Generate frontend client
         working-directory: "frontend"
-        run: nix develop --command 
-             node scripts/gen-types.js 
-              -i ../temp/openapi/api.json 
-              -o ../temp/client 
-              -g
-
-      - name: Compare generated OpenAPI schema
-        run: diff -u generated/api.json temp/openapi/api.json
+        run: nix develop --command node scripts/gen-types.js --temp
 
       - name: Compare generated frontend client
-        run: diff -ru frontend/src/generated temp/client
+        run: diff -ru frontend/src/generated "$RUNNER_TEMP/frontend/generated"
