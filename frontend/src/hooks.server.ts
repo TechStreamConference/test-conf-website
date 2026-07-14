@@ -1,4 +1,4 @@
-// This hook includes the client and forceses it to set the base URL.
+// This hook includes the client and forces it to set the base URL.
 
 import '$bff/client';
 
