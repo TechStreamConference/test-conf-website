@@ -19,6 +19,7 @@
           packages = with pkgs; [
             git
             just
+            just-lsp
             nodejs_22
             pnpm
             uv
@@ -31,6 +32,7 @@
             echo ""
             git --version
             just --version
+            just-lsp --version
             node --version
             pnpm --version
             uv --version

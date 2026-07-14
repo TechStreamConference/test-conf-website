@@ -1,0 +1,18 @@
+{
+    "recommendations": [
+        "mkhl.direnv",
+        "mhutchie.git-graph",
+        "DavidAnson.vscode-markdownlint",
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-python-envs",
+        "donjayamanne.python-extension-pack",
+        "charliermarsh.ruff",
+        "nefrob.vscode-just-syntax",
+        "redhat.vscode-yaml",
+        "KevinRose.vsc-python-indent",
+        "pinage404.nix-extension-pack"
+    ],
+    "unwantedRecommendations": []
+}
