@@ -20,16 +20,16 @@ const {
 	}
 });
 
-console.log(tmpdir())
+const baseDir = process.env.CI_TMP_DIR ?? tmpdir();
 
 // Must match the output location of the backend generator.
-const input = join(tmpdir(), 'backend', 'openapi.json');
+const input = join(baseDir, 'backend', 'openapi.json');
 
 // Repository output.
 const generatedOutput = 'src/generated';
 
 // Temporary output used by CI.
-const tempOutput = join(tmpdir(), 'frontend', 'generated');
+const tempOutput = join(baseDir, 'frontend', 'generated');
 
 const output = temp ? tempOutput : generatedOutput;
 
