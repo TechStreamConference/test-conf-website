@@ -5,37 +5,35 @@
 
 import { parseArgs } from 'node:util';
 import { createClient } from '@hey-api/openapi-ts';
-import { existsSync, mkdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, statSync } from 'node:fs';
+import path from 'node:path';
 
-const {
-	values: { temp }
-} = parseArgs({
+const { values } = parseArgs({
 	options: {
-		temp: {
-			type: 'boolean',
-			short: 't'
+		input: {
+			type: 'string',
+			short: 'i',
+			required: true
+		},
+		output: {
+			type: 'string',
+			short: 'o',
+			required: true
 		}
 	}
 });
 
-const baseDir = process.env.CI_TMP_DIR ?? tmpdir();
-
-// Must match the output location of the backend generator.
-const input = join(baseDir, 'backend', 'openapi.json');
-
-// Repository output.
-const generatedOutput = 'src/generated';
-
-// Temporary output used by CI.
-const tempOutput = join(baseDir, 'frontend', 'generated');
-
-const output = temp ? tempOutput : generatedOutput;
+const input = path.resolve(values.input);
+const output = path.resolve(values.output);
 
 if (!existsSync(input)) {
 	console.error(`Input file "${input}" does not exist.`);
-	process.exit(1);
+	process.exit(2);
+}
+
+if (!statSync(input).isFile()) {
+	console.error(`Input path '${input}' is not a file.`);
+	process.exit(2);
 }
 
 mkdirSync(output, { recursive: true });
