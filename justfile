@@ -54,9 +54,17 @@ init-dev: backend-init frontend-init gen-types backend-db-reset-dev
 run: backend-run frontend-run
 
 # Generates Open API from backend and then Frontend Types.
+[script]
 gen-types:
-    uv run --directory {{ backend_dir }} scripts/dump-fast-api.py
-    cd {{ frontend_dir }} && node scripts/gen-types.js
+    temp_dir=$(mktemp -d)
+    trap 'rm -rf "$temp_dir"' EXIT
+
+    uv run --directory {{ backend_dir }} scripts/dump-fast-api.py \
+        -o "$temp_dir/backend/openapi.json"
+
+    pnpm --dir {{ frontend_dir }} exec node scripts/gen-types.js \
+        -i "$temp_dir/backend/openapi.json" \
+        -o src/generated
 
 #
 # Frontend
