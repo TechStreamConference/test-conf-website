@@ -147,4 +147,6 @@ db-reset:
 #
 
 # CI: Initializes the ci enviroment
-init-ci: backend-init frontend-init
+init-ci:
+    pnpm --dir {{ frontend_dir }} install --frozen-lockfile
+    uv sync --directory {{ backend_dir }} --dev --locked --exact
