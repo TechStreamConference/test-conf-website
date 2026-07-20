@@ -3,7 +3,8 @@ services:
     image: ghcr.io/techstreamconference/test-conf-website/frontend:${ENVIRONMENT}
     container_name: frontend-${ENVIRONMENT}
     restart: unless-stopped
+    env_file:
+      - ../.env
     environment:
       PORT: 3000
       ORIGIN: https://${ENVIRONMENT}.test-conf.de
-      BACKEND_ROOT_URI: ${BACKEND_ROOT_URI}
