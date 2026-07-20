@@ -19,3 +19,8 @@ updates:
     directory: "/ops"
     schedule:
       interval: "weekly"
+  
+  - package-ecosystem: "nix"
+    directory: "/"
+    schedule:
+      interval: "weekly"
