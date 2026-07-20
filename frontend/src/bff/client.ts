@@ -1,10 +1,10 @@
 import { client } from '$gen/client.gen';
 import { env } from '$env/dynamic/private';
 
-const BACKEND_URL: string | undefined = env['FRONTEND_API_BASE_URL'];
+const BACKEND_URL: string | undefined = env['BACKEND_ROOT_URI'];
 
 if (!BACKEND_URL) {
-	throw new Error('FRONTEND_API_BASE_URL is not configured');
+	throw new Error('BACKEND_ROOT_URI is not configured');
 }
 
 client.setConfig({

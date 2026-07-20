@@ -6,4 +6,4 @@ services:
     environment:
       PORT: 3000
       ORIGIN: https://${ENVIRONMENT}.test-conf.de
-      FRONTEND_API_BASE_URL: ${FRONTEND_API_BASE_URL}
+      BACKEND_ROOT_URI: ${BACKEND_ROOT_URI}
