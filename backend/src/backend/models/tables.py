@@ -27,3 +27,18 @@ class Global(SQLModel, table=True):
 
     key: GlobalKey = Field(primary_key=True)
     value: str
+
+
+# WARNING: Changing the `StaticPageKind` enum requires also creating a database
+#          migration to update the SQLAlchemy Enum type in the database.
+@final
+class StaticPageKind(StrEnum):
+    IMPRINT = auto()
+
+
+@final
+class StaticPage(SQLModel, table=True):
+    __tablename__ = "static_pages"  # type: ignore[reportAssignmentType]
+
+    kind: StaticPageKind = Field(primary_key=True)
+    content: str
