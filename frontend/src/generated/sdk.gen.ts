@@ -4,7 +4,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BackendHealthCheckData, BackendHealthCheckResponses, GetGlobalsV1Data, GetGlobalsV1Responses } from './types.gen';
+import type { BackendHealthCheckData, BackendHealthCheckResponses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -26,6 +26,13 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  * Retrieve all global key-value configuration pairs stored in the database.
  */
 export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Options<GetGlobalsV1Data, ThrowOnError>): RequestResult<GetGlobalsV1Responses, unknown, ThrowOnError> => (options?.client ?? client).get<GetGlobalsV1Responses, unknown, ThrowOnError>({ url: '/v1/globals', ...options });
+
+/**
+ * Get the markdown contents of the imprint page
+ *
+ * Retrieve the markdown contents of the imprint page stored in the database.
+ */
+export const getImprintV1 = <ThrowOnError extends boolean = false>(options?: Options<GetImprintV1Data, ThrowOnError>): RequestResult<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError> => (options?.client ?? client).get<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError>({ url: '/v1/imprint', ...options });
 
 /**
  * Database Health

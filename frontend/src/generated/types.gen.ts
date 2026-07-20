@@ -16,6 +16,26 @@ export type GlobalsResponseV1 = {
     footer_text: string;
 };
 
+/**
+ * ImprintPageContentNotFoundResponseV1
+ */
+export type ImprintPageContentNotFoundResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Imprint page not found in the database.';
+};
+
+/**
+ * ImprintResponseV1
+ */
+export type ImprintResponseV1 = {
+    /**
+     * Content
+     */
+    content: string;
+};
+
 export type GetGlobalsV1Data = {
     body?: never;
     path?: never;
@@ -31,6 +51,31 @@ export type GetGlobalsV1Responses = {
 };
 
 export type GetGlobalsV1Response = GetGlobalsV1Responses[keyof GetGlobalsV1Responses];
+
+export type GetImprintV1Data = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/imprint';
+};
+
+export type GetImprintV1Errors = {
+    /**
+     * Not Found
+     */
+    404: ImprintPageContentNotFoundResponseV1;
+};
+
+export type GetImprintV1Error = GetImprintV1Errors[keyof GetImprintV1Errors];
+
+export type GetImprintV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: ImprintResponseV1;
+};
+
+export type GetImprintV1Response = GetImprintV1Responses[keyof GetImprintV1Responses];
 
 export type BackendHealthCheckData = {
     body?: never;
