@@ -1,41 +1,115 @@
-import prettier from 'eslint-config-prettier';
-import path from 'node:path';
 import js from '@eslint/js';
-import svelte from 'eslint-plugin-svelte';
-import { defineConfig, includeIgnoreFile } from 'eslint/config';
+import path from 'node:path';
+import prettier from 'eslint-config-prettier';
 import globals from 'globals';
 import ts from 'typescript-eslint';
+import { defineConfig, includeIgnoreFile } from 'eslint/config';
+import svelte from 'eslint-plugin-svelte';
 
 const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
 	includeIgnoreFile(gitignorePath),
+
+	{
+		ignores: ['src/generated/**']
+	},
+
 	js.configs.recommended,
 	ts.configs.recommended,
-	svelte.configs.recommended,
+
+	// Register the Svelte parser and recommended rules.
+	...svelte.configs.recommended,
+
 	prettier,
-	svelte.configs.prettier,
+
+	// ---------------------------------------------------------------------
+	// TypeScript
+	// ---------------------------------------------------------------------
 	{
-		languageOptions: { globals: { ...globals.browser, ...globals.node } },
+		files: ['{src,scripts}/**/*.ts'],
+
+		extends: [ts.configs.strictTypeChecked],
+
+		languageOptions: {
+			parser: ts.parser,
+			parserOptions: {
+				projectService: {
+					allowDefaultProject: ['scripts/*.ts']
+				}
+			},
+			globals: {
+				...globals.browser,
+				...globals.node
+			}
+		},
+
 		rules: {
-			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
-			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+			'@typescript-eslint/no-explicit-any': 'error',
+			'@typescript-eslint/no-unsafe-assignment': 'error',
+			'@typescript-eslint/no-unsafe-call': 'error',
+			'@typescript-eslint/no-unsafe-member-access': 'error',
+			'@typescript-eslint/no-unsafe-return': 'error',
+			'@typescript-eslint/no-unsafe-argument': 'error'
 		}
 	},
+
+	// ---------------------------------------------------------------------
+	// JavaScript (Node scripts)
+	// ---------------------------------------------------------------------
 	{
-		files: ['**/*.svelte', '**/*.svelte.ts', '**/*.svelte.js'],
+		files: ['scripts/**/*.js'],
+
+		extends: [ts.configs.recommendedTypeChecked],
+
+		languageOptions: {
+			parser: ts.parser,
+			parserOptions: {
+				projectService: {
+					allowDefaultProject: ['scripts/*.js']
+				}
+			},
+			globals: {
+				...globals.node
+			}
+		},
+
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'error',
+
+			'@typescript-eslint/no-unsafe-assignment': 'off',
+			'@typescript-eslint/no-unsafe-call': 'off',
+			'@typescript-eslint/no-unsafe-member-access': 'off',
+			'@typescript-eslint/no-unsafe-return': 'off',
+			'@typescript-eslint/no-unsafe-argument': 'off'
+		}
+	},
+
+	// ---------------------------------------------------------------------
+	// Svelte
+	// ---------------------------------------------------------------------
+	{
+		files: ['src/**/*.svelte'],
+
 		languageOptions: {
 			parserOptions: {
+				parser: ts.parser,
 				projectService: true,
-				extraFileExtensions: ['.svelte'],
-				parser: ts.parser
+				extraFileExtensions: ['.svelte']
+			},
+			globals: {
+				...globals.browser,
+				...globals.node
 			}
+		},
+
+		rules: {
+			'@typescript-eslint/no-explicit-any': 'error',
+			'@typescript-eslint/no-unsafe-assignment': 'error',
+			'@typescript-eslint/no-unsafe-call': 'error',
+			'@typescript-eslint/no-unsafe-member-access': 'error',
+			'@typescript-eslint/no-unsafe-return': 'error',
+			'@typescript-eslint/no-unsafe-argument': 'error'
 		}
-	},
-	{
-		// Override or add rule settings here, such as:
-		// 'svelte/button-has-type': 'error'
-		rules: {}
 	}
 );

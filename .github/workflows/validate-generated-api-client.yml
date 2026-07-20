@@ -1,0 +1,36 @@
+name: validate-api-client
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  generated-api:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Initialize development environment 
+        run: nix develop --command just init-ci
+
+      - name: Generate OpenAPI schema
+        working-directory: "backend"
+        run: >
+          nix develop --command 
+          uv run scripts/dump-fast-api.py 
+          -o "$RUNNER_TEMP"/backend/openapi.json
+
+      - name: Generate frontend client
+        working-directory: "frontend"
+        run: >
+          nix develop --command 
+          node scripts/gen-types.js 
+          -i "$RUNNER_TEMP/backend/openapi.json" 
+          -o "$RUNNER_TEMP/frontend/generated"
+
+      - name: Compare generated frontend client
+        run: git diff --no-index -- frontend/src/generated "$RUNNER_TEMP/frontend/generated"

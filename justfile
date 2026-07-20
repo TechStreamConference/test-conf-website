@@ -47,14 +47,24 @@ init-direnv:
     fi
 
 # Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
-init-dev: backend-init backend-db-reset-dev frontend-init
-
-# Initializes the ci enviroment
-init-ci: backend-init frontend-init
+init-dev: backend-init frontend-init gen-types backend-db-reset-dev
 
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
 [parallel]
 run: backend-run frontend-run
+
+# Generates Open API from backend and then Frontend Types.
+[script]
+gen-types:
+    temp_dir=$(mktemp -d)
+    trap 'rm -rf "$temp_dir"' EXIT
+
+    uv run --directory {{ backend_dir }} scripts/dump-fast-api.py \
+        -o "$temp_dir/backend/openapi.json"
+
+    pnpm --dir {{ frontend_dir }} exec node scripts/gen-types.js \
+        -i "$temp_dir/backend/openapi.json" \
+        -o src/generated
 
 #
 # Frontend
@@ -121,7 +131,7 @@ backend-run:
 
 # Initializes the backend workspace
 backend-init:
-    uv sync --directory {{backend_dir}} --dev
+    uv sync --directory {{ backend_dir }} --dev
 
 #
 # Database
@@ -131,3 +141,12 @@ backend-init:
 db-reset:
     docker compose down -v postgres
     docker compose up -d --wait postgres
+
+#
+# CI
+#
+
+# CI: Initializes the ci enviroment
+init-ci:
+    pnpm --dir {{ frontend_dir }} install --frozen-lockfile
+    uv sync --directory {{ backend_dir }} --dev --locked --exact

@@ -6,3 +6,4 @@ services:
     environment:
       PORT: 3000
       ORIGIN: https://${ENVIRONMENT}.test-conf.de
+      BACKEND_ROOT_URI: ${BACKEND_ROOT_URI}
