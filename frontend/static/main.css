@@ -41,6 +41,7 @@
     color-scheme: dark;
 }
 
+/* if the transition time is not corresponding, have a look at the constants in '$lib/helper/light-dark.ts' */
 .theme-transition * {
     transition: background-color var(--transition-duration),
         border-color var(--transition-duration),

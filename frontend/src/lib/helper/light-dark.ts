@@ -4,7 +4,7 @@ export enum Theme {
     Dark = 'dark'
 }
 
-// when changing theese: remember, that there are coresponding valus in app.html and main.css
+// when changing theese: remember, that there are coresponding valus in 'src/app.html' and 'static/main.css'
 const STORAGE_KEY: string = 'TEST_CONF_THEME';
 const CSS_DARK_MODE: string = 'dark-theme';
 const CSS_LIGHT_MODE: string = 'light-theme';
