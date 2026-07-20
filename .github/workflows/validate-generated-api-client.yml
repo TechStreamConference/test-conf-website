@@ -33,4 +33,4 @@ jobs:
           -o "$RUNNER_TEMP/frontend/generated"
 
       - name: Compare generated frontend client
-        run: git diff --no-index -- frontend/src/generated "$RUNNER_TEMP/frontend" || true
+        run: git diff --no-index -- frontend/src/generated "$RUNNER_TEMP/frontend/generated"
