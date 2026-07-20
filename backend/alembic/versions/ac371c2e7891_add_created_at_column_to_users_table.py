@@ -1,7 +1,7 @@
 """add `created_at` column to `users` table
 
 Revision ID: ac371c2e7891
-Revises: 88da587105f3
+Revises: 73b3c98b460f
 Create Date: 2026-07-08 12:37:15.136097
 
 """
@@ -14,7 +14,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "ac371c2e7891"
-down_revision: str | Sequence[str] | None = "88da587105f3"
+down_revision: str | Sequence[str] | None = "73b3c98b460f"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
