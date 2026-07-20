@@ -11,7 +11,7 @@ from sqlmodel import SQLModel
 
 
 def _utc_now() -> datetime:
-    return datetime.now(UTC)
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 class _AuditMixin(SQLModel):
