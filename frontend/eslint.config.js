@@ -65,9 +65,7 @@ export default defineConfig(
 		languageOptions: {
 			parser: ts.parser,
 			parserOptions: {
-				projectService: {
-					allowDefaultProject: ['scripts/*.js']
-				}
+				project: './tsconfig.scripts.json'
 			},
 			globals: {
 				...globals.node
