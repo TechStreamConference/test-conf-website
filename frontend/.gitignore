@@ -24,5 +24,3 @@ vite.config.ts.timestamp-*
 
 /.idea
 /src/lib/vitest-examples/
-
-src/routes/test/**
