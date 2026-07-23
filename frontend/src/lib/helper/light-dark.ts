@@ -9,7 +9,7 @@ const STORAGE_KEY: string = 'TEST_CONF_THEME';
 const CSS_DARK_MODE: string = 'dark-theme';
 const CSS_LIGHT_MODE: string = 'light-theme';
 const CSS_TRANSITION_CLASS: string = 'theme-transition';
-const CSS_TRANSITION_TIME: number = 500;
+const CSS_TRANSITION_TIME_MILLISECONDS: number = 500;
 const PREFERRED_THEME_QUERY: string = '(prefers-color-scheme: dark)';
 
 let css_transition_timer: number | undefined;
@@ -76,7 +76,7 @@ function apply_transition(): void {
 	css_transition_timer = window.setTimeout(() => {
 		root.classList.remove(CSS_TRANSITION_CLASS);
 		css_transition_timer = undefined;
-	}, CSS_TRANSITION_TIME);
+	}, CSS_TRANSITION_TIME_MILLISECONDS);
 }
 
 export function init_theme(): void {
@@ -84,15 +84,15 @@ export function init_theme(): void {
 		return;
 	}
 
-	initialized = true;
 	apply_theme(get_theme());
-
 	window.matchMedia(PREFERRED_THEME_QUERY).addEventListener('change', () => {
 		if (get_theme() === Theme.System) {
 			apply_theme(Theme.System);
 			apply_transition();
 		}
 	});
+
+	initialized = true;
 }
 
 export function get_theme(): Theme {
