@@ -12,15 +12,17 @@
 	let is_open: boolean = $state(false);
 
 	onMount(() => {
-		set(get_theme());
+		current_theme = get_theme();
 	});
 
 	function get_icon_from_theme(theme: Theme): string {
 		switch (theme) {
 			case Theme.Light:
 				return LIGHT_ICON;
+
 			case Theme.Dark:
 				return DARK_ICON;
+
 			case Theme.System:
 			default:
 				return SYSTEM_ICON;
@@ -30,26 +32,34 @@
 	function select(theme: Theme): void {
 		set_theme(theme);
 		is_open = false;
-		set(theme);
-	}
-
-	function set(theme: Theme): void {
 		current_theme = theme;
 	}
 </script>
 
 <details bind:open={is_open}>
-	<summary aria-label="Theme">{get_icon_from_theme(current_theme)}</summary>
+	<summary aria-label="Theme selector">{get_icon_from_theme(current_theme)}</summary>
 
 	<div>
-		<button class="normal-font" type="button" onclick={() => select(Theme.System)}
-			>{SYSTEM_ICON} System{current_theme === Theme.System ? ' ✓' : ''}</button
+		<button
+			class:selected={current_theme === Theme.System}
+			class="normal-font"
+			type="button"
+			aria-pressed={current_theme === Theme.System}
+			onclick={() => select(Theme.System)}>{SYSTEM_ICON} System</button
 		>
-		<button class="normal-font" type="button" onclick={() => select(Theme.Light)}
-			>{LIGHT_ICON} Light{current_theme === Theme.Light ? ' ✓' : ''}</button
+		<button
+			class:selected={current_theme === Theme.Light}
+			class="normal-font"
+			type="button"
+			aria-pressed={current_theme === Theme.Light}
+			onclick={() => select(Theme.Light)}>{LIGHT_ICON} Light</button
 		>
-		<button class="normal-font" type="button" onclick={() => select(Theme.Dark)}
-			>{DARK_ICON} Dark{current_theme === Theme.Dark ? ' ✓' : ''}</button
+		<button
+			class:selected={current_theme === Theme.Dark}
+			class="normal-font"
+			type="button"
+			aria-pressed={current_theme === Theme.Dark}
+			onclick={() => select(Theme.Dark)}>{DARK_ICON} Dark</button
 		>
 	</div>
 </details>
@@ -91,13 +101,13 @@
 	div {
 		position: absolute;
 		top: calc(100% + 0.8rem);
-		right: 0;
+		inset-inline-end: 0;
 
 		display: flex;
 		flex-direction: column;
 		gap: 0.4rem;
 
-		min-width: 14rem;
+		min-width: 15rem;
 		padding: 0.6rem;
 
 		border-radius: var(--border-radius);
@@ -107,9 +117,11 @@
 
 		opacity: 0;
 		transform: translateY(-0.5rem);
-		pointer-events: auto;
+		pointer-events: none;
 
-		transition: opacity var(--transition-duration);
+		transition:
+			opacity var(--transition-duration),
+			transform var(--transition-duration);
 	}
 
 	details[open] div {
@@ -132,8 +144,17 @@
 		background: transparent;
 		color: var(--text-color);
 
-		text-align: left;
+		text-align: start;
 		cursor: pointer;
+	}
+
+	button.selected {
+		font-weight: 700;
+	}
+	button.selected::after {
+		content: '●';
+		margin-inline-start: auto;
+		color: var(--gray-color);
 	}
 
 	button:hover,
