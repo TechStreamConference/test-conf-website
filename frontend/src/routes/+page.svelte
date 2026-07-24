@@ -10,3 +10,9 @@
 </script>
 
 <h1>{data.globals.footer_text}</h1>
+
+<style>
+	h1 {
+		color: var(--text-color);
+	}
+</style>
