@@ -1,8 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLAnchorAttributes } from 'svelte/elements';
+
+	import { DEFAULT_LINK_TARGET } from '$lib/helper/link-options';
 	import { LinkTarget } from '$lib/helper/link-options';
 	import { get_rel } from '$lib/helper/link-options';
-	import type { HTMLAnchorAttributes } from 'svelte/elements';
 
 	interface Props extends HTMLAnchorAttributes {
 		children: Snippet;
@@ -11,7 +13,7 @@
 		target?: LinkTarget;
 	}
 
-	const { children, href, aria_label, target = LinkTarget.NewTab, ...rest }: Props = $props();
+	const { children, href, aria_label, target = DEFAULT_LINK_TARGET, ...rest }: Props = $props();
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
