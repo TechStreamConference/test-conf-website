@@ -1,0 +1,55 @@
+@font-face {
+    font-family: 'metropolis';
+    src: local("Metropolis"),
+        local("Metropolis-Black"),
+        url("../font/Metropolis-Black.woff2") format("woff2");
+    font-weight: 900;
+}
+
+@font-face {
+    font-family: 'noto-sans';
+    src: local("Noto Sans"),
+        local("NotoSans"),
+        local("NotoSans-Medium"),
+        url("../font/noto-sans-v39-latin-500.woff2");
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: 'noto-sans';
+    src: local("Noto Sans"),
+        local("NotoSans"),
+        local("NotoSans-Light"),
+        url("../font/noto-sans-v39-latin-300.woff2");
+    font-weight: 300;
+}
+
+.headline-font {
+    letter-spacing: 1px;
+    font-family: metropolis, sans-serif;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-style: normal;
+    color: var(--text-color);
+}
+
+.sub-headline-font {
+    font-family: noto-sans, sans-serif;
+    font-weight: 500;
+    font-style: normal;
+    color: var(--text-color);
+}
+
+:root {
+    --normal-font-family: noto-sans, sans-serif;
+    --normal-font-weight: 300;
+    --normal-font-style: normal;
+    --normal-font-color: var(--text-color);
+}
+
+.normal-font {
+    font-family: var(--normal-font-family), sans-serif;
+    font-weight: var(--normal-font-weight);
+    font-style: var(--normal-font-style);
+    color: var(--normal-font-color);
+}
