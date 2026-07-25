@@ -42,21 +42,18 @@
 	<div>
 		<button
 			class:selected={current_theme === Theme.System}
-			class="normal-font"
 			type="button"
 			aria-pressed={current_theme === Theme.System}
 			onclick={() => select(Theme.System)}>{SYSTEM_ICON} System</button
 		>
 		<button
 			class:selected={current_theme === Theme.Light}
-			class="normal-font"
 			type="button"
 			aria-pressed={current_theme === Theme.Light}
 			onclick={() => select(Theme.Light)}>{LIGHT_ICON} Light</button
 		>
 		<button
 			class:selected={current_theme === Theme.Dark}
-			class="normal-font"
 			type="button"
 			aria-pressed={current_theme === Theme.Dark}
 			onclick={() => select(Theme.Dark)}>{DARK_ICON} Dark</button
