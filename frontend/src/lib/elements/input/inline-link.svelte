@@ -9,14 +9,14 @@
 		href: string;
 		aria_label: string;
 		target?: LinkTarget;
-		external?: boolean | undefined;
+		external?: boolean;
 	}
 
 	const {
 		children,
 		href,
 		aria_label,
-		target = LinkTarget.Self,
+		target = LinkTarget.Blank,
 		external = true,
 		...rest
 	}: Props = $props();
@@ -44,7 +44,5 @@
 	a:focus-visible {
 		color: var(--primary-color-light);
 		text-decoration-color: var(--primary-color-light);
-
-		outline: none;
 	}
 </style>
