@@ -2,11 +2,10 @@
 	interface Props {
 		src: string;
 		alt: string;
-		height?: string;
-		width?: string;
-		classes?: string;
+		height?: string | undefined;
+		width?: string | undefined;
+		classes?: string | undefined;
 	}
-
 	const { src, alt, height, width, classes }: Props = $props();
 </script>
 
