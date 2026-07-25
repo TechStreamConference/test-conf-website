@@ -1,12 +1,12 @@
 <script lang="ts">
+	import type { HTMLImgAttributes } from 'svelte/elements';
 	import Image from '$lib/elements/img/image.svelte';
 
-	interface Props {
+	interface Props extends Omit<HTMLImgAttributes, 'src' | 'alt'> {
 		height?: string | undefined;
 		width?: string | undefined;
-		classes?: string | undefined;
 	}
-	const { height, width, classes }: Props = $props();
+	const { height, width, ...rest }: Props = $props();
 </script>
 
-<Image src="/img/logo_small.png" alt="small Test-Conf logo" {height} {width} {classes} />
+<Image src="/img/logo_small.png" alt="small Test-Conf logo" {height} {width} {...rest} />
