@@ -9,21 +9,13 @@
 		href: string;
 		aria_label: string;
 		target?: LinkTarget;
-		external?: boolean;
 	}
 
-	const {
-		children,
-		href,
-		aria_label,
-		target = LinkTarget.Self,
-		external = true,
-		...rest
-	}: Props = $props();
+	const { children, href, aria_label, target = LinkTarget.NewTab, ...rest }: Props = $props();
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-<a {href} {target} aria-label={aria_label} rel={external ? get_rel(target) : undefined} {...rest}>
+<a {href} {target} aria-label={aria_label} rel={get_rel(target)} {...rest}>
 	{@render children()}
 </a>
 

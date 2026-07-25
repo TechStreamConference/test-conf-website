@@ -3,18 +3,15 @@
 const NO_REFERRER: string = 'noopener noreferrer';
 
 export enum LinkTarget {
-	Self = '_self', // Open in the current tab (default).
-	Blank = '_blank', // Open in a new tab/window.
+	SameTab = '_self', // Open in the current tab (default).
+	NewTab = '_blank', // Open in a new tab/window.
 	Parent = '_parent', // Open in the parent frame (rarely used).
 	Top = '_top' // Open in the top-level frame (rarely used).
 }
 
 export function get_rel(target: LinkTarget): string | undefined {
-	switch (target) {
-		case LinkTarget.Blank:
-			return NO_REFERRER;
-
-		default:
-			return undefined;
+	if (target === LinkTarget.NewTab) {
+		return NO_REFERRER;
 	}
+	return undefined;
 }
