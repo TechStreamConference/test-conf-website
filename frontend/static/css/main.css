@@ -40,11 +40,8 @@
 
     --tag-background-color-blue: light-dark(blue, #0066ff);
     --tag-text-color-blue: light-dark(white, white);
-
     --tag-background-color-blue-light: light-dark(#0066ff, #00aeff);
     --tag-text-color-blue-light: light-dark(white, black);
-
-
 }
 
 :root.light-theme {

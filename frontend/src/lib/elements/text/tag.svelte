@@ -11,7 +11,7 @@
 	}
 
 	const { children, tag_color, ...rest }: Props = $props();
-	// it is okay, that this is set only once since light dark switch is workign via CSS
+	// it is okay, that this is set only once since light dark switch is working via CSS
 	// svelte-ignore state_referenced_locally
 	const theme_color: ThemeColor = get_theme_color(tag_color);
 </script>
@@ -24,8 +24,13 @@
 	p {
 		font-size: var(--paragraph-font-size);
 		display: block;
-		padding: 0.5rem 0.25rem;
-		align-self: flex-start;
+		padding: 0.25rem;
 		border-radius: var(--border-radius);
+	}
+
+	@media (min-width: 120rem) {
+		p {
+			padding: 0.25rem 0.5rem;
+		}
 	}
 </style>

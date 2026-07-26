@@ -14,7 +14,8 @@ const config: Config = {
 		alias: {
 			$gen: 'src/generated',
 			$bff: 'src/bff',
-			$lib: 'src/lib'
+			$lib: 'src/lib',
+			$src: 'src',
 		}
 	}
 };
