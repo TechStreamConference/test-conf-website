@@ -1,6 +1,12 @@
+/*
+ * Mobile:    0
+ * Tablet:    48rem
+ * Desktop:   80rem
+ * Desktop 2: 120rem
+ * Desktop 3: 180rem
+ */
+
 :root {
-    /*horizontal-break-1: 1280px;*/
-    /*horizontal-break-2: 600px;*/
     color-scheme: light dark;
 
     --border-radius: 5px;
@@ -60,7 +66,6 @@
 }
 
 html {
-    font-size: 62.5%;
     scroll-behavior: smooth;
 }
 

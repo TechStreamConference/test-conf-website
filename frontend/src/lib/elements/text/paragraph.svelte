@@ -15,6 +15,10 @@
 </p>
 
 <style>
+	p {
+		font-size: var(--paragraph-font-size);
+	}
+
 	.preserve-newlines {
 		white-space: pre-line;
 	}
