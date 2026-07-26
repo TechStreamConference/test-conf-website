@@ -9,7 +9,7 @@
 	const { children, ...rest }: Props = $props();
 </script>
 
-<h4 class="sub-headline-font">
+<h4 class="sub-headline-font" {...rest}>
 	{@render children()}
 </h4>
 

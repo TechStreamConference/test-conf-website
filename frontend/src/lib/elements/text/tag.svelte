@@ -16,7 +16,7 @@
 	const theme_color: ThemeColor = get_theme_color(tag_color);
 </script>
 
-<p style:background-color={theme_color.background} style:color={theme_color.text}>
+<p style:background-color={theme_color.background} style:color={theme_color.text} {...rest}>
 	{@render children()}
 </p>
 

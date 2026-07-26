@@ -13,8 +13,8 @@
 </script>
 
 <div>
-	{#each tags as tag}
-		<Tag tag_color={get_tag_color(tag.color_id)}>{tag.text}</Tag>
+	{#each tags as tag (tag.id)}
+		<Tag tag_color={get_tag_color(tag.color_id)} {...rest}>{tag.text}</Tag>
 	{/each}
 </div>
 
