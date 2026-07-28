@@ -3,10 +3,9 @@
 	import { set_theme } from '$lib/helper/light-dark';
 	import { get_theme } from '$lib/helper/light-dark';
 	import { onMount } from 'svelte';
-
-	const SYSTEM_ICON: string = '💻';
-	const LIGHT_ICON: string = '☀️';
-	const DARK_ICON: string = '🌙';
+	import { Sun } from '@lucide/svelte';
+	import { Moon } from '@lucide/svelte';
+	import { SunMoon } from '@lucide/svelte';
 
 	let current_theme: Theme = $state(Theme.System);
 	let is_open: boolean = $state(false);
@@ -14,20 +13,6 @@
 	onMount(() => {
 		current_theme = get_theme();
 	});
-
-	function get_icon_from_theme(theme: Theme): string {
-		switch (theme) {
-			case Theme.Light:
-				return LIGHT_ICON;
-
-			case Theme.Dark:
-				return DARK_ICON;
-
-			case Theme.System:
-			default:
-				return SYSTEM_ICON;
-		}
-	}
 
 	function select(theme: Theme): void {
 		set_theme(theme);
@@ -37,26 +22,34 @@
 </script>
 
 <details bind:open={is_open}>
-	<summary aria-label="Theme selector">{get_icon_from_theme(current_theme)}</summary>
+	<summary aria-label="Theme selector">
+		{#if current_theme === Theme.Dark}
+			<Moon />
+		{:else if current_theme === Theme.Light}
+			<Sun />
+		{:else}
+			<SunMoon />
+		{/if}
+	</summary>
 
 	<div>
 		<button
 			class:selected={current_theme === Theme.System}
 			type="button"
 			aria-pressed={current_theme === Theme.System}
-			onclick={() => select(Theme.System)}>{SYSTEM_ICON} System</button
+			onclick={() => select(Theme.System)}><SunMoon /> System</button
 		>
 		<button
 			class:selected={current_theme === Theme.Light}
 			type="button"
 			aria-pressed={current_theme === Theme.Light}
-			onclick={() => select(Theme.Light)}>{LIGHT_ICON} Light</button
+			onclick={() => select(Theme.Light)}><Sun /> Light</button
 		>
 		<button
 			class:selected={current_theme === Theme.Dark}
 			type="button"
 			aria-pressed={current_theme === Theme.Dark}
-			onclick={() => select(Theme.Dark)}>{DARK_ICON} Dark</button
+			onclick={() => select(Theme.Dark)}><Moon /> Dark</button
 		>
 	</div>
 </details>
@@ -93,6 +86,7 @@
 	summary:hover,
 	summary:focus-visible {
 		background-color: var(--primary-color-light);
+		color: var(--white-color);
 	}
 
 	div {
@@ -109,7 +103,6 @@
 
 		border-radius: var(--border-radius);
 
-		background-color: var(--background-color);
 		box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.25);
 
 		opacity: 0;
