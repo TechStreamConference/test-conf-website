@@ -6,8 +6,9 @@
 	import { Sun } from '@lucide/svelte';
 	import { Moon } from '@lucide/svelte';
 	import { SunMoon } from '@lucide/svelte';
+	import { Hourglass } from '@lucide/svelte';
 
-	let current_theme: Theme = $state(Theme.System);
+	let current_theme: Theme | undefined = $state(undefined);
 	let is_open: boolean = $state(false);
 
 	onMount(() => {
@@ -27,8 +28,10 @@
 			<Moon />
 		{:else if current_theme === Theme.Light}
 			<Sun />
-		{:else}
+		{:else if current_theme === Theme.System}
 			<SunMoon />
+		{:else}
+			<Hourglass />
 		{/if}
 	</summary>
 
