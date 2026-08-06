@@ -2,7 +2,7 @@
     font-family: 'metropolis';
     src: local("Metropolis"),
         local("Metropolis-Black"),
-        url("../font/Metropolis-Black.woff2") format("woff2");
+        url("../font/metropolis-black.woff2") format("woff2");
     font-weight: 900;
 }
 
