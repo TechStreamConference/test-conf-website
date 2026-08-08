@@ -82,6 +82,18 @@ frontend-fix:
 frontend-test:
     pnpm --dir {{ frontend_dir }} run test
 
+# Runs the end-to-end test suite against the locally running application.
+e2e-test:
+    PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} run test:e2e
+
+# Opens the Playwright UI for the end-to-end test suite.
+e2e-ui:
+    PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} exec playwright test --ui
+
+# Installs the Playwright browsers and their system dependencies.
+e2e-init:
+    PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} exec playwright install --with-deps
+
 # Runs frontend application
 frontend-run:
     pnpm --dir {{ frontend_dir }} dev
