@@ -1,10 +1,14 @@
 import asyncio
+from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager
 from enum import StrEnum
 from enum import auto
 from typing import Final
+from typing import Optional
 from typing import final
 
 import typer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import ASYNC_SESSION_FACTORY
 from backend.seed.dev import seed_dev
@@ -39,8 +43,10 @@ async def _run(
     environment: Environment,
     num_users: int,
     seed: int,
+    session_factory_override: Optional[Callable[[], AbstractAsyncContextManager[AsyncSession]]] = None,
 ) -> None:
-    async with ASYNC_SESSION_FACTORY() as session:
+    factory: Final = ASYNC_SESSION_FACTORY if session_factory_override is None else session_factory_override
+    async with factory() as session:
         match environment:
             case Environment.DEV:
                 await seed_dev(session, num_users=num_users, seed=seed)

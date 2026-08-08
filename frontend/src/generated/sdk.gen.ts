@@ -4,7 +4,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BackendHealthCheckData, BackendHealthCheckResponses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses } from './types.gen';
+import type { BackendHealthCheckData, BackendHealthCheckResponses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,6 +19,13 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * Get event by year and sequence number
+ *
+ * Retrieve a specific event based on the provided year and sequence number.
+ */
+export const getEventByYearAndSequenceNumberV1 = <ThrowOnError extends boolean = false>(options: Options<GetEventByYearAndSequenceNumberV1Data, ThrowOnError>): RequestResult<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError> => (options.client ?? client).get<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/event/{year}/{sequence_number}', ...options });
 
 /**
  * Get global configuration values
