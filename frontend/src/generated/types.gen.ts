@@ -7,6 +7,118 @@ export type ClientOptions = {
 };
 
 /**
+ * EventNotFoundResponseV1
+ */
+export type EventNotFoundResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Event not found in the database.';
+};
+
+/**
+ * EventResponseV1
+ */
+export type EventResponseV1 = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Available Languages
+     */
+    available_languages: Array<string>;
+    /**
+     * Language Tag
+     */
+    language_tag: string;
+    /**
+     * Is Language Fallback
+     */
+    is_language_fallback: boolean;
+    /**
+     * Title
+     */
+    title: string;
+    /**
+     * Subtitle
+     */
+    subtitle: string;
+    /**
+     * Presskit Url
+     */
+    presskit_url: string | null;
+    /**
+     * Trailer Url
+     */
+    trailer_url: string | null;
+    /**
+     * Trailer Poster Url
+     */
+    trailer_poster_url: string | null;
+    /**
+     * Trailer Subtitles Url
+     */
+    trailer_subtitles_url: string | null;
+    /**
+     * Description Headline
+     */
+    description_headline: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+    /**
+     * Discord Url
+     */
+    discord_url: string | null;
+    /**
+     * Twitch Url
+     */
+    twitch_url: string | null;
+    /**
+     * Youtube Channel Url
+     */
+    youtube_channel_url: string | null;
+    /**
+     * Call For Papers Start
+     */
+    call_for_papers_start: string | null;
+    /**
+     * Call For Papers End
+     */
+    call_for_papers_end: string | null;
+    /**
+     * Speakers Visible From
+     */
+    speakers_visible_from: string | null;
+    /**
+     * Sponsors Visible From
+     */
+    sponsors_visible_from: string | null;
+    /**
+     * Media Partners Visible From
+     */
+    media_partners_visible_from: string | null;
+    /**
+     * Team Members Visible From
+     */
+    team_members_visible_from: string | null;
+    /**
+     * Schedule Visible From
+     */
+    schedule_visible_from: string | null;
+};
+
+/**
  * GlobalsResponseV1
  */
 export type GlobalsResponseV1 = {
@@ -14,6 +126,16 @@ export type GlobalsResponseV1 = {
      * Footer Text
      */
     footer_text: string;
+};
+
+/**
+ * HTTPValidationError
+ */
+export type HttpValidationError = {
+    /**
+     * Detail
+     */
+    detail?: Array<ValidationError>;
 };
 
 /**
@@ -35,6 +157,90 @@ export type ImprintResponseV1 = {
      */
     content: string;
 };
+
+/**
+ * InvalidSequenceNumberResponseV1
+ */
+export type InvalidSequenceNumberResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Invalid sequence number.';
+};
+
+/**
+ * ValidationError
+ */
+export type ValidationError = {
+    /**
+     * Location
+     */
+    loc: Array<string | number>;
+    /**
+     * Message
+     */
+    msg: string;
+    /**
+     * Error Type
+     */
+    type: string;
+    /**
+     * Input
+     */
+    input?: unknown;
+    /**
+     * Context
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
+};
+
+export type GetEventByYearAndSequenceNumberV1Data = {
+    body?: never;
+    path: {
+        /**
+         * Language Tag
+         */
+        language_tag: string;
+        /**
+         * Year
+         */
+        year: number;
+        /**
+         * Sequence Number
+         */
+        sequence_number: number | 'latest';
+    };
+    query?: never;
+    url: '/v1/{language_tag}/event/{year}/{sequence_number}';
+};
+
+export type GetEventByYearAndSequenceNumberV1Errors = {
+    /**
+     * Bad Request
+     */
+    400: InvalidSequenceNumberResponseV1;
+    /**
+     * Not Found
+     */
+    404: EventNotFoundResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetEventByYearAndSequenceNumberV1Error = GetEventByYearAndSequenceNumberV1Errors[keyof GetEventByYearAndSequenceNumberV1Errors];
+
+export type GetEventByYearAndSequenceNumberV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: EventResponseV1;
+};
+
+export type GetEventByYearAndSequenceNumberV1Response = GetEventByYearAndSequenceNumberV1Responses[keyof GetEventByYearAndSequenceNumberV1Responses];
 
 export type GetGlobalsV1Data = {
     body?: never;
