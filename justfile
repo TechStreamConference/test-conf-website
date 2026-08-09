@@ -90,6 +90,10 @@ frontend-run:
 storybook:
     pnpm --dir {{ frontend_dir }} run storybook
 
+# Builds Storybook to verify that all component stories compile successfully.
+frontend-storybook-build:
+    pnpm --dir {{ frontend_dir }} run build-storybook
+
 # Initializes the frontend workspace
 frontend-init:
     pnpm --dir {{ frontend_dir }} install
