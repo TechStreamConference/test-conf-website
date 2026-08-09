@@ -93,6 +93,7 @@
 	}
 
 	div {
+		background-color: var(--background-color-base);
 		position: absolute;
 		top: calc(100% + 0.8rem);
 		inset-inline-end: 0;
