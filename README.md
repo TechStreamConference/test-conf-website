@@ -39,6 +39,16 @@ Run `just setup` from the relevant directory:
 just setup
 ```
 
+### Storybook
+
+Start the local component playground from the repository root:
+
+```sh
+just storybook
+```
+
+Storybook is then available at [http://localhost:6006](http://localhost:6006).
+
 ---
 
 ### Optional: Automatic shell activation with direnv

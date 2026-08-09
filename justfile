@@ -86,6 +86,10 @@ frontend-test:
 frontend-run:
     pnpm --dir {{ frontend_dir }} dev
 
+# Starts Storybook locally for developing UI components in isolation.
+storybook:
+    pnpm --dir {{ frontend_dir }} run storybook
+
 # Initializes the frontend workspace
 frontend-init:
     pnpm --dir {{ frontend_dir }} install
