@@ -3,10 +3,10 @@
 	import { set_theme } from '$lib/helper/light-dark';
 	import { get_theme } from '$lib/helper/light-dark';
 	import { onMount } from 'svelte';
-	import { Sun } from '@lucide/svelte';
-	import { Moon } from '@lucide/svelte';
-	import { SunMoon } from '@lucide/svelte';
-	import { Hourglass } from '@lucide/svelte';
+	import Sun from '@lucide/svelte/icons/sun';
+	import Moon from '@lucide/svelte/icons/moon';
+	import SunMoon from '@lucide/svelte/icons/sun-moon';
+	import Hourglass from '@lucide/svelte/icons/hourglass';
 
 	let current_theme: Theme | undefined = $state(undefined);
 	let is_open: boolean = $state(false);
