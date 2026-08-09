@@ -1,4 +1,6 @@
+from datetime import UTC
 from datetime import date
+from datetime import datetime
 from typing import Final
 from typing import Literal
 from unittest.mock import AsyncMock
@@ -10,10 +12,16 @@ from fastapi import HTTPException
 from backend.models.responses import EventResponseV1
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
+from backend.routes.v1.events import get_current_event
 from backend.routes.v1.events import get_event_by_year_and_sequence_number
 
 
-def _event(event_id: int, start_date: date) -> Event:
+def _event(
+    event_id: int,
+    start_date: date,
+    *,
+    frontpage_spotlight_date: datetime | None = None,
+) -> Event:
     return Event(
         id=event_id,
         start_date=start_date,
@@ -24,7 +32,7 @@ def _event(event_id: int, start_date: date) -> Event:
         publish_date=None,
         call_for_papers_start=None,
         call_for_papers_end=None,
-        frontpage_spotlight_date=None,
+        frontpage_spotlight_date=frontpage_spotlight_date,
         speakers_visible_from=None,
         sponsors_visible_from=None,
         media_partners_visible_from=None,
@@ -59,6 +67,39 @@ def _session_with_rows(rows: list[Mock]) -> AsyncMock:
     session: Final = AsyncMock()
     session.execute.return_value = Mock(all=Mock(return_value=rows))
     return session
+
+
+@pytest.mark.asyncio
+async def test_current_event_returns_spotlighted_event_and_requested_translation() -> None:
+    event: Final = _event(
+        2,
+        date(2026, 9, 1),
+        frontpage_spotlight_date=datetime(2026, 8, 1, tzinfo=UTC).replace(tzinfo=None),
+    )
+    session: Final = _session_with_rows([
+        _row(event, _translation(2, "de")),
+        _row(event, _translation(2, "en")),
+    ])
+
+    result: Final = await get_current_event(session, "en")
+
+    assert isinstance(result, EventResponseV1)
+    assert result.id == 2
+    assert result.available_languages == ["de", "en"]
+    assert result.language_tag == "en"
+    assert result.is_language_fallback is False
+    session.execute.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_current_event_returns_not_found_when_no_event_is_applicable() -> None:
+    session: Final = _session_with_rows([])
+
+    with pytest.raises(HTTPException) as exc_info:
+        _ = await get_current_event(session, "de")
+
+    assert exc_info.value.status_code == 404
+    assert exc_info.value.detail == "Event not found in the database."
 
 
 @pytest.mark.asyncio

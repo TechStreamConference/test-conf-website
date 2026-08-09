@@ -1,3 +1,5 @@
+from datetime import UTC
+from datetime import datetime
 from typing import Annotated
 from typing import Final
 from typing import Literal
@@ -22,6 +24,49 @@ from backend.models.tables import EventTranslation
 from backend.utils import create_http_exception
 
 ROUTER = APIRouter()
+
+
+@ROUTER.get(
+    "/{language_tag}/event",
+    summary="Get the current event",
+    description="Retrieve the event that is currently featured on the front page.",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_404_NOT_FOUND: {"model": EventNotFoundResponseV1},
+    },
+    operation_id="get current event v1",
+)
+async def get_current_event(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    language_tag: str,
+) -> EventResponseV1:
+    now: Final = datetime.now(UTC).replace(tzinfo=None)
+    current_event_id: Final = (
+        select(Event.id)
+        .where(
+            col(Event.frontpage_spotlight_date).is_not(None),
+            col(Event.frontpage_spotlight_date) <= now,
+        )
+        .order_by(
+            col(Event.frontpage_spotlight_date).desc(),
+            col(Event.start_date).desc(),
+            col(Event.id).desc(),
+        )
+        .limit(1)
+        .scalar_subquery()
+    )
+    statement: Final = (
+        select(Event, EventTranslation)
+        .join(
+            EventTranslation,
+            col(EventTranslation.event_id) == col(Event.id),
+        )
+        .where(col(Event.id) == current_event_id)
+        .order_by(col(EventTranslation.language_tag))
+    )
+    rows: Final = list((await session.execute(statement)).all())
+
+    return _event_response_v1_from_rows(rows, language_tag)
 
 
 @ROUTER.get(

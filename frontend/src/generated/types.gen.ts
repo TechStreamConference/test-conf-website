@@ -196,6 +196,40 @@ export type ValidationError = {
     };
 };
 
+export type GetCurrentEventV1Data = {
+    body?: never;
+    path: {
+        /**
+         * Language Tag
+         */
+        language_tag: string;
+    };
+    query?: never;
+    url: '/v1/{language_tag}/event';
+};
+
+export type GetCurrentEventV1Errors = {
+    /**
+     * Not Found
+     */
+    404: EventNotFoundResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCurrentEventV1Error = GetCurrentEventV1Errors[keyof GetCurrentEventV1Errors];
+
+export type GetCurrentEventV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: EventResponseV1;
+};
+
+export type GetCurrentEventV1Response = GetCurrentEventV1Responses[keyof GetCurrentEventV1Responses];
+
 export type GetEventByYearAndSequenceNumberV1Data = {
     body?: never;
     path: {
