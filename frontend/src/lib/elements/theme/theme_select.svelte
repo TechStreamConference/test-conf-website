@@ -25,13 +25,13 @@
 <details bind:open={is_open}>
 	<summary aria-label="Theme selector">
 		{#if current_theme === Theme.Dark}
-			<Moon />
+			<Moon aria-hidden="true" />
 		{:else if current_theme === Theme.Light}
-			<Sun />
+			<Sun aria-hidden="true" />
 		{:else if current_theme === Theme.System}
-			<SunMoon />
+			<SunMoon aria-hidden="true" />
 		{:else}
-			<Hourglass />
+			<Hourglass aria-hidden="true" />
 		{/if}
 	</summary>
 
@@ -40,19 +40,19 @@
 			class:selected={current_theme === Theme.System}
 			type="button"
 			aria-pressed={current_theme === Theme.System}
-			onclick={() => select(Theme.System)}><SunMoon /> System</button
+			onclick={() => select(Theme.System)}><SunMoon aria-hidden="true" /> System</button
 		>
 		<button
 			class:selected={current_theme === Theme.Light}
 			type="button"
 			aria-pressed={current_theme === Theme.Light}
-			onclick={() => select(Theme.Light)}><Sun /> Light</button
+			onclick={() => select(Theme.Light)}><Sun aria-hidden="true" /> Light</button
 		>
 		<button
 			class:selected={current_theme === Theme.Dark}
 			type="button"
 			aria-pressed={current_theme === Theme.Dark}
-			onclick={() => select(Theme.Dark)}><Moon /> Dark</button
+			onclick={() => select(Theme.Dark)}><Moon aria-hidden="true" /> Dark</button
 		>
 	</div>
 </details>
