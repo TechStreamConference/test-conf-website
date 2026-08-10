@@ -5,16 +5,16 @@
 
 	import Tag from '$lib/elements/text/tag.svelte';
 
-	interface Props extends HTMLAttributes<HTMLParagraphElement> {
-		tags: PlaceholderBackendTagClass[]; // replace that with the actural backend type later
+	interface Props extends HTMLAttributes<HTMLDivElement> {
+		tags: PlaceholderBackendTagClass[]; // replace that with the actual backend type later
 	}
 
 	const { tags, ...rest }: Props = $props();
 </script>
 
-<div>
+<div {...rest}>
 	{#each tags as tag (tag.id)}
-		<Tag tag_color={get_tag_color(tag.color_id)} {...rest}>{tag.text}</Tag>
+		<Tag tag_color={get_tag_color(tag.color_id)}>{tag.text}</Tag>
 	{/each}
 </div>
 
