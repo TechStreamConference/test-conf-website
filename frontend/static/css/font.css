@@ -47,6 +47,7 @@
     --normal-font-color: var(--text-color);
 }
 
+html,
 .normal-font {
     font-family: var(--normal-font-family), sans-serif;
     font-weight: var(--normal-font-weight);
