@@ -11,7 +11,7 @@
     src: local("Noto Sans"),
         local("NotoSans"),
         local("NotoSans-Medium"),
-        url("../font/noto-sans-v39-latin-500.woff2");
+        url("/font/noto-sans-v39-latin-500.woff2") format("woff2");
     font-weight: 500;
 }
 
@@ -20,7 +20,7 @@
     src: local("Noto Sans"),
         local("NotoSans"),
         local("NotoSans-Light"),
-        url("../font/noto-sans-v39-latin-300.woff2");
+        url("/font/noto-sans-v39-latin-300.woff2") format("woff2");
     font-weight: 300;
 }
 
