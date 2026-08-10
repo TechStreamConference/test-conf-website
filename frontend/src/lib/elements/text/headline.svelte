@@ -7,10 +7,10 @@
 		render_line?: boolean;
 	}
 
-	const { children, render_line = false, ...rest }: Props = $props();
+	const { children, render_line = false, class: classProp, ...rest }: Props = $props();
 </script>
 
-<h2 class="headline-font" class:render-line={render_line} {...rest}>
+<h2 class={['headline-font', classProp]} class:render-line={render_line} {...rest}>
 	{@render children()}
 </h2>
 

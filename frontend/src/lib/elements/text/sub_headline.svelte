@@ -6,10 +6,10 @@
 		children: Snippet;
 	}
 
-	const { children, ...rest }: Props = $props();
+	const { children, class: className, ...rest }: Props = $props();
 </script>
 
-<h4 class="sub-headline-font" {...rest}>
+<h4 class={['sub-headline-font', className]} {...rest}>
 	{@render children()}
 </h4>
 
