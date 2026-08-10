@@ -11,9 +11,7 @@
 	}
 
 	const { children, tag_color, ...rest }: Props = $props();
-	// it is okay, that this is set only once since light dark switch is working via CSS
-	// svelte-ignore state_referenced_locally
-	const theme_color: ThemeColor = get_theme_color(tag_color);
+	const theme_color: ThemeColor = $derived(get_theme_color(tag_color));
 </script>
 
 <p style:background-color={theme_color.background} style:color={theme_color.text} {...rest}>
