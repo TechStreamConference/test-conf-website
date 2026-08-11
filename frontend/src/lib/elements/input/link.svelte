@@ -34,7 +34,7 @@
 		border: none;
 		border-radius: var(--border-radius);
 
-		background-color: var(--primary-color-light);
+		background-color: var(--primary-color-400);
 		color: var(--white-color);
 
 		text-decoration: none;
@@ -53,7 +53,7 @@
 		transform: translateY(-0.2rem);
 		box-shadow: 0 0.8rem 1.8rem rgba(0, 0, 0, 0.28);
 
-		background-color: var(--primary-color-dark);
+		background-color: var(--primary-color-600);
 		outline: none;
 	}
 

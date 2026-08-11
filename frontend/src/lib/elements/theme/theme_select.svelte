@@ -88,12 +88,12 @@
 
 	summary:hover,
 	summary:focus-visible {
-		background-color: var(--primary-color-light);
+		background-color: var(--primary-color-400);
 		color: var(--white-color);
 	}
 
 	div {
-		background-color: var(--background-color-base);
+		background-color: var(--background-color-500);
 		position: absolute;
 		top: calc(100% + 0.8rem);
 		inset-inline-end: 0;
@@ -148,12 +148,12 @@
 	button.selected::after {
 		content: '●';
 		margin-inline-start: auto;
-		color: var(--gray-color);
+		color: var(--gray-color-500);
 	}
 
 	button:hover,
 	button:focus-visible {
-		background-color: var(--primary-color-light);
+		background-color: var(--primary-color-400);
 		color: var(--white-color);
 		outline: none;
 	}
