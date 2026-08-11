@@ -10,9 +10,14 @@ export enum LinkTarget {
 const NO_REFERRER: string = 'noopener noreferrer';
 export const DEFAULT_LINK_TARGET: LinkTarget = LinkTarget.NewTab;
 
-export function get_rel(target: LinkTarget): string | undefined {
+export function get_rel(target: LinkTarget | undefined): string {
+	if (target === undefined) {
+		return '';
+	}
+
 	if (target === LinkTarget.NewTab) {
 		return NO_REFERRER;
 	}
-	return undefined;
+
+	return '';
 }

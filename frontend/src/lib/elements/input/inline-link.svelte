@@ -13,11 +13,11 @@
 		target?: LinkTarget;
 	}
 
-	const { children, href, aria_label, target = DEFAULT_LINK_TARGET, ...rest }: Props = $props();
+	const { children, href, aria_label, target = DEFAULT_LINK_TARGET, rel: rel_name, ...rest }: Props = $props();
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-<a {href} {target} aria-label={aria_label} rel={get_rel(target)} {...rest}>
+<a {href} {target} aria-label={aria_label} rel={[rel_name, get_rel(target)]} {...rest}>
 	{@render children()}
 </a>
 
