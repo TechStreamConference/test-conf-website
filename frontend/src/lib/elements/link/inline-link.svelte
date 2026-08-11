@@ -6,18 +6,25 @@
 	import { LinkTarget } from '$lib/helper/link-options';
 	import { get_rel } from '$lib/helper/link-options';
 
-	interface Props extends HTMLAnchorAttributes {
+	interface Props extends Omit<HTMLAnchorAttributes, 'href' | 'aria-label' | 'target'> {
 		children: Snippet;
 		href: string;
 		aria_label: string;
 		target?: LinkTarget;
 	}
 
-	const { children, href, aria_label, target = DEFAULT_LINK_TARGET, rel: rel_name, ...rest }: Props = $props();
+	const {
+		children,
+		href,
+		aria_label,
+		target = DEFAULT_LINK_TARGET,
+		rel: rel_name,
+		...rest
+	}: Props = $props();
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-<a {href} {target} aria-label={aria_label} rel={[rel_name, get_rel(target)]} {...rest}>
+<a {href} {target} aria-label={aria_label} rel={get_rel(target, rel_name)} {...rest}>
 	{@render children()}
 </a>
 
