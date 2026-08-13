@@ -44,6 +44,6 @@
 	a:hover,
 	a:focus-visible {
 		color: var(--line-color);
-		text-decoration-color: var(----line-color);
+		text-decoration-color: var(--line-color);
 	}
 </style>
