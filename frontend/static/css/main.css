@@ -1,6 +1,12 @@
+/*
+ * Mobile:    0
+ * Tablet:    48rem
+ * Desktop:   80rem
+ * Desktop 2: 120rem
+ * Desktop 3: 180rem
+ */
+
 :root {
-    /*horizontal-break-1: 1280px;*/
-    /*horizontal-break-2: 600px;*/
     color-scheme: light dark;
 
     --border-radius: 5px;
@@ -31,6 +37,11 @@
     --line-color: light-dark(var(--primary-color-light), var(--secondary-color));
     --icon-color: light-dark(var(--secondary-color), var(--primary-color-light));
     --outline-hover-color: light-dark(var(--secondary-color), white);
+
+    --tag-background-color-blue: light-dark(blue, #0066ff);
+    --tag-text-color-blue: light-dark(white, white);
+    --tag-background-color-blue-light: light-dark(#0066ff, #00aeff);
+    --tag-text-color-blue-light: light-dark(white, black);
 }
 
 :root.light-theme {
@@ -60,7 +71,6 @@
 }
 
 html {
-    font-size: 62.5%;
     scroll-behavior: smooth;
 }
 
