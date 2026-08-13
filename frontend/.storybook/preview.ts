@@ -1,7 +1,6 @@
 import type { Preview } from '@storybook/sveltekit';
 
 import '../static/css/font.css';
-import '../static/css/spacings.css';
 import '../static/css/main.css';
 
 const preview: Preview = {
