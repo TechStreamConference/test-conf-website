@@ -33,7 +33,7 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--half-gap);
+		gap: 0.5rem;
 
 		min-height: 4.4rem;
 		padding: var(--full-padding) var(--2x-padding);
