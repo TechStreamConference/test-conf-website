@@ -2,7 +2,7 @@
     font-family: 'metropolis';
     src: local("Metropolis"),
         local("Metropolis-Black"),
-        url("/font/metropolis-black.woff2") format("woff2");
+        url("../font/metropolis-black.woff2") format("woff2");
     font-weight: 900;
 }
 
@@ -40,7 +40,8 @@
     color: var(--text-color);
 }
 
-html {
+html,
+.normal-font {
     font-family: noto-sans, sans-serif;
     font-weight: 300;
     font-style: normal;

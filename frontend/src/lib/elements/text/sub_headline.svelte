@@ -1,0 +1,21 @@
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
+
+	interface Props extends HTMLAttributes<HTMLParagraphElement> {
+		children: Snippet;
+	}
+
+	const { children, class: className, ...rest }: Props = $props();
+</script>
+
+<h4 class={['sub-headline-font', className]} {...rest}>
+	{@render children()}
+</h4>
+
+<style>
+	h4 {
+		font-size: var(--subheadline-font-size);
+		align-self: center;
+	}
+</style>

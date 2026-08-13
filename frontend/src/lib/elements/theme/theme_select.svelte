@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Theme } from '$lib/helper/light-dark';
-	import { set_theme } from '$lib/helper/light-dark';
-	import { get_theme } from '$lib/helper/light-dark';
+	import { Theme } from '$lib/helper/light_dark';
+	import { set_theme } from '$lib/helper/light_dark';
+	import { get_theme } from '$lib/helper/light_dark';
 	import { onMount } from 'svelte';
 	import Sun from '@lucide/svelte/icons/sun';
 	import Moon from '@lucide/svelte/icons/moon';
