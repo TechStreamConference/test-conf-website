@@ -1,15 +1,21 @@
+/*
+ * Mobile:    0
+ * Tablet:    48rem
+ * Desktop:   80rem
+ * Desktop 2: 120rem
+ * Desktop 3: 180rem
+ */
+
 :root {
-    /*horizontal-break-1: 1280px;*/
-    /*horizontal-break-2: 600px;*/
     color-scheme: light dark;
 
     --border-radius: 5px;
     --transition-duration: 0.3s;
     --transition-duration-fast: 0.1s;
 
-    --primary-color-light: light-dark(#674c8a, #563e75);
-    --primary-color-mid: light-dark(#5e4680, #5e4680);
-    --primary-color-dark: light-dark(#563e75, #674c8a);
+    --primary-color-400: light-dark(#674c8a, #563e75);
+    --primary-color-500: light-dark(#5e4680, #5e4680);
+    --primary-color-600: light-dark(#563e75, #674c8a);
 
     --secondary-color: #ccff57;
 
@@ -18,19 +24,24 @@
 
     --white-color: white;
     --black-color: black;
-    --gray-color: gray;
-    --gray-color-light: rgb(190, 190, 190);
+    --gray-color-400: rgb(190, 190, 190);
+    --gray-color-500: gray;
 
-    --background-color-base: light-dark(white, rgb(40, 40, 40));
-    --background-color-special: light-dark(rgb(237, 237, 237), rgb(60, 60, 60));
+    --background-color-400: light-dark(rgb(237, 237, 237), rgb(60, 60, 60));
+    --background-color-500: light-dark(white, rgb(40, 40, 40));
     --background-color-transparent: light-dark(rgba(102, 102, 102, 0.9), rgba(40, 40, 40, 0.85));
 
     --text-color: light-dark(black, white);
     --text-color-gray: light-dark(#333333, #bbbbbb);
 
-    --line-color: light-dark(var(--primary-color-light), var(--secondary-color));
-    --icon-color: light-dark(var(--secondary-color), var(--primary-color-light));
+    --line-color: light-dark(var(--primary-color-400), var(--secondary-color));
+    --icon-color: light-dark(var(--secondary-color), var(--primary-color-400));
     --outline-hover-color: light-dark(var(--secondary-color), white);
+
+    --tag-background-color-blue: light-dark(blue, #0066ff);
+    --tag-text-color-blue: light-dark(white, white);
+    --tag-background-color-blue-light: light-dark(#0066ff, #00aeff);
+    --tag-text-color-blue-light: light-dark(white, black);
 }
 
 :root.light-theme {
@@ -60,11 +71,10 @@
 }
 
 html {
-    font-size: 62.5%;
     scroll-behavior: smooth;
 }
 
 html,
 body {
-    background-color: var(--background-color-base);
+    background-color: var(--background-color-500);
 }

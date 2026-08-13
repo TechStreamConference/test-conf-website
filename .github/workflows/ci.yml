@@ -9,6 +9,16 @@ jobs:
     name: ${{ matrix.project-part }}-${{ matrix.command }}
     runs-on: ubuntu-latest
 
+    env:
+      ENVIRONMENT: dev
+      BACKEND_ROOT_URI: http://localhost/api
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_NAME: postgres
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_ECHO: "false"
+
     strategy:
       fail-fast: false
       matrix:
@@ -28,8 +38,33 @@ jobs:
       - name: Install ${{ matrix.project-part }} project dependencies
         run: nix develop --command just init-ci
 
+      - name: Start backend integration-test stack
+        if: matrix.project-part == 'backend' && matrix.command == 'test'
+        run: |
+          cp .env.example .env
+          nix develop --command just up
+          nix develop --command just backend-migrate
+          nix develop --command just backend-seed-dev
+          nohup nix develop --command \
+            uv run --directory backend uvicorn backend.main:app --host 0.0.0.0 --port 8080 \
+            > "$RUNNER_TEMP/backend.log" 2>&1 &
+
+          for _ in {1..30}; do
+            if curl --fail --silent http://localhost/api/openapi.json > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat "$RUNNER_TEMP/backend.log"
+          exit 1
+
       - name: Run ${{ matrix.project-part }} ${{ matrix.command }}
         run: nix develop --command just ${{ matrix.project-part }}-${{ matrix.command }}
+
+      - name: Stop backend integration-test stack
+        if: always() && matrix.project-part == 'backend' && matrix.command == 'test'
+        run: docker compose down --volumes
 
   storybook:
     name: frontend-storybook-build

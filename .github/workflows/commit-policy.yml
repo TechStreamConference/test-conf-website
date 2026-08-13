@@ -1,0 +1,36 @@
+name: Commit policy
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  no-fixup-commits:
+    name: No fixup commits
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Reject fixup commits
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          bad_commits="$(
+            git log \
+              --format='%h %s' \
+              "$BASE_SHA..$HEAD_SHA" |
+            grep -E '^[0-9a-f]+ (fixup|squash|amend)! ' || true
+          )"
+
+          if [[ -n "$bad_commits" ]]; then
+            echo "Autosquash commits must be squashed before merging:"
+            echo "$bad_commits"
+            exit 1
+          fi
