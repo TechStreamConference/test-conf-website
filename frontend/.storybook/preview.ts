@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/sveltekit';
 
+import '../static/css/breakpoints.css';
 import '../static/css/font.css';
 import '../static/css/main.css';
 
