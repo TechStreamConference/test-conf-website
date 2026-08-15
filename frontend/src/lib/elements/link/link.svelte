@@ -2,9 +2,9 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLAnchorAttributes } from 'svelte/elements';
 
-	import { DEFAULT_LINK_TARGET } from '$lib/helper/link-options';
-	import { LinkTarget } from '$lib/helper/link-options';
-	import { get_rel } from '$lib/helper/link-options';
+	import { DEFAULT_LINK_TARGET } from '$lib/helper/link_options';
+	import { LinkTarget } from '$lib/helper/link_options';
+	import { get_rel } from '$lib/helper/link_options';
 
 	interface Props extends Omit<HTMLAnchorAttributes, 'href' | 'aria-label' | 'target'> {
 		children: Snippet;
