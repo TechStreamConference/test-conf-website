@@ -1,0 +1,12 @@
+{
+	"name": "@test-conf/logging-schema",
+	"private": true,
+	"version": "0.0.1",
+	"dependencies": {
+		"@typespec/compiler": "^0.67.0",
+		"@typespec/json-schema": "^0.67.0"
+	},
+	"scripts": {
+		"compile": "tsp compile ."
+	}
+}

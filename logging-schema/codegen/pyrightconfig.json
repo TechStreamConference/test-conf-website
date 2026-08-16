@@ -1,0 +1,4 @@
+{
+  "extends": "../../backend/pyrightconfig.json",
+  "include": ["src"]
+}

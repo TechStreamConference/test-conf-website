@@ -19,6 +19,9 @@
 		"build-storybook": "storybook build",
 		"test:e2e": "playwright test"
 	},
+	"dependencies": {
+		"zod": "^3.24.0"
+	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
 		"@hey-api/openapi-ts": "^0.99.0",

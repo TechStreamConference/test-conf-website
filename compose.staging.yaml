@@ -4,3 +4,4 @@ include:
 - ops/postgres.compose.yaml
 - ops/backend.compose.yaml
 - ops/frontend.compose.yaml
+- ops/alloy.staging.compose.yaml
