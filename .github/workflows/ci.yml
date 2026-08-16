@@ -65,3 +65,19 @@ jobs:
       - name: Stop backend integration-test stack
         if: always() && matrix.project-part == 'backend' && matrix.command == 'test'
         run: docker compose down --volumes
+
+  storybook:
+    name: frontend-storybook-build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Install frontend project dependencies
+        run: nix develop --command pnpm --dir frontend install --frozen-lockfile
+
+      - name: Build Storybook
+        run: nix develop --command just frontend-storybook-build
