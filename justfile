@@ -129,7 +129,7 @@ e2e-init:
 
 # Runs the frontend application with structured log output directed to .logs/frontend.jsonl.
 frontend-run:
-    LOG_FILE=.logs/frontend.jsonl pnpm --dir {{ frontend_dir }} dev
+    LOG_FILE={{ justfile_directory() }}/.logs/frontend.jsonl pnpm --dir {{ frontend_dir }} dev
 
 # Builds and starts Storybook locally for developing UI components in isolation.
 storybook: frontend-storybook-build
@@ -189,7 +189,7 @@ codegen-test:
 
 # Runs the backend application using Uvicorn, with structured log output directed to .logs/backend.jsonl.
 backend-run:
-    LOG_FILE=.logs/backend.jsonl uv run --directory {{ backend_dir }} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
+    LOG_FILE={{ justfile_directory() }}/.logs/backend.jsonl uv run --directory {{ backend_dir }} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
 
 # Initializes the backend workspace
 backend-init:
