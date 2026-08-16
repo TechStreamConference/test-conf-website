@@ -11,6 +11,7 @@ import typer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import ASYNC_SESSION_FACTORY
+from backend.seed.dev import seed_dev
 from backend.seed.prod import seed_prod
 
 app: Final = typer.Typer(no_args_is_help=True)
@@ -48,9 +49,6 @@ async def _run(
     async with factory() as session:
         match environment:
             case Environment.DEV:
-                # local import: `faker` is a dev-only dependency, not installed in production
-                from backend.seed.dev import seed_dev
-
                 await seed_dev(session, num_users=num_users, seed=seed)
             case Environment.PROD:
                 await seed_prod(session)
