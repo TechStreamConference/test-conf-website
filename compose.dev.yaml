@@ -1,3 +1,4 @@
 include:
 - ops/nginx.dev.compose.yaml
 - ops/postgres.compose.yaml
+- ops/observability.dev.compose.yaml

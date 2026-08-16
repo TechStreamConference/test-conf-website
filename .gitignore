@@ -1,3 +1,6 @@
 **/.env
 .direnv/
 **/.idea/
+# Local log spool files written by native backend/frontend processes.
+# These are ephemeral transport files — Loki is the retained log store.
+.logs/
