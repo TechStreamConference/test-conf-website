@@ -8,9 +8,13 @@ authors = [
 ]
 requires-python = ">=3.13"
 
+# `faker` is deliberately not listed as dev dependency because we need it
+# for deploying in the staging environment. However, both staging and production
+# shall use the same image. Therefore, we include it in both.
 dependencies = [
     "alembic>=1.19.1",
     "asyncpg>=0.31.0",
+    "faker>=40.36.0",
     "fastapi>=0.141.1",
     "langcodes>=3.5.1",
     "psycopg[binary]>=3.3.4",
@@ -24,7 +28,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "faker>=40.36.0",
     "httpx>=0.28.1",
     "poethepoet>=0.48.0",
     "pyright[nodejs]>=1.1.411",
