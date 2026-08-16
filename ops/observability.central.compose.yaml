@@ -1,0 +1,88 @@
+services:
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: loki-observability
+    command: -config.file=/etc/loki/config.yaml
+    volumes:
+      - loki_data:/loki
+      - ./loki/central-config.yaml:/etc/loki/config.yaml:ro
+    # Loki is intentionally NOT exposed outside the Docker network.
+    # Staging/production Alloy must reach it via the server's internal IP.
+    networks:
+      - observability
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  grafana:
+    image: grafana/grafana:11.6.0
+    container_name: grafana-observability
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    environment:
+      GF_LOG_LEVEL: "warn"
+      # Grafana is behind oauth2-proxy which handles authentication.
+      GF_AUTH_PROXY_ENABLED: "true"
+      GF_AUTH_PROXY_HEADER_NAME: "X-Auth-Request-Email"
+      GF_AUTH_PROXY_HEADERS: "Email:X-Auth-Request-Email"
+      GF_AUTH_PROXY_AUTO_SIGN_UP: "true"
+      GF_SERVER_ROOT_URL: "https://observability.test-conf.de"
+    networks:
+      - observability
+    depends_on:
+      loki:
+        condition: service_healthy
+    restart: unless-stopped
+
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.15.3
+    container_name: oauth2-proxy-observability
+    restart: unless-stopped
+    command:
+      - --provider=oidc
+      - --provider-display-name=ZITADEL
+      - --oidc-issuer-url=https://id.test-conf.de
+      - --redirect-url=https://observability.test-conf.de/oauth2/callback
+
+      - --http-address=0.0.0.0:4180
+      - --reverse-proxy=true
+      - --cookie-secure=true
+      - --cookie-samesite=lax
+      - --upstream=http://grafana:3000
+
+      - --scope=openid email profile
+      - --email-domain=*
+      # Allow any Zitadel user who has been granted the observability-access group.
+      - --allowed-group=observability-access
+
+      # Pass the authenticated user's email to Grafana auth proxy.
+      - --set-xauthrequest=true
+    environment:
+      OAUTH2_PROXY_CLIENT_ID: ${OAUTH2_PROXY_CLIENT_ID_OBSERVABILITY}
+      OAUTH2_PROXY_CLIENT_SECRET: ${OAUTH2_PROXY_CLIENT_SECRET_OBSERVABILITY}
+      OAUTH2_PROXY_COOKIE_SECRET: ${OAUTH2_PROXY_COOKIE_SECRET_OBSERVABILITY}
+    networks:
+      - observability
+
+  nginx:
+    image: nginx:1.31.3-alpine
+    container_name: nginx-observability
+    volumes:
+      - ./nginx/observability/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18084:80"
+    networks:
+      - observability
+
+volumes:
+  loki_data:
+  grafana_data:
+
+networks:
+  observability:
+    name: observability-central
