@@ -1,0 +1,74 @@
+// Grafana Alloy configuration — staging environment
+//
+// Collects Docker container stdout/stderr and forwards to the central Loki
+// deployment at observability.test-conf.de.
+//
+// The LOKI_URL environment variable must point to an endpoint that is reachable
+// from the staging server but NOT exposed publicly (use the server's internal
+// IP or a private network address).  The Alloy container sets it via the
+// Compose environment section.
+//
+// Labels applied to all log streams:
+//   service_name  — derived from Docker container name
+//   environment   — "staging"
+
+discovery.docker "staging_containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "10s"
+}
+
+discovery.relabel "docker_service_labels" {
+  targets = discovery.docker.staging_containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/?(.+?)(?:-[a-z]+)?$"
+    target_label  = "service_name"
+  }
+}
+
+loki.source.docker "staging_containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.docker_service_labels.output
+  forward_to       = [loki.process.staging_pipeline.receiver]
+  refresh_interval = "10s"
+}
+
+loki.process "staging_pipeline" {
+  // Attempt to parse JSON application logs to extract structured metadata.
+  stage.json {
+    expressions = {
+      event_name    = "\"event.name\"",
+      severity_text = "severity_text",
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      "event_name"    = "event_name",
+      "severity_text" = "severity_text",
+    }
+  }
+
+  stage.static_labels {
+    values = {
+      environment = "staging",
+    }
+  }
+
+  stage.labels {
+    values = {
+      service_name = "service_name",
+    }
+  }
+
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.write "central" {
+  endpoint {
+    // Set LOKI_URL to the internal address of the central observability server,
+    // e.g. http://10.0.0.5:3100 — never expose Loki on the public internet.
+    url = env("LOKI_URL")
+  }
+}
