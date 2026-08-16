@@ -1,19 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
-import Page from '../routes/+page.svelte';
+import ShowcaseStory from './fixtures/ShowcaseStory.svelte';
 
 const meta = {
 	title: 'Pages/Home',
-	component: Page,
-	args: {
-		data: {
-			globals: {
-				footer_text: 'Tech Stream Conference'
-			}
-		}
-	}
-} satisfies Meta<ComponentProps<typeof Page>>;
+	component: ShowcaseStory
+} satisfies Meta<ComponentProps<typeof ShowcaseStory>>;
 
 export default meta;
 
