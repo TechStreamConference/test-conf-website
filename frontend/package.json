@@ -16,7 +16,8 @@
 		"fix": "pnpm run format && pnpm run lint:fix",
 		"test": "vitest --run",
 		"storybook": "storybook dev --port 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
+		"test:e2e": "playwright test"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

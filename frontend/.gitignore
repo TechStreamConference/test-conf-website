@@ -8,6 +8,8 @@ node_modules
 /.svelte-kit
 /build
 /storybook-static
+/playwright-report
+/test-results
 
 # OS
 .DS_Store
