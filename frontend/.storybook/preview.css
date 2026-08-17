@@ -1,0 +1,9 @@
+:root {
+	--half-gap: 0.5rem;
+	--full-padding: 1rem;
+	--2x-padding: 2rem;
+}
+
+body {
+	color: var(--text-color);
+}
