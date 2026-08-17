@@ -6,7 +6,7 @@
 	const { ...rest }: Props = $props();
 </script>
 
-<area {...rest} />
+<textarea {...rest}></textarea>
 
 <style>
 </style>
