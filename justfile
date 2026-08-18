@@ -98,8 +98,8 @@ e2e-init:
 frontend-run:
     pnpm --dir {{ frontend_dir }} dev
 
-# Starts Storybook locally for developing UI components in isolation.
-storybook:
+# Builds and starts Storybook locally for developing UI components in isolation.
+storybook: frontend-storybook-build
     pnpm --dir {{ frontend_dir }} run storybook
 
 # Builds Storybook to verify that all component stories compile successfully.
