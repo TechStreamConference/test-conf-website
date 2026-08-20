@@ -3,15 +3,21 @@
 	import InputArea from '$lib/elements/input/input_area.svelte';
 
 	interface Props {
-		variant: 'line' | 'area';
+		count: number;
+		variant: 'line' | 'area' | 'mixed';
 		label: string;
 	}
 
-	let { variant, label }: Props = $props();
+	let { count, variant, label }: Props = $props();
 </script>
 
-{#if variant === 'line'}
-	<InputLine id="input-line" {label} />
-{:else}
-	<InputArea id="input-area" {label} />
-{/if}
+{#each Array(count) as i (i)}
+	{#if variant === 'line'}
+		<InputLine id="input-line-{i}" {label} />
+	{:else if variant === 'area'}
+		<InputArea id="input-area-{i}" {label} />
+	{:else}
+		<InputLine id="input-line-{i}" {label} />
+		<InputArea id="input-area-{i}" {label} />
+	{/if}
+{/each}
