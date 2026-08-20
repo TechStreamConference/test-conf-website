@@ -14,48 +14,44 @@
 </div>
 
 <style>
-    div {
-        position: relative;
-        margin-block-start: 1.5rem;
-        height: 2rem;
-    }
+	div {
+		width: 100%;
+		height: fit-content;
+		position: relative;
+		margin-top: 1rem;
+	}
 
-    input {
-        box-sizing: border-box;
-        width: 100%;
-        height: 100%;
+	input {
+		background-color: var(--background-color-500);
+		padding: 0.25rem;
+		width: 100%;
+		font-size: 1rem;
+		border-radius: var(--border-radius);
+		border: 0px;
+		outline: 1px solid var(--line-color);
+		box-shadow: 0 0 0 0 transparent;
+		transition:
+			box-shadow var(--transition-duration-fast),
+			border-radius var(--transition-duration-fast);
+	}
 
-        background-color: transparent;
-        border-radius: var(--border-radius);
-        border-color: var(--line-color);
-    }
+	input:hover {
+		border-radius: 0;
+		box-shadow: 0 0 0 2px var(--line-color);
+	}
 
-    label {
-        position: absolute;
+	input:focus {
+		box-shadow: 0 0 0 2px var(--line-color);
+	}
 
-        inset-block-start: 50%;
-        inset-inline-start: 0.2rem;
-
-        transform: translateY(-50%);
-
-        background-color: var(--background-color-500);
-        border-radius: var(--border-radius);
-        padding: 0.2rem;
-        transition:
-                inset-block-start var(--transition-duration-fast),
-                transform  var(--transition-duration-fast),
-                font-size var(--transition-duration-fast),
-                inset-inline-start var(--transition-duration-fast);
-    }
-
-    div:has(input:hover) label,
-    div:has(input:focus) label,
-    div:has(input:placeholder-shown) label,
-    div:has(input:has-value) label {
-        inset-block-start: 0;
-        transform: translateY(-50%);
-
-        font-size: 0.8rem;
-        inset-inline-start: 0.5rem;
-    }
+	label {
+		background-color: var(--background-color-500);
+		display: inline-block;
+		inset-inline-start: 0.2rem;
+		inset-block-start: -0.9rem;
+		position: absolute;
+		font-size: 1rem;
+		padding: 0 0.3rem;
+		border-radius: var(--border-radius);
+	}
 </style>

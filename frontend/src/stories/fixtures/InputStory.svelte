@@ -13,5 +13,5 @@
 {#if variant === 'line'}
 	<InputLine id="input-line" {label} />
 {:else}
-	<InputArea id="input-area" />
+	<InputArea id="input-area" {label} />
 {/if}
