@@ -33,8 +33,8 @@
             git --version
             just --version
             just-lsp --version
-            node --version
-            pnpm --version
+            echo "node version $(node --version)"
+            echo "pnpm version $(pnpm --version)"
             uv --version
             echo ""
             echo "'just' for available commands."
