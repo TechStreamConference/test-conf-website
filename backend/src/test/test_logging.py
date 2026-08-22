@@ -15,6 +15,22 @@ from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestReceived
 
 
+@pytest.fixture(autouse=True)
+def switch_to_staging_environment(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Set the `environment` to “staging” for all tests in this module.
+
+    This is required because in the “dev” environment, logs to `stdout` are pretty-printed
+    (thus indented and colorized), which makes naïve JSON parsing of the output fail.
+    """
+    # We cannot simply change the environment variable because the `SETTINGS` object is instantiated
+    # at import time, so we must patch the `environment` attribute directly. For this, we have to
+    # patch the object from the module that imports it.
+    import backend.logging._core as log_core_module
+
+    mock_settings: Final = log_core_module.SETTINGS.model_copy(update={"environment": "staging"})
+    monkeypatch.setattr(log_core_module, "SETTINGS", mock_settings)
+
+
 def _capture_log(event: LogEventBase, level: str = "info") -> dict[str, object]:
     """Call the named logging level with `event` and return the parsed JSONL record."""
     import backend.logging as log_module
@@ -129,19 +145,19 @@ class TestFileLogging:
         monkeypatch.setenv("LOG_FILE", str(log_path))
 
         # Force module reload to pick up the new env var.
-        import backend.logging as log_module
+        import backend.logging._core as logging_core_module
 
-        original_file: Final = log_module._LOG_FILE  # type: ignore[reportPrivateUsage]
+        original_file: Final = logging_core_module._LOG_FILE  # type: ignore[reportPrivateUsage]
         try:
             log_path.parent.mkdir(parents=True, exist_ok=True)
             with log_path.open("a", encoding="utf-8") as file_handle:
                 # Temporarily patch the module-level file handle.
-                log_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
+                logging_core_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
                 captured: Final = StringIO()
                 original_stdout: Final = sys.stdout
                 sys.stdout = captured  # type: ignore[assignment]
                 try:
-                    log_module.info(ApplicationStarted(host="filehost", port=3000))
+                    logging_core_module.info(ApplicationStarted(host="filehost", port=3000))
                 finally:
                     sys.stdout = original_stdout
 
@@ -149,27 +165,27 @@ class TestFileLogging:
             file_record: Final = json.loads(log_path.read_text(encoding="utf-8").strip())
             assert stdout_record == file_record
         finally:
-            log_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]
+            logging_core_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]
 
     def test_log_file_appends(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
         """Records are appended, not overwritten."""
         log_path: Final = tmp_path / "append.jsonl"
-        import backend.logging as log_module
+        import backend.logging._core as logging_core_module
 
-        original_file: Final = log_module._LOG_FILE  # type: ignore[reportPrivateUsage]
+        original_file: Final = logging_core_module._LOG_FILE  # type: ignore[reportPrivateUsage]
         try:
             with log_path.open("a", encoding="utf-8") as file_handle:
-                log_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
+                logging_core_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
                 devnull: Final = StringIO()
                 original_stdout: Final = sys.stdout
                 sys.stdout = devnull  # type: ignore[assignment]
                 try:
-                    log_module.info(ApplicationStarted(host="h", port=1))
-                    log_module.info(ApplicationStopping())
+                    logging_core_module.info(ApplicationStarted(host="h", port=1))
+                    logging_core_module.info(ApplicationStopping())
                 finally:
                     sys.stdout = original_stdout
 
             lines: Final = log_path.read_text(encoding="utf-8").strip().split("\n")
             assert len(lines) == 2
         finally:
-            log_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]
+            logging_core_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]
