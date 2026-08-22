@@ -72,7 +72,7 @@ gen-types:
 
 # Runs the formatter, linter, and type checker on the frontend codebase without making any changes, reporting issues only.
 frontend-check:
-    pnpm --dir {{ frontend_dir }} run check 
+    pnpm --dir {{ frontend_dir }} run check
 
 # Runs the formatter, linter, and type checker on the frontend codebase, applying automatic fixes where possible.
 frontend-fix:
