@@ -15,6 +15,7 @@ const config: Config = {
 			$gen: 'src/generated',
 			$bff: 'src/bff',
 			$lib: 'src/lib',
+			$logging: 'src/logging',
 			$src: 'src'
 		}
 	}

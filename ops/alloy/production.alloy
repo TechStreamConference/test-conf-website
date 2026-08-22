@@ -1,0 +1,63 @@
+// Grafana Alloy configuration — production environment
+//
+// Identical to staging.alloy except the environment label is "production".
+// Keep this file in sync with staging.alloy for non-environment parts.
+
+discovery.docker "production_containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "10s"
+}
+
+discovery.relabel "docker_service_labels" {
+  targets = discovery.docker.production_containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    regex         = "/?(.+?)(?:-[a-z]+)?$"
+    target_label  = "service_name"
+  }
+}
+
+loki.source.docker "production_containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.docker_service_labels.output
+  forward_to       = [loki.process.production_pipeline.receiver]
+  refresh_interval = "10s"
+}
+
+loki.process "production_pipeline" {
+  stage.json {
+    expressions = {
+      event_name    = "\"event.name\"",
+      severity_text = "severity_text",
+    }
+  }
+
+  stage.structured_metadata {
+    values = {
+      "event_name"    = "event_name",
+      "severity_text" = "severity_text",
+    }
+  }
+
+  stage.static_labels {
+    values = {
+      environment = "production",
+    }
+  }
+
+  stage.labels {
+    values = {
+      service_name = "service_name",
+    }
+  }
+
+  forward_to = [loki.write.central.receiver]
+}
+
+loki.write "central" {
+  endpoint {
+    // Set LOKI_URL to the internal address of the central observability server.
+    url = env("LOKI_URL")
+  }
+}

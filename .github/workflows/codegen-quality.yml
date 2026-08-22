@@ -1,0 +1,29 @@
+name: codegen-quality
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  codegen-quality:
+    name: codegen-${{ matrix.command }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          - check
+          - test
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Initialize CI environment
+        run: nix develop --command just init-ci
+
+      - name: Run codegen ${{ matrix.command }}
+        run: nix develop --command just codegen-${{ matrix.command }}

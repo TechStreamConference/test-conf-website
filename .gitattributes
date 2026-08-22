@@ -1,1 +1,3 @@
 frontend/src/generated/** linguist-generated=true
+frontend/src/logging/events.gen.ts linguist-generated=true
+backend/src/backend/logging/events_gen.py linguist-generated=true

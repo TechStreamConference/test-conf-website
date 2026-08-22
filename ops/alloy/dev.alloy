@@ -1,0 +1,120 @@
+// Grafana Alloy configuration — development environment
+//
+// Collects logs from two sources:
+//   1. Native application JSONL files (.logs/backend.jsonl, .logs/frontend.jsonl)
+//      written by the backend and frontend processes running outside Docker.
+//   2. Docker container stdout/stderr from PostgreSQL and other infrastructure.
+//
+// All logs are forwarded to the local Loki instance with two indexed labels:
+//   service_name  — e.g. backend, frontend, postgres, nginx
+//   environment   — always "development" in this config
+//
+// event_name and severity_text are added as Loki structured metadata (non-indexed
+// but searchable) for structured application logs.
+
+// ─── Application JSONL files ──────────────────────────────────────────────
+
+local.file_match "native_app_logs" {
+  path_targets = [
+    {
+      "__path__"   = "/logs/backend.jsonl",
+      "service_name" = "backend",
+    },
+    {
+      "__path__"   = "/logs/frontend.jsonl",
+      "service_name" = "frontend",
+    },
+  ]
+  sync_period = "5s"
+}
+
+loki.source.file "native_app_logs" {
+  targets    = local.file_match.native_app_logs.targets
+  forward_to = [loki.process.native_app_pipeline.receiver]
+}
+
+loki.process "native_app_pipeline" {
+  // Parse the structured JSON record from the application.
+  stage.json {
+    expressions = {
+      event_name    = "\"event.name\"",
+      severity_text = "severity_text",
+    }
+  }
+
+  // Promote event_name and severity_text into Loki structured metadata so they
+  // are searchable without inflating label cardinality.
+  stage.structured_metadata {
+    values = {
+      "event_name"    = "event_name",
+      "severity_text" = "severity_text",
+    }
+  }
+
+  // Label: environment (static)
+  stage.static_labels {
+    values = {
+      environment = "development",
+    }
+  }
+
+  // Label: service_name (from the path_targets label set above)
+  stage.labels {
+    values = {
+      service_name = "service_name",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+// ─── Docker container logs ────────────────────────────────────────────────
+
+discovery.docker "local_containers" {
+  host             = "unix:///var/run/docker.sock"
+  refresh_interval = "10s"
+}
+
+// Extract a clean service_name from the container name (strip the leading /
+// and the -dev suffix that the project's Compose files add).
+discovery.relabel "docker_service_labels" {
+  targets = discovery.docker.local_containers.targets
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    // Strip leading "/" and trailing "-<environment>" suffix.
+    regex         = "/?(.+?)(?:-[a-z]+)?$"
+    target_label  = "service_name"
+  }
+}
+
+loki.source.docker "local_containers" {
+  host             = "unix:///var/run/docker.sock"
+  targets          = discovery.relabel.docker_service_labels.output
+  forward_to       = [loki.process.docker_pipeline.receiver]
+  refresh_interval = "10s"
+}
+
+loki.process "docker_pipeline" {
+  stage.static_labels {
+    values = {
+      environment = "development",
+    }
+  }
+
+  stage.labels {
+    values = {
+      service_name = "service_name",
+    }
+  }
+
+  forward_to = [loki.write.local.receiver]
+}
+
+// ─── Loki sink ────────────────────────────────────────────────────────────
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
