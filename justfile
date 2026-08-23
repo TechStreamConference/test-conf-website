@@ -90,6 +90,10 @@ e2e-test:
 e2e-ui:
     PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} exec playwright test --ui
 
+# Opens the Playwright Inspector in codegen mode to interactively record a new test.
+e2e-codegen url="http://localhost":
+    PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} exec playwright codegen {{ url }}
+
 # Installs the Playwright browsers and their system dependencies.
 e2e-init:
     PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} exec playwright install --with-deps
