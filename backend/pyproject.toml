@@ -23,7 +23,7 @@ dependencies = [
     "sqlalchemy[asyncio, postgresql-psycopg2binary]>=2.0.52",
     "sqlmodel>=0.0.39",
     "typer>=0.27.1",
-    "uvicorn>=0.52.1",
+    "uvicorn>=0.52.4",
 ]
 
 [dependency-groups]
@@ -34,7 +34,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
-    "ruff>=0.16.1",
+    "ruff>=0.16.3",
     "testcontainers[postgres]>=4.15.0",
 ]
 
