@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
 import InputStory from './fixtures/InputStory.svelte';
+import { InputType } from '$lib/helper/input';
 
 const meta = {
 	title: 'Components/Input',
@@ -10,7 +11,8 @@ const meta = {
 		count: 1,
 		variant: 'line',
 		label: 'Label',
-		layout: 'vertical'
+		layout: 'vertical',
+		type: InputType.Text
 	},
 	argTypes: {
 		variant: {
@@ -20,6 +22,10 @@ const meta = {
 		layout: {
 			control: 'inline-radio',
 			options: ['horizontal', 'vertical', 'grid']
+		},
+		type: {
+			control: 'select',
+			options: Object.values(InputType)
 		}
 	}
 } satisfies Meta<ComponentProps<typeof InputStory>>;

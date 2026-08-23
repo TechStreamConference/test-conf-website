@@ -1,15 +1,18 @@
 <script lang="ts">
 	import InputLine from '$lib/elements/input/input_line.svelte';
 	import InputArea from '$lib/elements/input/input_area.svelte';
+	import { InputType } from '$lib/helper/input';
 
 	interface Props {
 		count: number;
 		variant: 'line' | 'area' | 'mixed';
 		layout: 'horizontal' | 'vertical' | 'grid';
 		label: string;
+		type: InputType;
 	}
 
-	let { count, variant, layout, label }: Props = $props();
+	let { count, variant, layout, label, type }: Props = $props();
+	let value = $state('');
 </script>
 
 <div
@@ -19,11 +22,11 @@
 >
 	{#each Array(count) as _, i (i)}
 		{#if variant === 'line'}
-			<InputLine id={`input-line-${i}`} {label} />
+			<InputLine id={`input-line-${i}`} {label} {type} bind:value />
 		{:else if variant === 'area'}
 			<InputArea id={`input-area-${i}`} {label} />
 		{:else}
-			<InputLine id={`input-line-${i}`} {label} />
+			<InputLine id={`input-line-${i}`} {label} {type} bind:value />
 			<InputArea id={`input-area-${i}`} {label} />
 		{/if}
 	{/each}

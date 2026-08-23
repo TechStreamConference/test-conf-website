@@ -1,16 +1,33 @@
-<script lang="ts">
+<script lang="ts" generics="T extends InputType">
 	import type { HTMLInputAttributes } from 'svelte/elements';
+	import type { InputValue } from '$lib/helper/input';
+	import type { InputType } from '$lib/helper/input';
+	import { parseInputValue } from '$lib/helper/input';
+	import { formatInputValue } from '$lib/helper/input';
 
-	interface Props extends Omit<HTMLInputAttributes, 'id'> {
+	interface Props extends Omit<HTMLInputAttributes, 'id' | 'type' | 'value'> {
 		id: string;
 		label: string;
+		type: T;
+		value: InputValue<T>;
 	}
-	const { id, label, ...rest }: Props = $props();
+	let { id, label, type, value = $bindable(), ...rest }: Props = $props();
+
+	function oninput(event: Event & { currentTarget: HTMLInputElement }) {
+		value = parseInputValue(type, event.currentTarget);
+	}
 </script>
 
 <div>
 	<label for={id}>{label}</label>
-	<input class="normal-font" {id} {...rest} />
+	<input
+		class="normal-font"
+		{id}
+		{type}
+		value={formatInputValue(type, value)}
+		{oninput}
+		{...rest}
+	/>
 </div>
 
 <style>
