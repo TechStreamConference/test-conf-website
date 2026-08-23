@@ -9,12 +9,17 @@ const meta = {
 	args: {
 		count: 1,
 		variant: 'line',
-		label: 'Label'
+		label: 'Label',
+		layout: 'vertical'
 	},
 	argTypes: {
 		variant: {
 			control: 'inline-radio',
 			options: ['line', 'area', 'mixed']
+		},
+		layout: {
+			control: 'inline-radio',
+			options: ['horizontal', 'vertical', 'grid']
 		}
 	}
 } satisfies Meta<ComponentProps<typeof InputStory>>;
