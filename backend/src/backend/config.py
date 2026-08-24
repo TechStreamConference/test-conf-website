@@ -13,7 +13,12 @@ _ROOT_ENV_FILE = _REPO_ROOT / ".env"
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=_ROOT_ENV_FILE, extra="ignore")
 
+    environment: str = "prod"
     backend_root_uri: str = "http://localhost/api"
+
+    # Must match the --host / --port args passed to uvicorn.
+    server_host: str = "0.0.0.0"  # noqa: S104
+    server_port: int = 8080
 
     database_host: str = "localhost"
     database_port: int = 5432
