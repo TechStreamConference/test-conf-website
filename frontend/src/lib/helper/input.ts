@@ -1,3 +1,7 @@
+const MAX_LENGTH_VISIBLE_FACTOR = 0.5;
+const MAX_LENGTH_ORANGE_FACTOR = 0.75;
+const MAX_LENGTH_RED_FACTOR = 0.9;
+
 export enum InputType {
 	Text = 'text',
 	Password = 'password',
@@ -14,6 +18,15 @@ export enum InputType {
 	Week = 'week',
 	Color = 'color'
 }
+
+export const MAX_LENGTH_INPUT_TYPE = new Set<InputType>([
+	InputType.Text,
+	InputType.Password,
+	InputType.Email,
+	InputType.Search,
+	InputType.Tel,
+	InputType.Url
+]);
 
 export interface InputValueMap {
 	[InputType.Text]: string;
@@ -55,4 +68,18 @@ export function formatInputValue<T extends InputType>(type: T, value: InputValue
 		default:
 			return String(value);
 	}
+}
+
+export function isMaxLengthVisible(maxLength: number, value: string): boolean {
+	return value.length > maxLength * MAX_LENGTH_VISIBLE_FACTOR;
+}
+
+export function calculateMaxLengthColor(maxLength: number, value: string): string {
+	if (maxLength * MAX_LENGTH_RED_FACTOR <= value.length) {
+		return 'red';
+	}
+	if (maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length) {
+		return 'orange';
+	}
+	return '';
 }

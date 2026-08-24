@@ -9,9 +9,10 @@
 		layout: 'horizontal' | 'vertical' | 'grid';
 		label: string;
 		type: InputType;
+		maxlength?: number | undefined;
 	}
 
-	let { count, variant, layout, label, type }: Props = $props();
+	let { count, variant, layout, maxlength, label, type }: Props = $props();
 	let value = $state('');
 </script>
 
@@ -22,11 +23,11 @@
 >
 	{#each Array(count) as _, i (i)}
 		{#if variant === 'line'}
-			<InputLine id={`input-line-${i}`} {label} {type} bind:value />
+			<InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} />
 		{:else if variant === 'area'}
 			<InputArea id={`input-area-${i}`} {label} />
 		{:else}
-			<InputLine id={`input-line-${i}`} {label} {type} bind:value />
+			<InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} />
 			<InputArea id={`input-area-${i}`} {label} />
 		{/if}
 	{/each}

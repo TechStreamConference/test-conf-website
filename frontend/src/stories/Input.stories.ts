@@ -12,7 +12,8 @@ const meta = {
 		variant: 'line',
 		label: 'Label',
 		layout: 'vertical',
-		type: InputType.Text
+		type: InputType.Text,
+		maxlength: undefined
 	},
 	argTypes: {
 		variant: {
@@ -26,6 +27,11 @@ const meta = {
 		type: {
 			control: 'select',
 			options: Object.values(InputType)
+		},
+		maxlength: {
+			control: 'number',
+			step: 1,
+			defaultValue: undefined
 		}
 	}
 } satisfies Meta<ComponentProps<typeof InputStory>>;
