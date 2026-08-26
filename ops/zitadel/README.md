@@ -49,6 +49,8 @@ Key points:
 | `.env` | ❌ No (Git-ignored) | Private config with real secrets |
 | `.gitignore` | ✅ Yes | Ensures `.env` is never committed |
 | `README.md` | ✅ Yes | This file |
+| `social-login-setup.md` | ✅ Yes | Step-by-step guide: add Google / Twitch as IdPs |
+| `normalize-service/main.py` | ✅ Yes | Actions V2 target: fetch Twitch Helix profile and rewrite `createUser` payload |
 
 > **Never commit `.env`.**
 > The root `.gitignore` already ignores `**/.env`; this directory also has its own
