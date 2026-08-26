@@ -25,10 +25,10 @@
 		{#if variant === 'line'}
 			<InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} />
 		{:else if variant === 'area'}
-			<InputArea id={`input-area-${i}`} {label} />
+			<InputArea id={`input-area-${i}`} {label} bind:value {maxlength} />
 		{:else}
 			<InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} />
-			<InputArea id={`input-area-${i}`} {label} />
+			<InputArea id={`input-area-${i}`} {label} bind:value {maxlength} />
 		{/if}
 	{/each}
 </div>
