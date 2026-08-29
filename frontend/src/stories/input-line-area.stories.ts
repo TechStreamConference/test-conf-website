@@ -1,8 +1,9 @@
-import type { Meta, StoryObj } from '@storybook/sveltekit';
+import type { Meta } from '@storybook/sveltekit';
+import type { StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
-import InputStory from './fixtures/InputLineAreaStory.svelte';
 import { InputType } from '$lib/helper/input';
+import InputStory from './fixtures/InputLineAreaStory.svelte';
 
 const meta = {
 	title: 'Components/Input',
@@ -37,7 +38,5 @@ const meta = {
 } satisfies Meta<ComponentProps<typeof InputStory>>;
 
 export default meta;
-
 type Story = StoryObj<typeof meta>;
-
 export const Line_Area: Story = {};

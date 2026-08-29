@@ -1,6 +1,6 @@
 <script lang="ts">
-	import LogoBig from '$lib/elements/img/logo_big.svelte';
-	import LogoSmall from '$lib/elements/img/logo_small.svelte';
+	import LogoBig from '$lib/elements/img/LogoBig.svelte';
+	import LogoSmall from '$lib/elements/img/LogoSmall.svelte';
 
 	interface Props {
 		variant: 'big' | 'small';

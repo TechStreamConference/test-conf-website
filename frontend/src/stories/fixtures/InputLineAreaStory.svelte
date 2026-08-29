@@ -1,6 +1,6 @@
 <script lang="ts">
-	import InputLine from '$lib/elements/input/input_line.svelte';
-	import InputArea from '$lib/elements/input/input_area.svelte';
+	import InputLine from '$lib/elements/input/Line.svelte';
+	import InputArea from '$lib/elements/input/Area.svelte';
 	import { InputType } from '$lib/helper/input';
 
 	interface Props {
@@ -11,7 +11,6 @@
 		type: InputType;
 		maxlength?: number | undefined;
 	}
-
 	let { count, variant, layout, maxlength, label, type }: Props = $props();
 	// use `any` here so that I can write every value here to just display it.
 	// the actual type is displayed within the UI.

@@ -1,10 +1,10 @@
 <script lang="ts">
-	import Headline from '$lib/elements/text/headline.svelte';
-	import SubHeadline from '$lib/elements/text/sub_headline.svelte';
-	import Paragraph from '$lib/elements/text/paragraph.svelte';
-	import TagWrapper from '$lib/elements/text/tag_wrapper.svelte';
-	import InlineLink from '$lib/elements/link/inline_link.svelte';
-	import LogoSmall from '$lib/elements/img/logo_small.svelte';
+	import Headline from '$lib/elements/text/Headline.svelte';
+	import SubHeadline from '$lib/elements/text/SubHeadline.svelte';
+	import Paragraph from '$lib/elements/text/Paragraph.svelte';
+	import TagWrapper from '$lib/elements/text/TagWrapper.svelte';
+	import InlineLink from '$lib/elements/link/InlineLink.svelte';
+	import LogoSmall from '$lib/elements/img/LogoSmall.svelte';
 </script>
 
 <article>
@@ -38,6 +38,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+
 		max-width: 40rem;
 	}
 </style>

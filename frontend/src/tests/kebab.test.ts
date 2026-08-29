@@ -1,36 +1,36 @@
 import { describe, expect, it } from 'vitest';
-import { to_kebab_case } from '$lib/helper/kebab';
+import { snakeToKebab } from '$lib/helper/casing';
 
-describe('to_kebab_case', () => {
+describe('snakeToKebab', () => {
 	it('should lowercase an already-lowercase word', () => {
-		expect(to_kebab_case('blue')).toBe('blue');
+		expect(snakeToKebab('blue')).toBe('blue');
 	});
 
 	it('should lowercase an uppercase word', () => {
-		expect(to_kebab_case('BLUE')).toBe('blue');
+		expect(snakeToKebab('BLUE')).toBe('blue');
 	});
 
 	it('should replace a single underscore with a hyphen', () => {
-		expect(to_kebab_case('Blue_Light')).toBe('blue-light');
+		expect(snakeToKebab('Blue_Light')).toBe('blue-light');
 	});
 
 	it('should replace every underscore with a hyphen, not just the first', () => {
-		expect(to_kebab_case('foo_bar_baz')).toBe('foo-bar-baz');
+		expect(snakeToKebab('foo_bar_baz')).toBe('foo-bar-baz');
 	});
 
 	it('should handle consecutive underscores', () => {
-		expect(to_kebab_case('foo__bar')).toBe('foo--bar');
+		expect(snakeToKebab('foo__bar')).toBe('foo--bar');
 	});
 
 	it('should leave a string without underscores unchanged apart from casing', () => {
-		expect(to_kebab_case('Blue')).toBe('blue');
+		expect(snakeToKebab('Blue')).toBe('blue');
 	});
 
 	it('should handle an empty string', () => {
-		expect(to_kebab_case('')).toBe('');
+		expect(snakeToKebab('')).toBe('');
 	});
 
 	it('should handle a string of only underscores', () => {
-		expect(to_kebab_case('___')).toBe('---');
+		expect(snakeToKebab('___')).toBe('---');
 	});
 });

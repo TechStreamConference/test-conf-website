@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/sveltekit';
+import type { Meta } from '@storybook/sveltekit';
+import type { StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
-import ImageComponent from '$lib/elements/img/image.svelte';
+import ImageComponent from '$lib/elements/img/Image.svelte';
 
 const meta = {
 	title: 'Components/Images/Image',
@@ -14,7 +15,5 @@ const meta = {
 } satisfies Meta<ComponentProps<typeof ImageComponent>>;
 
 export default meta;
-
 type Story = StoryObj<typeof meta>;
-
 export const Image: Story = {};
