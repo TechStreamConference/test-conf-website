@@ -1,3 +1,6 @@
+import { toDate } from './date';
+import { formatDate } from './date';
+
 const MAX_LENGTH_VISIBLE_FACTOR = 0.5;
 const MAX_LENGTH_ORANGE_FACTOR = 0.75;
 const MAX_LENGTH_RED_FACTOR = 0.9;
@@ -76,24 +79,6 @@ export function formatInputValue<T extends InputType>(type: T, value: InputValue
 		default:
 			return String(value);
 	}
-}
-
-function toDate(value: unknown): Date {
-	if (value instanceof Date) {
-		return value;
-	}
-	if (typeof value === 'string' || typeof value === 'number') {
-		return new Date(value);
-	}
-	return new Date(NaN);
-}
-
-function formatDate(value: Date, length: number, asLocalTime: boolean): string {
-	if (Number.isNaN(value.getTime())) {
-		return '';
-	}
-	const date = asLocalTime ? new Date(value.getTime() - value.getTimezoneOffset() * 60_000) : value;
-	return date.toISOString().slice(0, length);
 }
 
 export function isMaxLengthVisible(maxLength: number, value: string): boolean {
