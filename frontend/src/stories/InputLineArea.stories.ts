@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
-import InputStory from './fixtures/InputStory.svelte';
+import InputStory from './fixtures/InputLineAreaStory.svelte';
 import { InputType } from '$lib/helper/input';
 
 const meta = {

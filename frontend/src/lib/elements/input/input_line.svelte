@@ -9,7 +9,10 @@
 	import { validate_unsigned_int } from '$lib/helper/numbers';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
-	interface Props extends Omit<HTMLInputAttributes, 'id' | 'type' | 'value' | 'maxlength'> {
+	interface Props extends Omit<
+		HTMLInputAttributes,
+		'id' | 'type' | 'value' | 'maxlength' | 'checked'
+	> {
 		id: string;
 		label: string;
 		type: T;

@@ -16,6 +16,7 @@
 	let value = $state('');
 </script>
 
+<p>{value}</p>
 <div
 	class:horizontal={layout === 'horizontal'}
 	class:vertical={layout === 'vertical'}

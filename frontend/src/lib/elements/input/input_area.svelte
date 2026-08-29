@@ -4,7 +4,7 @@
 	import { calculateMaxLengthColor } from '$lib/helper/input';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
-	interface Props extends Omit<HTMLTextareaAttributes, 'id' | 'maxlength'> {
+	interface Props extends Omit<HTMLTextareaAttributes, 'id' | 'maxlength' | 'checked'> {
 		id: string;
 		label: string;
 		maxlength?: number | undefined;
