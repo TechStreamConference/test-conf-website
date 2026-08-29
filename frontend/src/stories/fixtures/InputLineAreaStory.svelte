@@ -16,7 +16,11 @@
 	let value = $state('');
 </script>
 
+<p>{typeof value}</p>
 <p>{value}</p>
+{#if value instanceof Date && !Number.isNaN(value.getTime())}
+	<p>UTC: {value.toISOString()}</p>
+{/if}
 <div
 	class:horizontal={layout === 'horizontal'}
 	class:vertical={layout === 'vertical'}
