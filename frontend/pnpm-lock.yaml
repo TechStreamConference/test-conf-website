@@ -22,8 +22,8 @@ importers:
         specifier: ^1.34.0
         version: 1.34.0(svelte@5.56.9(@typescript-eslint/types@8.67.0))
       '@storybook/addon-a11y':
-        specifier: ^10.5.7
-        version: 10.5.7(storybook@10.5.10(prettier@3.9.6)(react@19.2.8))
+        specifier: ^10.5.10
+        version: 10.5.10(storybook@10.5.10(prettier@3.9.6)(react@19.2.8))
       '@storybook/sveltekit':
         specifier: ^10.5.7
         version: 10.5.7(@sveltejs/vite-plugin-svelte@7.3.0(svelte@5.56.9(@typescript-eslint/types@8.67.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0)))(esbuild@0.28.2)(rollup@4.62.3)(storybook@10.5.10(prettier@3.9.6)(react@19.2.8))(svelte@5.56.9(@typescript-eslint/types@8.67.0))(vite@8.2.1(@types/node@26.2.0)(esbuild@0.28.2)(jiti@2.7.0))
@@ -919,10 +919,10 @@ packages:
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
-  '@storybook/addon-a11y@10.5.7':
-    resolution: {integrity: sha512-I30rsNz6aA3xg3811MEry40uJDHP3l5SOkfqtmNkp7y4NdqTDdKhmbhhDAZQX1WWEk6GeMBGr3AJ3TCz7r7JmQ==}
+  '@storybook/addon-a11y@10.5.10':
+    resolution: {integrity: sha512-RpRQV5xUbrl6hCiNrd5FSMIo6pnRZ0VZxWvEW/ASLcreGkKUW5jl2AeLCe5YROE2i80s/dU+6VPzOYKrwWNFbQ==}
     peerDependencies:
-      storybook: ^10.5.7
+      storybook: ^10.5.10
 
   '@storybook/builder-vite@10.5.7':
     resolution: {integrity: sha512-fShF/aQaITqcJuMCLr42BGNUAbhDi4IboqvlbZqXAwgrrTslnZEUnY8GcEcvpZmjl11VwlmazhMJdH50fIgBPg==}
@@ -2887,7 +2887,7 @@ snapshots:
 
   '@standard-schema/spec@1.1.0': {}
 
-  '@storybook/addon-a11y@10.5.7(storybook@10.5.10(prettier@3.9.6)(react@19.2.8))':
+  '@storybook/addon-a11y@10.5.10(storybook@10.5.10(prettier@3.9.6)(react@19.2.8))':
     dependencies:
       '@storybook/global': 5.0.0
       axe-core: 4.13.0
