@@ -1,6 +1,7 @@
-import type { Meta, StoryObj } from '@storybook/sveltekit';
+import type { Meta } from '@storybook/sveltekit';
+import type { StoryObj } from '@storybook/sveltekit';
 
-import ThemeSelectComponent from '$lib/elements/theme/theme_select.svelte';
+import ThemeSelectComponent from '$lib/elements/theme/ThemeSelect.svelte';
 
 const meta = {
 	title: 'Components/Theme',
@@ -8,7 +9,5 @@ const meta = {
 } satisfies Meta<typeof ThemeSelectComponent>;
 
 export default meta;
-
 type Story = StoryObj<typeof meta>;
-
 export const ThemeSelect: Story = {};
