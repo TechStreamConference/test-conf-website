@@ -12,6 +12,8 @@ export default defineConfig(({ mode }) => {
 	return {
 		plugins: [sveltekit()],
 
+		ssr: { noExternal: ['zod'] },
+
 		test: {
 			expect: { requireAssertions: true },
 
