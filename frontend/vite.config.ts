@@ -7,10 +7,12 @@ import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig(({ mode }) => {
 	// Load ../.env into process.env
-	Object.assign(process.env, loadEnv(mode, path.resolve(__dirname, '..'), ''));
+	Object.assign(process.env, loadEnv(mode, path.resolve(import.meta.dirname, '..'), ''));
 
 	return {
 		plugins: [sveltekit()],
+
+		ssr: { noExternal: ['zod'] },
 
 		test: {
 			expect: { requireAssertions: true },

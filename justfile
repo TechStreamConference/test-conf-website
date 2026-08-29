@@ -1,5 +1,7 @@
 backend_dir := "backend"
 frontend_dir := "frontend"
+schema_dir := "logging-schema"
+codegen_dir := "logging-schema/codegen"
 
 #
 # General
@@ -46,8 +48,12 @@ init-direnv:
         echo "Added direnv hook to $rc — open a new terminal or run: source $rc"
     fi
 
-# Initializes the development environment by resetting the database, running migrations, and seeding it with development data.
-init-dev: backend-init frontend-init gen-types backend-db-reset-dev
+# Initializes the development environment: installs deps, resets DB, generates types, cleans old log spools.
+init-dev: backend-init frontend-init gen-types gen-log-models backend-db-reset-dev clean-logs
+
+# Removes old local log spool files. Called automatically at the start of a fresh development session.
+clean-logs:
+    rm -rf .logs
 
 # Runs both the backend and the frontend applications in the background, with hot-reloading enabled for development.
 [parallel]
@@ -66,13 +72,36 @@ gen-types:
         -i "$temp_dir/backend/openapi.json" \
         -o src/generated
 
+
+# Compiles the TypeSpec log schema to JSON Schema files in logging-schema/schema/. Useful for
+# inspecting the intermediate output; normal code-gen via gen-log-models uses a temp dir instead.
+gen-log-schema:
+    pnpm --dir {{ schema_dir }} exec tsp compile .
+
+# Generates typed log event models (Pydantic + Zod) from the TypeSpec schema.
+# Intermediate JSON Schema files are written to a temp dir and cleaned up automatically.
+[script]
+gen-log-models:
+    temp_dir=$(mktemp -d)
+    trap 'rm -rf "$temp_dir"' EXIT
+
+    pnpm --dir {{ schema_dir }} exec tsp compile . \
+        --option "@typespec/json-schema.emitter-output-dir=$temp_dir"
+
+    uv run --directory {{ codegen_dir }} python -m codegen \
+        --input "$temp_dir" \
+        --python-output "{{ justfile_directory() }}/{{ backend_dir }}/src/backend/logging/events_gen.py" \
+        --typescript-output "{{ justfile_directory() }}/{{ frontend_dir }}/src/logging/events.gen.ts"
+    uv run --directory {{ backend_dir }} ruff format src/backend/logging/events_gen.py
+    pnpm --dir {{ frontend_dir }} exec prettier --write src/logging/events.gen.ts
+
 #
 # Frontend
 #
 
 # Runs the formatter, linter, and type checker on the frontend codebase without making any changes, reporting issues only.
 frontend-check:
-    pnpm --dir {{ frontend_dir }} run check 
+    pnpm --dir {{ frontend_dir }} run check
 
 # Runs the formatter, linter, and type checker on the frontend codebase, applying automatic fixes where possible.
 frontend-fix:
@@ -98,9 +127,9 @@ e2e-codegen url="http://localhost":
 e2e-init:
     PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} exec playwright install --with-deps
 
-# Runs frontend application
+# Runs the frontend application with structured log output directed to .logs/frontend.jsonl.
 frontend-run:
-    pnpm --dir {{ frontend_dir }} dev
+    LOG_FILE={{ justfile_directory() }}/.logs/frontend.jsonl pnpm --dir {{ frontend_dir }} dev
 
 # Builds and starts Storybook locally for developing UI components in isolation.
 storybook: frontend-storybook-build
@@ -149,9 +178,18 @@ backend-fix:
 backend-test:
     uv run --directory {{ backend_dir }} poe test
 
-# Runs the backend application using Uvicorn, with hot-reloading enabled for development.
+# Runs ruff and pyright on the codegen project.
+codegen-check:
+    uv run --directory {{ codegen_dir }} ruff check src/
+    uv run --directory {{ codegen_dir }} pyright src/
+
+# Runs the test suite for the codegen project.
+codegen-test:
+    uv run --directory {{ codegen_dir }} pytest
+
+# Runs the backend application using Uvicorn, with structured log output directed to .logs/backend.jsonl.
 backend-run:
-    uv run --directory {{ backend_dir }} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
+    LOG_FILE={{ justfile_directory() }}/.logs/backend.jsonl uv run --directory {{ backend_dir }} uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload
 
 # Initializes the backend workspace
 backend-init:
@@ -174,3 +212,5 @@ db-reset:
 init-ci:
     pnpm --dir {{ frontend_dir }} install --frozen-lockfile
     uv sync --directory {{ backend_dir }} --dev --locked --exact
+    pnpm --dir {{ schema_dir }} install --frozen-lockfile
+    uv sync --directory {{ codegen_dir }} --locked --exact
