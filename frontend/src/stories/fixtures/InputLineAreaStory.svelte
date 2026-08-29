@@ -13,10 +13,20 @@
 	}
 
 	let { count, variant, layout, maxlength, label, type }: Props = $props();
-	let value = $state('');
+	// use `any` here so that I can write every value here to just display it.
+	// the actual type is displayed within the UI.
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let value: any = $state('');
+
+	function getTypeName(value: unknown): string {
+		if (value === null) return 'null';
+		if (value === undefined) return 'undefined';
+
+		return value.constructor.name;
+	}
 </script>
 
-<p>{typeof value}</p>
+<p>{getTypeName(value)}</p>
 <p>{value}</p>
 {#if value instanceof Date && !Number.isNaN(value.getTime())}
 	<p>UTC: {value.toISOString()}</p>
