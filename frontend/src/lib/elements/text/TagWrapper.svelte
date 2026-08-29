@@ -1,20 +1,19 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements';
-	import type { PlaceholderBackendTagClass } from '$src/placeholder/tag';
-	import { get_tag_color } from '$lib/helper/tag';
 
-	import Tag from '$lib/elements/text/tag.svelte';
+	import type { PlaceholderBackendTagClass } from '$src/placeholder/tag';
+	import Tag from '$lib/elements/text/Tag.svelte';
+	import { getTagColor } from '$lib/helper/tag';
 
 	interface Props extends HTMLAttributes<HTMLDivElement> {
 		tags: PlaceholderBackendTagClass[]; // replace that with the actual backend type later
 	}
-
 	const { tags, ...rest }: Props = $props();
 </script>
 
 <div {...rest}>
 	{#each tags as tag (tag.id)}
-		<Tag tag_color={get_tag_color(tag.color_id)}>{tag.text}</Tag>
+		<Tag tag_color={getTagColor(tag.color_id)}>{tag.text}</Tag>
 	{/each}
 </div>
 
@@ -22,10 +21,10 @@
 	div {
 		display: flex;
 		flex-direction: row;
-		gap: 0.2rem;
 		align-items: flex-start;
 		justify-content: flex-end;
 		align-content: flex-start;
 		flex-wrap: wrap;
+		gap: 0.2rem;
 	}
 </style>

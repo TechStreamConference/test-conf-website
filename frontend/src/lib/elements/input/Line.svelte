@@ -12,7 +12,7 @@
 	import { parseDateInputValue } from '$lib/helper/input';
 	import { parseInputValue } from '$lib/helper/input';
 	import { formatInputValue } from '$lib/helper/input';
-	import { validate_unsigned_int } from '$lib/helper/numbers';
+	import { unsignedIntOr } from '$lib/helper/numbers';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
 	type Props = Pick<
@@ -38,7 +38,7 @@
 		};
 	let { id, label, type, maxlength, value = $bindable(), context, ...rest }: Props = $props();
 
-	const validMaxLength: number | undefined = $derived(validate_unsigned_int(maxlength));
+	const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength, undefined));
 
 	function oninput(event: Event & { currentTarget: HTMLInputElement }) {
 		const element = event.currentTarget;
@@ -58,7 +58,7 @@
 		{id}
 		{type}
 		value={formatInputValue(type, value)}
-		{oninput}
+		oninput={onInput}
 		maxlength={validMaxLength}
 	/>
 	{#if validMaxLength !== undefined && MAX_LENGTH_INPUT_TYPE.has(type) && typeof value === 'string'}

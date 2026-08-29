@@ -15,7 +15,8 @@
 
 <style>
 	h4 {
-		font-size: var(--subheadline-font-size);
 		align-self: center;
+
+		font-size: var(--subheadline-font-size);
 	}
 </style>

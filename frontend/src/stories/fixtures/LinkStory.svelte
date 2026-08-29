@@ -1,7 +1,8 @@
 <script lang="ts">
-	import InlineLink from '$lib/elements/link/inline_link.svelte';
-	import Link from '$lib/elements/link/link.svelte';
-	import { LinkTarget } from '$lib/helper/link_options';
+	import InlineLink from '$lib/elements/link/InlineLink.svelte';
+	import Link from '$lib/elements/link/Link.svelte';
+
+	import { LinkTarget } from '$lib/helper/link-options';
 
 	interface Props {
 		variant: 'inline' | 'button';
@@ -10,7 +11,6 @@
 		aria_label: string;
 		target: LinkTarget;
 	}
-
 	let { variant, label, href, aria_label, target }: Props = $props();
 </script>
 

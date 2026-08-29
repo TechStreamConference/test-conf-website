@@ -48,6 +48,9 @@ export const MAX_LENGTH_INPUT_TYPE = new Set<InputType>([
 	InputType.Url
 ]);
 
+/**
+ * @brief this interface defines the value types for each input type.
+ */
 export interface InputValueMap {
 	[InputType.Text]: string;
 	[InputType.Password]: string;
@@ -63,7 +66,6 @@ export interface InputValueMap {
 	[InputType.Week]: ZonedDateTime;
 	[InputType.Color]: string;
 }
-
 export type InputValue<T extends InputType> = InputValueMap[T];
 
 export function isDateInputType(type: InputType): type is DateInputType {
@@ -101,6 +103,12 @@ export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
 	}
 }
 
+/**
+ * @brief this generate a frontend string based on the provided type.
+ *
+ * @param type the type the value should be formatted from.
+ * @param value the value formatted from.
+ */
 export function formatInputValue<T extends InputType>(type: T, value: InputValue<T>): string {
 	switch (type) {
 		case InputType.Number:

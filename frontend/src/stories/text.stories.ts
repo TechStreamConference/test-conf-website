@@ -1,8 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/sveltekit';
+import type { Meta } from '@storybook/sveltekit';
+import type { StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
-import { TagColor } from '$lib/helper/tag';
 import TextStory from './fixtures/TextStory.svelte';
+
+import { TagColor } from '$lib/helper/tag';
 
 const meta = {
 	title: 'Components/Text',
@@ -39,21 +41,18 @@ export const Headline: Story = {
 		render_line: true
 	}
 };
-
 export const SubHeadline: Story = {
 	args: {
 		variant: 'subheadline',
 		text: 'Building reliable software together'
 	}
 };
-
 export const Paragraph: Story = {
 	args: {
 		variant: 'paragraph',
 		text: 'A conference for people who care about testing, quality, and sustainable engineering.'
 	}
 };
-
 export const PreservedNewlines: Story = {
 	args: {
 		variant: 'paragraph',
@@ -61,7 +60,6 @@ export const PreservedNewlines: Story = {
 		preserve_newlines: true
 	}
 };
-
 export const Tag: Story = {
 	args: {
 		variant: 'tag',

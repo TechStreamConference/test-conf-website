@@ -6,7 +6,6 @@
 		children: Snippet;
 		preserve_newlines?: boolean;
 	}
-
 	const { children, preserve_newlines = false, ...rest }: Props = $props();
 </script>
 
