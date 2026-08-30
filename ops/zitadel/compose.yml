@@ -32,7 +32,7 @@ services:
         condition: service_healthy
 
   zitadel-api:
-    image: ghcr.io/zitadel/zitadel:${ZITADEL_VERSION}
+    image: ghcr.io/zitadel/zitadel:v4.17.1  # keep in sync with zitadel-login below
     restart: unless-stopped
     user: "0"
     command: start-from-init --masterkey "${ZITADEL_MASTERKEY}"
@@ -129,7 +129,7 @@ services:
       - traefik.http.routers.zitadel-canonical-websecure.priority=100
 
   zitadel-login:
-    image: ghcr.io/zitadel/zitadel-login:${ZITADEL_VERSION}
+    image: ghcr.io/zitadel/zitadel-login:v4.17.1  # keep in sync with zitadel-api above
     restart: unless-stopped
     user: "0"
     environment:

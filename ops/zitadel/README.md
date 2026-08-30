@@ -136,8 +136,9 @@ the database schema.
 
 To upgrade to a new Zitadel version:
 
-1. Update `ZITADEL_VERSION` in `.env` (and `.env.example` if it is a stable release).
+1. Update both Zitadel image tags in `compose.yml` (and the same in `.env.example` if it is a stable release).
 2. Pull new images and restart:
+
    ```bash
    cd ops/zitadel
    docker compose pull
