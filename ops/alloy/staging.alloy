@@ -1,7 +1,7 @@
 // Grafana Alloy configuration — staging environment
 //
 // Collects Docker container stdout/stderr and forwards to the central Loki
-// deployment at observability.test-conf.de.
+// deployment at logs.test-conf.de.
 //
 // The LOKI_URL environment variable must point to an endpoint that is reachable
 // from the staging server but NOT exposed publicly (use the server's internal
