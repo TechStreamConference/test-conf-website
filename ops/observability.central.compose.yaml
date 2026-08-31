@@ -28,9 +28,13 @@ services:
       # Grafana is behind oauth2-proxy which handles authentication.
       GF_AUTH_PROXY_ENABLED: "true"
       GF_AUTH_PROXY_HEADER_NAME: "X-Auth-Request-Email"
-      GF_AUTH_PROXY_HEADERS: "Email:X-Auth-Request-Email"
+      GF_AUTH_PROXY_HEADERS: "Email:X-Auth-Request-Email Role:X-Auth-Request-Role"
       GF_AUTH_PROXY_AUTO_SIGN_UP: "true"
+      GF_AUTH_PROXY_SYNC_TTL: "0"
       GF_SERVER_ROOT_URL: "https://logs.test-conf.de"
+
+      # Safe fallback when no recognized role header is present.
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: "Viewer"
     networks:
       - observability
     depends_on:
