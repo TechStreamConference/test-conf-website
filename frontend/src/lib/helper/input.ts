@@ -85,12 +85,9 @@ export function isMaxLengthVisible(maxLength: number, value: string): boolean {
 	return value.length > maxLength * MAX_LENGTH_VISIBLE_FACTOR;
 }
 
-export function calculateMaxLengthColor(maxLength: number, value: string): string {
-	if (maxLength * MAX_LENGTH_RED_FACTOR <= value.length) {
-		return 'red';
-	}
-	if (maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length) {
-		return 'orange';
-	}
-	return '';
+export function calculateOrange(maxLength: number, value: string): boolean {
+	return !calculateRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length;
+}
+export function calculateRed(maxLength: number, value: string): boolean {
+	return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;
 }

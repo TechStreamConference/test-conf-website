@@ -1,7 +1,11 @@
 <script lang="ts">
+	import type { AriaAttributes } from 'svelte/elements';
 	import type { HTMLInputAttributes } from 'svelte/elements';
 
-	interface Props extends Omit<HTMLInputAttributes, 'id' | 'label' | 'type' | 'value' | 'checked'> {
+	interface Props
+		extends
+			Pick<HTMLInputAttributes, 'class' | 'disabled' | 'name' | 'readonly' | 'required'>,
+			AriaAttributes {
 		id: string;
 		label: string;
 		checked: boolean;
@@ -11,8 +15,8 @@
 </script>
 
 <div>
-	<input {id} type="checkbox" bind:checked {...rest} />
-	<label class="normal-font" for={id}>{label}</label>
+	<input {...rest} {id} type="checkbox" bind:checked />
+	<label class:normal-font={true} for={id}>{label}</label>
 </div>
 
 <style>

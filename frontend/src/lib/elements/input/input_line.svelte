@@ -1,18 +1,32 @@
 <script lang="ts" generics="T extends InputType">
+	import type { AriaAttributes } from 'svelte/elements';
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import type { InputValue } from '$lib/helper/input';
 	import type { InputType } from '$lib/helper/input';
-	import { calculateMaxLengthColor } from '$lib/helper/input';
+	import { calculateOrange } from '$lib/helper/input';
+	import { calculateRed } from '$lib/helper/input';
 	import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
 	import { parseInputValue } from '$lib/helper/input';
 	import { formatInputValue } from '$lib/helper/input';
 	import { validate_unsigned_int } from '$lib/helper/numbers';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
-	interface Props extends Omit<
-		HTMLInputAttributes,
-		'id' | 'type' | 'value' | 'maxlength' | 'checked'
-	> {
+	interface Props
+		extends
+			Pick<
+				HTMLInputAttributes,
+				| 'autocomplete'
+				| 'class'
+				| 'disabled'
+				| 'max'
+				| 'min'
+				| 'name'
+				| 'placeholder'
+				| 'readonly'
+				| 'required'
+				| 'step'
+			>,
+			AriaAttributes {
 		id: string;
 		label: string;
 		type: T;
@@ -31,18 +45,20 @@
 <div>
 	<label for={id}>{label}</label>
 	<input
-		class="normal-font"
+		{...rest}
+		class:normal-font={true}
 		{id}
 		{type}
 		value={formatInputValue(type, value)}
 		{oninput}
 		maxlength={validMaxLength}
-		{...rest}
 	/>
 	{#if validMaxLength !== undefined && MAX_LENGTH_INPUT_TYPE.has(type) && typeof value === 'string'}
 		<p
 			class:visible={isMaxLengthVisible(validMaxLength, value)}
-			class="normal-font max-length-indicator {calculateMaxLengthColor(validMaxLength, value)}"
+			class:normal-font={true}
+			class:orange={calculateOrange(validMaxLength, value)}
+			class:red={calculateRed(validMaxLength, value)}
 		>
 			{value.length.toString()} / {validMaxLength.toString()}
 		</p>

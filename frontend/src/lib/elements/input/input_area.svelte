@@ -1,10 +1,18 @@
 <script lang="ts">
+	import type { AriaAttributes } from 'svelte/elements';
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 	import { validate_unsigned_int } from '$lib/helper/numbers';
-	import { calculateMaxLengthColor } from '$lib/helper/input';
+	import { calculateOrange } from '$lib/helper/input';
+	import { calculateRed } from '$lib/helper/input';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
-	interface Props extends Omit<HTMLTextareaAttributes, 'id' | 'maxlength' | 'checked'> {
+	interface Props
+		extends
+			Pick<
+				HTMLTextareaAttributes,
+				'autocomplete' | 'class' | 'disabled' | 'name' | 'placeholder' | 'readonly' | 'required'
+			>,
+			AriaAttributes {
 		id: string;
 		label: string;
 		maxlength?: number | undefined;
@@ -17,11 +25,14 @@
 
 <div>
 	<label for={id}>{label}</label>
-	<textarea class="normal-font" {id} maxlength={validMaxLength} bind:value {...rest}></textarea>
+	<textarea {...rest} class:normal-font={true} {id} maxlength={validMaxLength} bind:value
+	></textarea>
 	{#if validMaxLength !== undefined}
 		<p
 			class:visible={isMaxLengthVisible(validMaxLength, value)}
-			class="normal-font max-length-indicator {calculateMaxLengthColor(validMaxLength, value)}"
+			class:normal-font={true}
+			class:orange={calculateOrange(validMaxLength, value)}
+			class:red={calculateRed(validMaxLength, value)}
 		>
 			{value.length.toString()} / {validMaxLength.toString()}
 		</p>
