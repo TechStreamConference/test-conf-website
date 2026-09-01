@@ -108,7 +108,8 @@ export default defineConfig(
 				{
 					selector:
 						'SvelteElement[kind="html"] > SvelteStartTag > SvelteAttribute[key.name="class"]',
-					message: 'Do not use `class` on native HTML elements. Use it only on components.'
+					message:
+						'Do not use `class="..."` on native HTML elements. Use it only on components. Use `class:...={true}` instead'
 				},
 				// Spread attributes (e.g. `{...rest}`) must always be the first attribute,
 				// both on native HTML tags and on components.
