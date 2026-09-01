@@ -102,6 +102,15 @@ export default defineConfig(
 		},
 
 		rules: {
+			// Disallow `class="..."` on native HTML elements (components are fine).
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						'SvelteElement[kind="html"] > SvelteStartTag > SvelteAttribute[key.name="class"]',
+					message: 'Do not use `class` on native HTML elements. Use it only on components.'
+				}
+			],
 			'@typescript-eslint/no-unused-vars': [
 				'error',
 				{
