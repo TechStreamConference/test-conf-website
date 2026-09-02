@@ -35,6 +35,19 @@ class User(SQLModel, table=True):
     created_at: datetime = Field(default_factory=_utc_now, nullable=False)
 
 
+@final
+class OidcLoginTransaction(SQLModel, table=True):
+    __tablename__ = "oidc_login_transactions"  # type: ignore[reportAssignmentType]
+
+    state_hash: str = Field(primary_key=True)
+    browser_secret_hash: str
+    nonce: str  # Raw: Authlib needs the original to validate the ID token claim.
+    pkce_code_verifier: str  # Raw: sent verbatim to the token endpoint.
+    return_to: str
+    created_at: datetime = Field(default_factory=_utc_now, nullable=False)
+    expires_at: datetime
+
+
 # WARNING: Changing the `GlobalKey` enum requires also creating a database
 #          migration to update the SQLAlchemy Enum type in the database.
 @final
