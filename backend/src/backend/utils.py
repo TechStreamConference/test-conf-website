@@ -1,7 +1,26 @@
+import hashlib
+import secrets
 from typing import Final
 
 from fastapi import HTTPException
 from pydantic import BaseModel
+
+_BROWSER_SECRET_BYTES = 32
+
+
+def generate_browser_secret() -> str:
+    """Secret handed to the browser in the login cookie and stored hashed in the transaction.
+
+    Binds the callback to the user agent that started the flow.
+    """
+    return secrets.token_urlsafe(_BROWSER_SECRET_BYTES)
+
+
+def hash_token(token: str) -> str:
+    """Hash a bearer-style token for storage at rest."""
+    # Plain SHA-256 suffices because these tokens are high-entropy random values,
+    # so there is nothing for an attacker to brute-force.
+    return hashlib.sha256(token.encode()).hexdigest()
 
 
 def create_http_exception(status_code: int, body: BaseModel) -> HTTPException:
