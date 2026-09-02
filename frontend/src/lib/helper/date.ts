@@ -1,4 +1,4 @@
-export function toDate(value: unknown): Date {
+export function toDate(value: Date | string | number): Date {
 	if (value instanceof Date) {
 		return value;
 	}

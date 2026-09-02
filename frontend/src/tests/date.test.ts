@@ -21,13 +21,6 @@ describe('toDate', () => {
 	it('should return an invalid Date for an unparseable string', () => {
 		expect(Number.isNaN(toDate('not a date').getTime())).toBe(true);
 	});
-
-	it('should return an invalid Date for unsupported types', () => {
-		expect(Number.isNaN(toDate(null).getTime())).toBe(true);
-		expect(Number.isNaN(toDate(undefined).getTime())).toBe(true);
-		expect(Number.isNaN(toDate({}).getTime())).toBe(true);
-		expect(Number.isNaN(toDate(true).getTime())).toBe(true);
-	});
 });
 
 describe('formatDate', () => {
@@ -63,11 +56,11 @@ describe('formatDate', () => {
 	it('should format as local time when asLocalTime is true', () => {
 		const date = new Date('2026-09-02T20:51:30.123Z');
 		const expected =
-			`${date.getFullYear()}-` +
+			`${String(date.getFullYear())}-` +
 			`${String(date.getMonth() + 1).padStart(2, '0')}-` +
 			`${String(date.getDate()).padStart(2, '0')}T` +
 			`${String(date.getHours()).padStart(2, '0')}:` +
-			`${String(date.getMinutes()).padStart(2, '0')}`;
+			String(date.getMinutes()).padStart(2, '0');
 		expect(formatDate(date, 16, true)).toBe(expected);
 	});
 });
