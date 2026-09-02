@@ -105,6 +105,10 @@
 		font-size: 1rem;
 		padding: 0 0.3rem;
 		border-radius: var(--border-radius);
+		max-width: 75%;
+		overflow: hidden;
+		white-space: nowrap;
+		text-overflow: ellipsis;
 	}
 
 	p {
