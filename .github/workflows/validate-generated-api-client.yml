@@ -17,6 +17,9 @@ jobs:
       - name: Initialize development environment 
         run: nix develop --command just init-ci
 
+      - name: Create .env file
+        run: cp .env.example .env
+
       - name: Generate OpenAPI schema
         working-directory: "backend"
         run: >
