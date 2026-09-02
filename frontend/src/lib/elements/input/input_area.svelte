@@ -39,78 +39,12 @@
 	{/if}
 </div>
 
+<!-- eslint-disable svelte/no-unused-svelte-ignore -->
+<!-- svelte-ignore css_unused_selector -->
 <style>
-	div {
-		width: 100%;
-		height: fit-content;
-		position: relative;
-		margin-top: 1.1rem;
-	}
-
-	textarea {
-		background-color: var(--background-color-500);
-		padding: 0.25rem;
-		width: 100%;
-		font-size: 1rem;
-		border-radius: var(--border-radius);
-		border: 0;
-		outline: 1px solid var(--line-color);
-		box-shadow: 0 0 0 0 transparent;
-		transition:
-			box-shadow var(--transition-duration-fast),
-			border-radius var(--transition-duration-fast);
-	}
-
-	textarea:hover {
-		border-radius: 0;
-		box-shadow: 0 0 0 2px var(--line-color);
-	}
-
-	textarea:focus {
-		box-shadow: 0 0 0 2px var(--line-color);
-	}
-
-	label {
-		background-color: var(--background-color-500);
-		display: inline-block;
-		inset-inline-start: 0.2rem;
-		inset-block-start: -0.9rem;
-		position: absolute;
-		font-size: 1rem;
-		padding: 0 0.3rem;
-		border-radius: var(--border-radius);
-		max-width: 75%;
-		overflow: hidden;
-		white-space: nowrap;
-		text-overflow: ellipsis;
-	}
-
-	p {
-		background-color: var(--background-color-500);
-		position: absolute;
-		display: inline-block;
-		inset-inline-end: 0.2rem;
-		inset-block-start: -0.9rem;
-		padding: 0 0.3rem;
-		font-size: 0.8rem;
-		border-radius: var(--border-radius);
-		opacity: 0;
-		visibility: hidden;
-		transition:
-			opacity var(--transition-duration),
-			visibility var(--transition-duration);
-	}
-
-	p.visible {
-		opacity: 1;
-		visibility: visible;
-	}
-
-	.orange {
-		color: var(--warning-color);
-	}
-
-	.red {
-		color: var(--error-color);
-	}
+	/*
+	 * unused input selector because it is the same selector as textarea.
+	 * Also ESLint does not get, that the svelte-ignore is actually doing stuff.
+	 */
+	@import 'static/css/input.css';
 </style>
