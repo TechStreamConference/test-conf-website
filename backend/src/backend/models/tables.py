@@ -1,4 +1,3 @@
-from datetime import UTC
 from datetime import date
 from datetime import datetime
 from enum import StrEnum
@@ -9,21 +8,19 @@ from typing import final
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-
-def _utc_now() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=None)
+from backend.utils import utc_now
 
 
 class _AuditMixin(SQLModel):
     created_at: datetime = Field(
-        default_factory=_utc_now,
+        default_factory=utc_now,
         nullable=False,
     )
 
     updated_at: datetime = Field(
-        default_factory=_utc_now,
+        default_factory=utc_now,
         nullable=False,
-        sa_column_kwargs={"onupdate": _utc_now},
+        sa_column_kwargs={"onupdate": utc_now},
     )
 
 
@@ -32,7 +29,7 @@ class User(SQLModel, table=True):
     __tablename__ = "users"  # type: ignore[reportAssignmentType]
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=_utc_now, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 @final
@@ -44,7 +41,7 @@ class OidcLoginTransaction(SQLModel, table=True):
     nonce: str  # Raw: Authlib needs the original to validate the ID token claim.
     pkce_code_verifier: str  # Raw: sent verbatim to the token endpoint.
     return_to: str
-    created_at: datetime = Field(default_factory=_utc_now, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
     expires_at: datetime
 
 
