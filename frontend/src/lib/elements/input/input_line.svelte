@@ -133,10 +133,10 @@
 	}
 
 	.orange {
-		color: orange;
+		color: var(--warning-color);
 	}
 
 	.red {
-		color: red;
+		color: var(--error-color);
 	}
 </style>
