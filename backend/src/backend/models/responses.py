@@ -61,3 +61,8 @@ class EventNotFoundResponseV1(BaseModel):
 @final
 class InvalidSequenceNumberResponseV1(BaseModel):
     detail: Literal["Invalid sequence number."] = "Invalid sequence number."
+
+
+@final
+class InvalidRedirectUrlResponseV1(BaseModel):
+    detail: Literal["Invalid redirect URL."] = "Invalid redirect URL."
