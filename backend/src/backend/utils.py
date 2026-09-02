@@ -1,11 +1,18 @@
 import hashlib
 import secrets
+from datetime import UTC
+from datetime import datetime
 from typing import Final
 
 from fastapi import HTTPException
 from pydantic import BaseModel
 
 _BROWSER_SECRET_BYTES = 32
+
+
+def utc_now() -> datetime:
+    """Current UTC time, made naïve to match the timestamp columns."""
+    return datetime.now(UTC).replace(tzinfo=None)
 
 
 def generate_browser_secret() -> str:
