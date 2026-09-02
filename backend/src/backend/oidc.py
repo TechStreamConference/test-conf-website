@@ -1,3 +1,4 @@
+from datetime import timedelta
 from typing import Final
 from typing import final
 
@@ -9,6 +10,9 @@ from pydantic import ConfigDict
 from backend.config import SETTINGS
 
 _ZITADEL_CLIENT_NAME = "zitadel"
+
+# Login transactions are single-use and only have to survive the redirect to ZITADEL.
+LOGIN_TRANSACTION_LIFETIME = timedelta(minutes=10)
 
 # Requested at the authorization endpoint; `openid` is what makes this an OIDC
 # rather than a plain OAuth2 flow.
