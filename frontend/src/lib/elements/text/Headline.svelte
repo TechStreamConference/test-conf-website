@@ -18,15 +18,18 @@
 	h2 {
 		display: inline-block;
 		align-self: center;
+
 		font-size: var(--headline-font-size);
 	}
 
 	h2.render-line::after {
-		content: '';
 		display: block;
+
 		height: var(--headline-after-height);
 		width: var(--headline-after-width);
 		margin-inline-start: var(--headline-after-margin-start);
+
+		content: '';
 		background: var(--secondary-color);
 	}
 </style>

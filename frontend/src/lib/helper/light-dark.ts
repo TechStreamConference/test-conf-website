@@ -4,7 +4,7 @@ export enum Theme {
 	Dark = 'dark'
 }
 
-// when changing these: remember, that there are coresponding valus in 'src/app.html' and 'static/main.css'
+// when changing these: remember that there are corresponding values in 'src/app.html' and 'static/main.css'
 const STORAGE_KEY: string = 'TEST_CONF_THEME';
 const CSS_DARK_MODE: string = 'dark-theme';
 const CSS_LIGHT_MODE: string = 'light-theme';
@@ -15,7 +15,7 @@ const PREFERRED_THEME_QUERY: string = '(prefers-color-scheme: dark)';
 let css_transition_timer: number | undefined;
 let initialized: boolean = false;
 
-function parse_theme(value: string | null): Theme {
+function parseTheme(value: string | null): Theme {
 	switch (value) {
 		case Theme.Light:
 			return Theme.Light;
@@ -29,7 +29,7 @@ function parse_theme(value: string | null): Theme {
 	}
 }
 
-function next_theme(theme: Theme): Theme {
+function nextTheme(theme: Theme): Theme {
 	switch (theme) {
 		case Theme.Dark:
 			return Theme.Light;
@@ -41,11 +41,19 @@ function next_theme(theme: Theme): Theme {
 	}
 }
 
-function save_theme(theme: Theme): void {
+/**
+ * @brief Saves the theme to the browsers' local storage.
+ * @param theme the enum value
+ */
+function saveTheme(theme: Theme): void {
 	localStorage.setItem(STORAGE_KEY, theme);
 }
 
-function apply_theme(theme: Theme): void {
+/**
+ * @brief Applies the theme to the document.
+ * @param theme the enum value
+ */
+function applyTheme(theme: Theme): void {
 	const root = document.documentElement;
 	root.classList.remove(CSS_LIGHT_MODE, CSS_DARK_MODE);
 
@@ -65,7 +73,12 @@ function apply_theme(theme: Theme): void {
 	}
 }
 
-function apply_transition(): void {
+/**
+ * @brief Applies the css theme transition class to the document.
+ * Sets a time as long as the css transition is active.
+ * Removes the css transition class once the transition is done.
+ */
+function applyTransition(): void {
 	const root = document.documentElement;
 	root.classList.add(CSS_TRANSITION_CLASS);
 
@@ -79,34 +92,50 @@ function apply_transition(): void {
 	}, CSS_TRANSITION_TIME_MILLISECONDS);
 }
 
-export function init_theme(): void {
+/**
+ * @brief Initializes the theme.
+ * Also sets an event listener for the system theme change.
+ */
+export function initTheme(): void {
 	if (initialized) {
 		return;
 	}
 
-	apply_theme(get_theme());
+	applyTheme(getTheme());
 	window.matchMedia(PREFERRED_THEME_QUERY).addEventListener('change', () => {
-		if (get_theme() === Theme.System) {
-			apply_theme(Theme.System);
-			apply_transition();
+		if (getTheme() === Theme.System) {
+			applyTheme(Theme.System);
+			applyTransition();
 		}
 	});
 
 	initialized = true;
 }
 
-export function get_theme(): Theme {
-	return parse_theme(localStorage.getItem(STORAGE_KEY));
+/**
+ * @brief Gets the theme from the browsers' local storage and parses it.
+ * @returns the enum value
+ */
+export function getTheme(): Theme {
+	return parseTheme(localStorage.getItem(STORAGE_KEY));
 }
 
-export function set_theme(theme: Theme): void {
-	save_theme(theme);
-	apply_theme(theme);
-	apply_transition();
+/**
+ * @brief Sets the theme in the browsers' local storage and applies it to the document.
+ * @param theme the enum value
+ */
+export function setTheme(theme: Theme): void {
+	saveTheme(theme);
+	applyTheme(theme);
+	applyTransition();
 }
 
-export function toggle_theme(): Theme {
-	const next = next_theme(get_theme());
-	set_theme(next);
+/**
+ * @brief Toggles the theme and returns the new theme.
+ * @returns the new theme
+ */
+export function toggleTheme(): Theme {
+	const next = nextTheme(getTheme());
+	setTheme(next);
 	return next;
 }

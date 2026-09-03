@@ -1,10 +1,9 @@
 import type { RequestEvent } from '@sveltejs/kit';
 
-import { getGlobalsV1 } from '$gen/sdk.gen';
 import type { GlobalsResponseV1 } from '$gen/types.gen';
-
 import { UndefinedDataError } from '$bff/errors';
 import { GenericBackendError } from '$bff/errors';
+import { getGlobalsV1 } from '$gen/sdk.gen';
 import { logger } from '$logging';
 import { backendCallCompleted } from '$logging/events.gen';
 

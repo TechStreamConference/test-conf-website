@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends InputType">
 	import type { AriaAttributes } from 'svelte/elements';
 	import type { HTMLInputAttributes } from 'svelte/elements';
+
 	import type { InputValue } from '$lib/helper/input';
 	import type { InputType } from '$lib/helper/input';
 	import { isMaxLengthOrange } from '$lib/helper/input';
@@ -8,7 +9,7 @@
 	import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
 	import { parseInputValue } from '$lib/helper/input';
 	import { formatInputValue } from '$lib/helper/input';
-	import { validate_unsigned_int } from '$lib/helper/numbers';
+	import { unsignedIntOr } from '$lib/helper/numbers';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
 	interface Props
@@ -35,9 +36,9 @@
 	}
 	let { id, label, type, maxlength, value = $bindable(), ...rest }: Props = $props();
 
-	const validMaxLength: number | undefined = $derived(validate_unsigned_int(maxlength));
+	const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength, undefined));
 
-	function oninput(event: Event & { currentTarget: HTMLInputElement }) {
+	function onInput(event: Event & { currentTarget: HTMLInputElement }) {
 		value = parseInputValue(type, event.currentTarget);
 	}
 </script>
@@ -50,7 +51,7 @@
 		{id}
 		{type}
 		value={formatInputValue(type, value)}
-		{oninput}
+		oninput={onInput}
 		maxlength={validMaxLength}
 	/>
 	{#if validMaxLength !== undefined && MAX_LENGTH_INPUT_TYPE.has(type) && typeof value === 'string'}

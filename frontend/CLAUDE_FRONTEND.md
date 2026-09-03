@@ -18,6 +18,7 @@ Guide for how to work in this repo (Frontend of TestConf).
 6. **EOF.** All files end with an empty line (a trailing `\n`).
 7. **Accessibility** is extremely important. Check all (your) implementations against it.
 8. **English** is used everywhere — in code as well as in comments and any other files.
+9. **style.md** defines the codestyle were using in the project. Read it an apply it to youre new written code.
 
 ## Completion Workflow
 

@@ -10,7 +10,6 @@
 		label: string;
 		checked: boolean;
 	}
-
 	let { id, label, checked = $bindable(), ...rest }: Props = $props();
 </script>
 
@@ -25,25 +24,23 @@
 		align-items: center;
 		gap: 0.5rem;
 	}
-	input {
-		accent-color: var(--line-color);
 
+	input {
+		border-radius: var(--border-radius);
 		width: 1.1rem;
 		height: 1.1rem;
 
 		cursor: pointer;
-		border-radius: var(--border-radius);
+		accent-color: var(--line-color);
 
 		transition:
 			outline var(--transition-duration-fast),
 			box-shadow var(--transition-duration-fast);
 	}
-
 	input:hover {
 		outline: 2px solid var(--line-color);
 		outline-offset: 2px;
 	}
-
 	input:focus-visible {
 		outline: 2px solid var(--line-color);
 		outline-offset: 2px;

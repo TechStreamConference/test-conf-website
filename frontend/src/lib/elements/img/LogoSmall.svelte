@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HTMLImgAttributes } from 'svelte/elements';
-	import Image from '$lib/elements/img/image.svelte';
+
+	import Image from '$lib/elements/img/Image.svelte';
 
 	interface Props extends Omit<HTMLImgAttributes, 'src' | 'alt'> {
 		height?: string | undefined;

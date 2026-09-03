@@ -1,7 +1,8 @@
-import type { Meta, StoryObj } from '@storybook/sveltekit';
+import type { Meta } from '@storybook/sveltekit';
+import type { StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
-import TagWrapperComponent from '$lib/elements/text/tag_wrapper.svelte';
+import TagWrapperComponent from '$lib/elements/text/TagWrapper.svelte';
 
 const meta = {
 	title: 'Components/Text',
@@ -16,7 +17,5 @@ const meta = {
 } satisfies Meta<ComponentProps<typeof TagWrapperComponent>>;
 
 export default meta;
-
 type Story = StoryObj<typeof meta>;
-
 export const TagWrapper: Story = {};

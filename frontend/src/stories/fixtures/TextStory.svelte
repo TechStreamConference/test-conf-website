@@ -1,8 +1,9 @@
 <script lang="ts">
-	import Headline from '$lib/elements/text/headline.svelte';
-	import Paragraph from '$lib/elements/text/paragraph.svelte';
-	import SubHeadline from '$lib/elements/text/sub_headline.svelte';
-	import Tag from '$lib/elements/text/tag.svelte';
+	import Headline from '$lib/elements/text/Headline.svelte';
+	import Paragraph from '$lib/elements/text/Paragraph.svelte';
+	import SubHeadline from '$lib/elements/text/SubHeadline.svelte';
+	import Tag from '$lib/elements/text/Tag.svelte';
+
 	import { TagColor } from '$lib/helper/tag';
 
 	interface Props {
@@ -12,7 +13,6 @@
 		preserve_newlines: boolean;
 		tag_color: TagColor;
 	}
-
 	let { variant, text, render_line, preserve_newlines, tag_color }: Props = $props();
 </script>
 

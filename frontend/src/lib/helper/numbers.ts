@@ -1,19 +1,19 @@
-export function is_number(value: unknown): value is number {
+export function isNumber(value: unknown): value is number {
 	return typeof value === 'number';
 }
 
-export function is_valid_unsigned_int(value: number): boolean {
+export function isUnsignedInt(value: number): boolean {
 	return Number.isInteger(value) && value >= 0;
 }
 
-export function validate_unsigned_int(value: number | undefined | null): number | undefined {
-	if (!is_number(value)) {
-		return undefined;
+export function unsignedIntOr<T>(value: number | undefined | null, defaultValue: T): number | T {
+	if (!isNumber(value)) {
+		return defaultValue;
 	}
 
-	if (!is_valid_unsigned_int(value)) {
+	if (!isUnsignedInt(value)) {
 		console.log(`VALIDATOR: ${value.toString()} is not unsigned int - set to undefined`);
-		return undefined;
+		return defaultValue;
 	}
 
 	return value;

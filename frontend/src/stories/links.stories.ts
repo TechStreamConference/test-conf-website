@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
 
-import { LinkTarget } from '$lib/helper/link_options';
+import { LinkTarget } from '$lib/helper/link-options';
 import LinkStory from './fixtures/LinkStory.svelte';
 
 const meta = {
@@ -29,9 +29,7 @@ const meta = {
 export default meta;
 
 type Story = StoryObj<typeof meta>;
-
 export const Inline: Story = {};
-
 export const Button: Story = {
 	args: {
 		variant: 'button'

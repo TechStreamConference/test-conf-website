@@ -1,5 +1,5 @@
 <script lang="ts">
-	import InputCheckbox from '$lib/elements/input/input_checkbox.svelte';
+	import InputCheckbox from '$lib/elements/input/Checkbox.svelte';
 
 	interface Props {
 		count: number;
@@ -7,6 +7,7 @@
 		label: string;
 	}
 	const { count, layout, label }: Props = $props();
+
 	let value: boolean = $state(false);
 </script>
 
