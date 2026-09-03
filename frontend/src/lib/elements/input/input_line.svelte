@@ -3,8 +3,8 @@
 	import type { HTMLInputAttributes } from 'svelte/elements';
 	import type { InputValue } from '$lib/helper/input';
 	import type { InputType } from '$lib/helper/input';
-	import { calculateOrange } from '$lib/helper/input';
-	import { calculateRed } from '$lib/helper/input';
+	import { isMaxLengthOrange } from '$lib/helper/input';
+	import { isMaxLengthRed } from '$lib/helper/input';
 	import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
 	import { parseInputValue } from '$lib/helper/input';
 	import { formatInputValue } from '$lib/helper/input';
@@ -57,8 +57,8 @@
 		<p
 			class:visible={isMaxLengthVisible(validMaxLength, value)}
 			class:normal-font={true}
-			class:orange={calculateOrange(validMaxLength, value)}
-			class:red={calculateRed(validMaxLength, value)}
+			class:orange={isMaxLengthOrange(validMaxLength, value)}
+			class:red={isMaxLengthRed(validMaxLength, value)}
 		>
 			{value.length.toString()} / {validMaxLength.toString()}
 		</p>

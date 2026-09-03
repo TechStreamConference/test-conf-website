@@ -78,12 +78,12 @@ export function formatInputValue<T extends InputType>(type: T, value: InputValue
 }
 
 export function isMaxLengthVisible(maxLength: number, value: string): boolean {
-	return value.length > maxLength * MAX_LENGTH_VISIBLE_FACTOR;
+	return value.length >= maxLength * MAX_LENGTH_VISIBLE_FACTOR;
 }
 
-export function calculateOrange(maxLength: number, value: string): boolean {
-	return !calculateRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length;
+export function isMaxLengthOrange(maxLength: number, value: string): boolean {
+	return !isMaxLengthRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length;
 }
-export function calculateRed(maxLength: number, value: string): boolean {
+export function isMaxLengthRed(maxLength: number, value: string): boolean {
 	return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;
 }

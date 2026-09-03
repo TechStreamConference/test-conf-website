@@ -2,8 +2,8 @@
 	import type { AriaAttributes } from 'svelte/elements';
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 	import { validate_unsigned_int } from '$lib/helper/numbers';
-	import { calculateOrange } from '$lib/helper/input';
-	import { calculateRed } from '$lib/helper/input';
+	import { isMaxLengthOrange } from '$lib/helper/input';
+	import { isMaxLengthRed } from '$lib/helper/input';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
 	interface Props
@@ -31,8 +31,8 @@
 		<p
 			class:visible={isMaxLengthVisible(validMaxLength, value)}
 			class:normal-font={true}
-			class:orange={calculateOrange(validMaxLength, value)}
-			class:red={calculateRed(validMaxLength, value)}
+			class:orange={isMaxLengthOrange(validMaxLength, value)}
+			class:red={isMaxLengthRed(validMaxLength, value)}
 		>
 			{value.length.toString()} / {validMaxLength.toString()}
 		</p>
