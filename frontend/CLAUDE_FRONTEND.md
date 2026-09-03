@@ -1,31 +1,35 @@
 # CLAUDE.md — Frontend
 
-Anleitung, wie in diesem Repo (Frontend von TestConf) gearbeitet wird.
+Guide for how to work in this repo (Frontend of TestConf).
 
-## Umgebung
+## Environment
 
-- Dies ist eine Nix-Umgebung. Mit `nix develop` (im Repo-Root ausgeführt) wird eine Shell aufgesetzt, in der gearbeitet und getestet werden kann.
-- Innerhalb dieser Shell werden ausschließlich `just`-Commands ausgeführt (kein direktes `pnpm`, `npm` etc.).
-- Die verfügbaren `just`-Commands stehen in [`../justfile`](../justfile). Dort nachschauen, welcher Command für welche Aufgabe passt (z. B. Frontend-Check, Frontend-Test, Typegen, Storybook, E2E-Tests).
+- This is a Nix environment. `nix develop` (run from the repo root) sets up a shell in which work and tests can be carried out.
+- Within that shell, only `just` commands are run (no direct `pnpm`, `npm`, etc.).
+- The available `just` commands are documented in [`../justfile`](../justfile). Check there to see which command fits which task (e.g. frontend check, frontend test, type generation, Storybook, E2E tests).
 
-## Regeln
+## Rules
 
-1. **Vor jedem Command nachfragen.** Kein `nix develop`, `just ...` oder sonstiger Shell-Command wird ohne vorherige Rückfrage ausgeführt — **außer** dem Abschluss-Workflow (siehe unten), der ohne weitere Rückfrage ausgeführt werden darf.
-2. **Änderungen an der Umgebung** (Dependencies, Konfigurationsdateien wie `package.json`, `tsconfig.json`, `eslint.config.js`, Nix-Flake, `justfile` etc.) nur nach expliziter Rückfrage durchführen.
-3. **Keine Git-Commits.** Committen übernimmt der User selbst.
-4. **Nur besprochene Änderungen umsetzen.** Kein Scope-Creep, keine zusätzlichen Refactorings oder Aufräumarbeiten ohne Absprache.
-5. **Bei Unklarheit nachfragen**, statt zu raten.
-6. **EOF** Alle Dateien enden mit einer leeren Zeile (einem `\n`)
-7. **Accessibility** ist extrem wichtig. Prüfe alle (deine) Umsetzungen darauf.
+1. **Ask before every command.** No `nix develop`, `just ...`, or other shell command is run without prior confirmation.
+2. **Changes to the environment** (dependencies, config files such as `package.json`, `tsconfig.json`, `eslint.config.js`, the Nix flake, `justfile`, etc.) are only made after explicit confirmation.
+3. **No git commits.** Committing is done by the user.
+4. **Only implement changes that were discussed.** No scope creep, no extra refactoring or cleanup without agreement.
+5. **Ask when unsure**, instead of guessing.
+6. **EOF.** All files end with an empty line (a trailing `\n`).
+7. **Accessibility** is extremely important. Check all (your) implementations against it.
+8. **English** is used everywhere — in code as well as in comments and any other files.
 
-## Abschluss-Workflow
+## Completion Workflow
 
-Nach Abschluss von Änderungen (und nur dann) werden genau diese drei Commands in genau dieser Reihenfolge ohne weitere Rückfrage ausgeführt:
+Below is the frontend tests defined. Run them in exact that order, only after confirmation (see rule 1).
+This tests do not need to be executed every time. Only bevore the user wants to commit.
+Offer the execute them, when you think a big part is done. Do not decide that youreself.
+
+Start by running `just frontend-suite` to run all commands at once.
+Call the check commands on its own only when something failes to not run all commands again.
 
 ```bash
 just frontend-fix
 just frontend-check
 just frontend-test
 ```
-
-Keine anderen Commands und zu keinem anderen Zeitpunkt — das bleibt genehmigungspflichtig (siehe Regel 1). Treten bei den drei Commands Fehler auf, werden diese behoben, bevor die Änderung als abgeschlossen gilt.
