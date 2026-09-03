@@ -13,7 +13,6 @@ export enum InputType {
 	Url = 'url',
 	Tel = 'tel',
 	Number = 'number',
-	Range = 'range',
 	Date = 'date',
 	Time = 'time',
 	DatetimeLocal = 'datetime-local',
@@ -39,7 +38,6 @@ export interface InputValueMap {
 	[InputType.Url]: string;
 	[InputType.Tel]: string;
 	[InputType.Number]: number;
-	[InputType.Range]: number;
 	[InputType.Date]: Date;
 	[InputType.Time]: string;
 	[InputType.DatetimeLocal]: Date;
@@ -56,7 +54,6 @@ export function parseInputValue<T extends InputType>(
 ): InputValue<T> {
 	switch (type) {
 		case InputType.Number:
-		case InputType.Range:
 			return element.valueAsNumber as InputValue<T>;
 		case InputType.Date:
 			return (element.valueAsDate ?? new Date(NaN)) as InputValue<T>;
@@ -70,7 +67,6 @@ export function parseInputValue<T extends InputType>(
 export function formatInputValue<T extends InputType>(type: T, value: InputValue<T>): string {
 	switch (type) {
 		case InputType.Number:
-		case InputType.Range:
 			return Number.isNaN(value) ? '' : String(value);
 		case InputType.Date:
 			return formatDate(toDate(value), 10, false);
