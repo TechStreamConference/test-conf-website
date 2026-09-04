@@ -1,19 +1,28 @@
+import hmac
 from typing import Annotated
 from typing import Final
+from typing import Optional
 from urllib.parse import urlparse
 
 from fastapi import APIRouter
+from fastapi import Cookie
 from fastapi import Depends
+from fastapi import Response
 from fastapi import status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.config import SETTINGS
 from backend.database import get_session
+from backend.models.responses import EmailNotVerifiedResponseV1
+from backend.models.responses import IdentityProviderErrorResponseV1
+from backend.models.responses import InvalidLoginTransactionResponseV1
 from backend.models.responses import InvalidRedirectUrlResponseV1
+from backend.models.responses import LoginCallbackResponseV1
 from backend.models.tables import OidcLoginTransaction
 from backend.oidc import LOGIN_TRANSACTION_LIFETIME
 from backend.oidc import create_authorization_request
+from backend.oidc import exchange_code
 from backend.utils import create_http_exception
 from backend.utils import generate_browser_secret
 from backend.utils import hash_token
@@ -91,3 +100,80 @@ async def login(
     )
 
     return response
+
+
+@ROUTER.get(
+    "/callback",
+    summary="Identity provider callback endpoint",
+    description="Completes the login started at the identity provider and returns the redirect target.",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {
+            "model": InvalidLoginTransactionResponseV1,
+            "description": "Returned when the login transaction is unknown, expired or was started by another browser.",
+        },
+        status.HTTP_401_UNAUTHORIZED: {
+            "model": IdentityProviderErrorResponseV1,
+            "description": "Returned when the identity provider reported an error instead of an authorization code.",
+        },
+        status.HTTP_403_FORBIDDEN: {
+            "model": EmailNotVerifiedResponseV1,
+            "description": "Returned when the authenticated account has an unverified email address.",
+        },
+    },
+    operation_id="login callback v1",
+)
+async def callback(
+    response: Response,
+    session: Annotated[AsyncSession, Depends(get_session)],
+    login_secret: Annotated[Optional[str], Cookie(alias=_LOGIN_COOKIE_NAME)] = None,
+    state: Optional[str] = None,
+    code: Optional[str] = None,
+    error: Optional[str] = None,
+) -> LoginCallbackResponseV1:
+    if error is not None:
+        raise create_http_exception(
+            status.HTTP_401_UNAUTHORIZED,
+            IdentityProviderErrorResponseV1(),
+        )
+
+    if state is None or code is None or login_secret is None:
+        raise create_http_exception(
+            status.HTTP_400_BAD_REQUEST,
+            InvalidLoginTransactionResponseV1(),
+        )
+
+    transaction: Final = await session.get(OidcLoginTransaction, hash_token(state))
+    if transaction is None:
+        raise create_http_exception(
+            status.HTTP_400_BAD_REQUEST,
+            InvalidLoginTransactionResponseV1(),
+        )
+
+    expires_at: Final = transaction.expires_at
+    browser_secret_hash: Final = transaction.browser_secret_hash
+    nonce: Final = transaction.nonce
+    code_verifier: Final = transaction.pkce_code_verifier
+    return_to: Final = transaction.return_to
+
+    # Consume before validating so that a transaction can never be replayed.
+    await session.delete(transaction)
+    await session.commit()
+
+    if expires_at < utc_now() or not hmac.compare_digest(browser_secret_hash, hash_token(login_secret)):
+        raise create_http_exception(
+            status.HTTP_400_BAD_REQUEST,
+            InvalidLoginTransactionResponseV1(),
+        )
+
+    claims: Final = await exchange_code(code=code, code_verifier=code_verifier, nonce=nonce)
+    if not claims.email_verified:
+        raise create_http_exception(
+            status.HTTP_403_FORBIDDEN,
+            EmailNotVerifiedResponseV1(),
+        )
+
+    # TODO: create the local user and the application session before redirecting.
+    response.delete_cookie(_LOGIN_COOKIE_NAME, path="/")
+
+    return LoginCallbackResponseV1(redirect_url=return_to)
