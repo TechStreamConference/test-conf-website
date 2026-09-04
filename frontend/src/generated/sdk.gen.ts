@@ -4,7 +4,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BackendHealthCheckData, BackendHealthCheckResponses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses } from './types.gen';
+import type { BackendHealthCheckData, BackendHealthCheckResponses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,6 +19,20 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
      */
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * User login endpoint
+ *
+ * Forwards the client to the identity provider for authentication
+ */
+export const loginV1 = <ThrowOnError extends boolean = false>(options: Options<LoginV1Data, ThrowOnError>): RequestResult<unknown, LoginV1Errors, ThrowOnError> => (options.client ?? client).get<unknown, LoginV1Errors, ThrowOnError>({ url: '/v1/auth/login', ...options });
+
+/**
+ * Identity provider callback endpoint
+ *
+ * Completes the login started at the identity provider and returns the redirect target.
+ */
+export const loginCallbackV1 = <ThrowOnError extends boolean = false>(options?: Options<LoginCallbackV1Data, ThrowOnError>): RequestResult<LoginCallbackV1Responses, LoginCallbackV1Errors, ThrowOnError> => (options?.client ?? client).get<LoginCallbackV1Responses, LoginCallbackV1Errors, ThrowOnError>({ url: '/v1/auth/callback', ...options });
 
 /**
  * Get the current event
