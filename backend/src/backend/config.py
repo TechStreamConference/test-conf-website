@@ -36,8 +36,9 @@ class Settings(BaseSettings):
 
     @cached_property
     def zitadel_redirect_uri(self) -> str:
-        # Must match a redirect URI registered on the ZITADEL application byte for byte.
-        return f"{self.backend_root_uri.rstrip('/')}/v1/auth/callback"
+        # Points at the frontend, which forwards the callback to the backend so that
+        # errors can be rendered as pages. Must match the ZITADEL registration byte for byte.
+        return f"{self.frontend_root_uri.rstrip('/')}/auth/callback"
 
     @cached_property
     def async_database_url(self) -> str:
