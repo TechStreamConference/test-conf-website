@@ -102,6 +102,30 @@ export default defineConfig(
 		},
 
 		rules: {
+			// Disallow `class="..."` on native HTML elements (components are fine).
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						'SvelteElement[kind="html"] > SvelteStartTag > SvelteAttribute[key.name="class"]',
+					message:
+						'Do not use `class="..."` on native HTML elements. Use it only on components. Use `class:...={true}` instead'
+				},
+				// Spread attributes (e.g. `{...rest}`) must always be the first attribute,
+				// both on native HTML tags and on components.
+				{
+					selector: 'SvelteStartTag > SvelteSpreadAttribute:not(:first-child)',
+					message: 'Spread attributes (e.g. `{...rest}`) must be the first attribute.'
+				}
+			],
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			],
 			'@typescript-eslint/no-explicit-any': 'error',
 			'@typescript-eslint/no-unsafe-assignment': 'error',
 			'@typescript-eslint/no-unsafe-call': 'error',

@@ -111,6 +111,9 @@ frontend-fix:
 frontend-test:
     pnpm --dir {{ frontend_dir }} run test
 
+#Runs all the test parts of the frontend.
+frontend-suite: frontend-fix frontend-check frontend-test
+
 # Runs the end-to-end test suite against the locally running application.
 e2e-test:
     PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} run test:e2e
