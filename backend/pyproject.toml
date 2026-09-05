@@ -21,7 +21,7 @@ dependencies = [
     "pydantic>=2.13.4",
     "pydantic-settings>=2.14.2",
     "sqlalchemy[asyncio, postgresql-psycopg2binary]>=2.0.52",
-    "sqlmodel>=0.0.39",
+    "sqlmodel>=0.0.42",
     "typer>=0.27.1",
     "uvicorn>=0.52.4",
 ]
