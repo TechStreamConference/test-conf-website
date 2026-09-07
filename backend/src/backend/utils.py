@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 
 _BROWSER_SECRET_BYTES = 32
+_SESSION_TOKEN_BYTES = 32
 
 
 def utc_now() -> datetime:
@@ -21,6 +22,14 @@ def generate_browser_secret() -> str:
     Binds the callback to the user agent that started the flow.
     """
     return secrets.token_urlsafe(_BROWSER_SECRET_BYTES)
+
+
+def generate_session_token() -> str:
+    """Opaque bearer token handed to the browser as the application session cookie.
+
+    Only its hash is stored, so a database leak alone cannot yield a usable session.
+    """
+    return secrets.token_urlsafe(_SESSION_TOKEN_BYTES)
 
 
 def hash_token(token: str) -> str:
