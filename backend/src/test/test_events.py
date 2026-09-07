@@ -122,6 +122,21 @@ async def test_event_returns_requested_numbered_event_and_translation() -> None:
 
 
 @pytest.mark.asyncio
+async def test_event_returns_before_processing_later_events() -> None:
+    first_event: Final = _event(1, date(2024, 5, 1))
+    second_event: Final = _event(2, date(2024, 9, 1))
+    session: Final = _session_with_rows([
+        _row(first_event, _translation(1, "en")),
+        _row(second_event, _translation(2, "en")),
+    ])
+
+    result: Final = await get_event_by_year_and_sequence_number(session, "en", 2024, 1)
+
+    assert result.id == 1
+    assert result.title == "Title 1 (en)"
+
+
+@pytest.mark.asyncio
 async def test_event_latest_falls_back_to_english() -> None:
     event: Final = _event(1, date(2024, 5, 1))
     session: Final = _session_with_rows([
