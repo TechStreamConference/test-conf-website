@@ -219,6 +219,34 @@ export type LoginCallbackResponseV1 = {
 };
 
 /**
+ * MeResponseV1
+ */
+export type MeResponseV1 = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * NotAuthenticatedResponseV1
+ */
+export type NotAuthenticatedResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Not authenticated.';
+};
+
+/**
  * ValidationError
  */
 export type ValidationError = {
@@ -320,6 +348,35 @@ export type LoginCallbackV1Responses = {
 };
 
 export type LoginCallbackV1Response = LoginCallbackV1Responses[keyof LoginCallbackV1Responses];
+
+export type GetCurrentUserV1Data = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/auth/me';
+};
+
+export type GetCurrentUserV1Errors = {
+    /**
+     * Unauthorized
+     */
+    401: NotAuthenticatedResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCurrentUserV1Error = GetCurrentUserV1Errors[keyof GetCurrentUserV1Errors];
+
+export type GetCurrentUserV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: MeResponseV1;
+};
+
+export type GetCurrentUserV1Response = GetCurrentUserV1Responses[keyof GetCurrentUserV1Responses];
 
 export type GetCurrentEventV1Data = {
     body?: never;
