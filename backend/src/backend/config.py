@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     zitadel_client_id: str = Field(min_length=1)
     zitadel_client_secret: SecretStr = Field(min_length=1)
 
+    # Sliding idle expiry: refreshed while the session is used, capped by the
+    # absolute lifetime, after which the user must sign in again.
+    session_idle_timeout_days: int = Field(ge=1)
+    session_absolute_lifetime_days: int = Field(ge=1)
+
     @cached_property
     def zitadel_redirect_uri(self) -> str:
         # Points at the frontend, which forwards the callback to the backend so that
