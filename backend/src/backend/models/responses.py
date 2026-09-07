@@ -92,3 +92,15 @@ class EmailNotVerifiedResponseV1(BaseModel):
 @final
 class LoginCallbackResponseV1(BaseModel):
     redirect_url: str
+
+
+@final
+class NotAuthenticatedResponseV1(BaseModel):
+    detail: Literal["Not authenticated."] = "Not authenticated."
+
+
+@final
+class MeResponseV1(BaseModel):
+    id: int
+    email: str
+    username: str
