@@ -52,35 +52,39 @@ async def find_or_create_user(db: AsyncSession, claims: UserClaims) -> int:
     create the account row, and the loser's speculative user row is rolled back
     along with it, so no orphaned user is left behind.
     """
-    account: Final = (
-        await db.execute(select(Account).where(Account.zitadel_user_id == claims.subject))
-    ).scalar_one_or_none()
-    if account is not None:
-        account.email = claims.email
-        account.username = claims.preferred_username
-        db.add(account)
-        await db.commit()
-        return account.user_id
-
-    user: Final = User()
-    db.add(user)
-    await db.flush()  # Assigns `user.id` without committing yet.
-    if user.id is None:
-        raise ValueError("A flushed user always has an id.")
-
-    db.add(
-        Account(
-            user_id=user.id,
-            zitadel_user_id=claims.subject,
-            email=claims.email,
-            username=claims.preferred_username,
-        )
-    )
     try:
-        await db.commit()
+        async with db.begin():
+            account: Final = (
+                await db.execute(select(Account).where(Account.zitadel_user_id == claims.subject))
+            ).scalar_one_or_none()
+            if account is not None:
+                account.email = claims.email
+                account.username = claims.preferred_username
+                db.add(account)
+                return account.user_id
+
+            user: Final = User()
+            db.add(user)
+            await db.flush()  # Assigns `user.id` without committing yet.
+            if user.id is None:
+                raise ValueError("A flushed user always has an id.")
+
+            db.add(
+                Account(
+                    user_id=user.id,
+                    zitadel_user_id=claims.subject,
+                    email=claims.email,
+                    username=claims.preferred_username,
+                )
+            )
+            # Surface a uniqueness conflict while the transaction context is
+            # active, so it rolls the speculative user and account back.
+            await db.flush()
     except IntegrityError:
-        await db.rollback()
-        return (await db.execute(select(Account.user_id).where(Account.zitadel_user_id == claims.subject))).scalar_one()
+        async with db.begin():
+            return (
+                await db.execute(select(Account.user_id).where(Account.zitadel_user_id == claims.subject))
+            ).scalar_one()
 
     return user.id
 
