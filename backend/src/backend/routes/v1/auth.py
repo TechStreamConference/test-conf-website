@@ -49,7 +49,7 @@ def _is_valid_redirect_url(redirect_url: str) -> bool:
 
     base_path: Final = base.path.rstrip("/")
 
-    return parsed.path == base_path or parsed.path.startswith(base_path)
+    return not base_path or parsed.path == base_path or parsed.path.startswith(f"{base_path}/")
 
 
 @ROUTER.get(
