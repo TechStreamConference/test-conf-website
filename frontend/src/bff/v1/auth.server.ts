@@ -3,6 +3,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { loginCallbackV1 } from '$gen/sdk.gen';
 import type { LoginCallbackResponseV1, LoginCallbackV1Error } from '$gen/types.gen';
 
+import { backendFetch } from '$bff/client';
 import { logger } from '$logging';
 import { backendCallCompleted } from '$logging/events.gen';
 
@@ -12,7 +13,7 @@ export type LoginCallbackResult =
 export async function forwardLoginCallback(event: RequestEvent): Promise<LoginCallbackResult> {
 	const start = performance.now();
 	const { data, error, response } = await loginCallbackV1({
-		fetch: event.fetch,
+		fetch: backendFetch(event),
 		query: {
 			state: event.url.searchParams.get('state'),
 			code: event.url.searchParams.get('code'),
