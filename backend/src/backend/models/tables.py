@@ -33,6 +33,37 @@ class User(SQLModel, table=True):
 
 
 @final
+class Account(SQLModel, table=True):
+    """The login-capable identity for a user. Not every user has one; "virtual"
+    users (no login ability) exist only as a row in `users`.
+    """
+
+    __tablename__ = "accounts"  # type: ignore[reportAssignmentType]
+
+    user_id: int = Field(foreign_key="users.id", primary_key=True)
+    zitadel_user_id: str = Field(unique=True, nullable=False)
+    email: str
+    username: str
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+
+
+@final
+class UserSession(SQLModel, table=True):
+    __tablename__ = "sessions"  # type: ignore[reportAssignmentType]
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", nullable=False)
+    token_hash: str = Field(unique=True, nullable=False)
+    # TODO: not used yet; will identify the ZITADEL session for back-channel logout.
+    zitadel_session_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    last_seen_at: datetime = Field(default_factory=utc_now, nullable=False)
+    expires_at: datetime
+    absolute_expires_at: datetime
+    revoked_at: Optional[datetime] = None
+
+
+@final
 class OidcLoginTransaction(SQLModel, table=True):
     __tablename__ = "oidc_login_transactions"  # type: ignore[reportAssignmentType]
 
