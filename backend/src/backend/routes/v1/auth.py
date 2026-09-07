@@ -19,10 +19,16 @@ from backend.models.responses import IdentityProviderErrorResponseV1
 from backend.models.responses import InvalidLoginTransactionResponseV1
 from backend.models.responses import InvalidRedirectUrlResponseV1
 from backend.models.responses import LoginCallbackResponseV1
+from backend.models.responses import MeResponseV1
+from backend.models.responses import NotAuthenticatedResponseV1
+from backend.models.tables import Account
 from backend.models.tables import OidcLoginTransaction
 from backend.oidc import LOGIN_TRANSACTION_LIFETIME
 from backend.oidc import create_authorization_request
 from backend.oidc import exchange_code
+from backend.session import create_session
+from backend.session import find_or_create_user
+from backend.session import get_current_user
 from backend.utils import create_http_exception
 from backend.utils import generate_browser_secret
 from backend.utils import hash_token
@@ -173,7 +179,27 @@ async def callback(
             EmailNotVerifiedResponseV1(),
         )
 
-    # TODO: create the local user and the application session before redirecting.
-    response.delete_cookie(_LOGIN_COOKIE_NAME, path="/")
+    user_id: Final = await find_or_create_user(session, claims)
+    await create_session(session, response, user_id=user_id, zitadel_session_id=claims.session_id)
+
+    # `secure`/`httponly`/`samesite` are required here too: the `__Host-` prefix
+    # mandates `Secure` on every Set-Cookie for the name, including deletions,
+    # or the browser silently rejects the header and never clears the cookie.
+    response.delete_cookie(_LOGIN_COOKIE_NAME, path="/", secure=True, httponly=True, samesite="lax")
 
     return LoginCallbackResponseV1(redirect_url=return_to)
+
+
+@ROUTER.get(
+    "/me",
+    summary="Get the current user",
+    description="Returns the local user derived from the current application session.",
+    status_code=status.HTTP_200_OK,
+    responses={
+        # 401 exceptions are raised indirectly via the `get_current_user` dependency.
+        status.HTTP_401_UNAUTHORIZED: {"model": NotAuthenticatedResponseV1},
+    },
+    operation_id="get current user v1",
+)
+async def me(current_account: Annotated[Account, Depends(get_current_user)]) -> MeResponseV1:
+    return MeResponseV1(id=current_account.user_id, email=current_account.email, username=current_account.username)
