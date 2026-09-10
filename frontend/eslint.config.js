@@ -18,6 +18,15 @@ export default defineConfig(
 	js.configs.recommended,
 	ts.configs.recommended,
 
+	// ---------------------------------------------------------------------
+	// No-commit marker (Markup comments have their own section in the Svelte area)
+	// ---------------------------------------------------------------------
+	{
+		rules: {
+			'no-warning-comments': ['error', { terms: ['nocommit'], location: 'anywhere' }]
+		}
+	},
+
 	// Register the Svelte parser and recommended rules.
 	...svelte.configs.recommended,
 
@@ -107,7 +116,17 @@ export default defineConfig(
 			'@typescript-eslint/no-unsafe-call': 'error',
 			'@typescript-eslint/no-unsafe-member-access': 'error',
 			'@typescript-eslint/no-unsafe-return': 'error',
-			'@typescript-eslint/no-unsafe-argument': 'error'
+			'@typescript-eslint/no-unsafe-argument': 'error',
+
+			// Markup comments are not covered by `no-warning-comments`, so match
+			// the Svelte AST node for `<!-- ... -->` directly.
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector: 'SvelteHTMLComment[value=/nocommit/i]',
+					message: "Unexpected 'nocommit' comment."
+				}
+			]
 		}
 	}
 );
