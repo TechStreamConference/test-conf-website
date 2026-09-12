@@ -61,3 +61,46 @@ class EventNotFoundResponseV1(BaseModel):
 @final
 class InvalidSequenceNumberResponseV1(BaseModel):
     detail: Literal["Invalid sequence number."] = "Invalid sequence number."
+
+
+@final
+class InvalidRedirectUrlResponseV1(BaseModel):
+    detail: Literal["Invalid redirect URL."] = "Invalid redirect URL."
+
+
+@final
+class InvalidLoginTransactionResponseV1(BaseModel):
+    # Deliberately generic: an unknown, expired or mismatched transaction must not
+    # be distinguishable from the outside.
+    detail: Literal["Invalid or expired login transaction."] = "Invalid or expired login transaction."
+
+
+@final
+class IdentityProviderErrorResponseV1(BaseModel):
+    detail: Literal["The identity provider did not authenticate the user."] = (
+        "The identity provider did not authenticate the user."
+    )
+
+
+@final
+class EmailNotVerifiedResponseV1(BaseModel):
+    detail: Literal["The email address of this account is not verified."] = (
+        "The email address of this account is not verified."
+    )
+
+
+@final
+class LoginCallbackResponseV1(BaseModel):
+    redirect_url: str
+
+
+@final
+class NotAuthenticatedResponseV1(BaseModel):
+    detail: Literal["Not authenticated."] = "Not authenticated."
+
+
+@final
+class MeResponseV1(BaseModel):
+    id: int
+    email: str
+    username: str

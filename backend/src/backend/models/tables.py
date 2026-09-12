@@ -1,4 +1,3 @@
-from datetime import UTC
 from datetime import date
 from datetime import datetime
 from enum import StrEnum
@@ -9,21 +8,19 @@ from typing import final
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
-
-def _utc_now() -> datetime:
-    return datetime.now(UTC).replace(tzinfo=None)
+from backend.utils import utc_now
 
 
 class _AuditMixin(SQLModel):
     created_at: datetime = Field(
-        default_factory=_utc_now,
+        default_factory=utc_now,
         nullable=False,
     )
 
     updated_at: datetime = Field(
-        default_factory=_utc_now,
+        default_factory=utc_now,
         nullable=False,
-        sa_column_kwargs={"onupdate": _utc_now},
+        sa_column_kwargs={"onupdate": utc_now},
     )
 
 
@@ -32,7 +29,51 @@ class User(SQLModel, table=True):
     __tablename__ = "users"  # type: ignore[reportAssignmentType]
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    created_at: datetime = Field(default_factory=_utc_now, nullable=False)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+
+
+@final
+class Account(SQLModel, table=True):
+    """The login-capable identity for a user. Not every user has one; "virtual"
+    users (no login ability) exist only as a row in `users`.
+    """
+
+    __tablename__ = "accounts"  # type: ignore[reportAssignmentType]
+
+    user_id: int = Field(foreign_key="users.id", primary_key=True)
+    zitadel_user_id: str = Field(unique=True, nullable=False)
+    email: str
+    username: str
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+
+
+@final
+class UserSession(SQLModel, table=True):
+    __tablename__ = "sessions"  # type: ignore[reportAssignmentType]
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", nullable=False)
+    token_hash: str = Field(unique=True, nullable=False)
+    # TODO: not used yet; will identify the ZITADEL session for back-channel logout.
+    zitadel_session_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    last_seen_at: datetime = Field(default_factory=utc_now, nullable=False)
+    expires_at: datetime
+    absolute_expires_at: datetime
+    revoked_at: Optional[datetime] = None
+
+
+@final
+class OidcLoginTransaction(SQLModel, table=True):
+    __tablename__ = "oidc_login_transactions"  # type: ignore[reportAssignmentType]
+
+    state_hash: str = Field(primary_key=True)
+    browser_secret_hash: str
+    nonce: str  # Raw: Authlib needs the original to validate the ID token claim.
+    pkce_code_verifier: str  # Raw: sent verbatim to the token endpoint.
+    return_to: str
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
+    expires_at: datetime
 
 
 # WARNING: Changing the `GlobalKey` enum requires also creating a database
