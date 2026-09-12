@@ -12,7 +12,7 @@ requires-python = ">=3.13"
 # for deploying in the staging environment. However, both staging and production
 # shall use the same image. Therefore, we include it in both.
 dependencies = [
-    "alembic>=1.19.1",
+    "alembic>=1.19.2",
     "asyncpg>=0.31.0",
     "faker>=40.38.0",
     "fastapi>=0.141.1",
