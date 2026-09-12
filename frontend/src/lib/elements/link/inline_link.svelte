@@ -24,7 +24,7 @@
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-<a {href} {target} aria-label={aria_label} rel={get_rel(target, rel_name)} {...rest}>
+<a {...rest} {href} {target} aria-label={aria_label} rel={get_rel(target, rel_name)}>
 	{@render children()}
 </a>
 

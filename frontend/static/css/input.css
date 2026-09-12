@@ -1,0 +1,92 @@
+div {
+    position: relative;
+
+    width: 100%;
+    height: fit-content;
+    margin-top: 1.1rem;
+}
+
+input,
+textarea {
+    width: 100%;
+    padding: 0.25rem;
+    min-width: 5rem;
+    min-height: 1rem;
+
+    background-color: var(--background-color-500);
+    border-radius: var(--border-radius);
+    border: 0;
+
+    font-size: 1rem;
+
+    outline: 1px solid var(--line-color);
+    box-shadow: 0 0 0 0 transparent;
+
+    transition:
+        box-shadow var(--transition-duration-fast),
+        border-radius var(--transition-duration-fast);
+}
+
+input:hover,
+textarea:hover {
+    border-radius: 0;
+
+    box-shadow: 0 0 0 2px var(--line-color);
+}
+
+input:focus,
+textarea:focus {
+    box-shadow: 0 0 0 2px var(--line-color);
+}
+
+label {
+    display: inline-block;
+    position: absolute;
+
+    padding: 0 0.3rem;
+    inset-inline-start: 0.2rem;
+    inset-block-start: -0.9rem;
+    max-width: 75%;
+
+    border-radius: var(--border-radius);
+    background-color: var(--background-color-500);
+    overflow: hidden;
+
+    font-size: 1rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+p {
+    display: inline-block;
+    position: absolute;
+
+    inset-inline-end: 0.2rem;
+    inset-block-start: -0.9rem;
+    padding: 0 0.3rem;
+    border-radius: var(--border-radius);
+
+    background-color: var(--background-color-500);
+
+    font-size: 0.8rem;
+
+    opacity: 0;
+    visibility: hidden;
+
+    transition:
+        opacity var(--transition-duration),
+        visibility var(--transition-duration);
+}
+
+p.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.orange {
+    color: var(--warning-color);
+}
+
+.red {
+    color: var(--error-color);
+}

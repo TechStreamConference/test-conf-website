@@ -4,7 +4,7 @@ import type { ComponentProps } from 'svelte';
 import ShowcaseStory from './fixtures/ShowcaseStory.svelte';
 
 const meta = {
-	title: 'Pages/Home',
+	title: 'Pages',
 	component: ShowcaseStory
 } satisfies Meta<ComponentProps<typeof ShowcaseStory>>;
 
@@ -12,4 +12,4 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Home: Story = {};

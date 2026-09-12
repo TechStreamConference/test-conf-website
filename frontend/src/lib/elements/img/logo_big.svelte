@@ -9,4 +9,4 @@
 	const { height, width, ...rest }: Props = $props();
 </script>
 
-<Image src="/img/logo_big.png" alt="Tech Stream Conference Logo" {height} {width} {...rest} />
+<Image {...rest} src="/img/logo_big.png" alt="Tech Stream Conference Logo" {height} {width} />
