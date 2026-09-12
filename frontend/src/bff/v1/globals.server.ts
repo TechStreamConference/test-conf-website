@@ -5,12 +5,13 @@ import type { GlobalsResponseV1 } from '$gen/types.gen';
 
 import { UndefinedDataError } from '$bff/errors';
 import { GenericBackendError } from '$bff/errors';
+import { backendFetch } from '$bff/client';
 import { logger } from '$logging';
 import { backendCallCompleted } from '$logging/events.gen';
 
 export async function loadGlobals(event: RequestEvent): Promise<GlobalsResponseV1> {
 	const start = performance.now();
-	const { data, error, response } = await getGlobalsV1({ fetch: event.fetch });
+	const { data, error, response } = await getGlobalsV1({ fetch: backendFetch(event) });
 	logger.info(
 		backendCallCompleted({
 			operation_id: 'getGlobalsV1',
