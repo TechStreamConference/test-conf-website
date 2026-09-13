@@ -1,5 +1,5 @@
-import { toDate } from './date';
-import { formatDate } from './date';
+import type { DateTimeContext } from '$lib/helper/zoned_date_time';
+import { ZonedDateTime } from '$lib/helper/zoned_date_time';
 
 const MAX_LENGTH_VISIBLE_FACTOR = 0.5;
 const MAX_LENGTH_ORANGE_FACTOR = 0.75;
@@ -21,6 +21,24 @@ export enum InputType {
 	Color = 'color'
 }
 
+const DATE_INPUT_TYPE_VALUES = [
+	InputType.Date,
+	InputType.Time,
+	InputType.DatetimeLocal,
+	InputType.Month,
+	InputType.Week
+] as const;
+
+export type DateInputType = (typeof DATE_INPUT_TYPE_VALUES)[number];
+
+/**
+ * Ties the `context` field to `T`: required for the date/time input types (they need a
+ * `DateTimeContext` to parse the raw HTML input value into a `ZonedDateTime`), absent otherwise.
+ */
+export type InputContextProp<T extends InputType> = T extends DateInputType
+	? { context: DateTimeContext }
+	: { context?: undefined };
+
 export const MAX_LENGTH_INPUT_TYPE = new Set<InputType>([
 	InputType.Text,
 	InputType.Password,
@@ -38,27 +56,55 @@ export interface InputValueMap {
 	[InputType.Url]: string;
 	[InputType.Tel]: string;
 	[InputType.Number]: number;
-	[InputType.Date]: Date;
-	[InputType.Time]: string;
-	[InputType.DatetimeLocal]: Date;
-	[InputType.Month]: string;
-	[InputType.Week]: string;
+	[InputType.Date]: ZonedDateTime;
+	[InputType.Time]: ZonedDateTime;
+	[InputType.DatetimeLocal]: ZonedDateTime;
+	[InputType.Month]: ZonedDateTime;
+	[InputType.Week]: ZonedDateTime;
 	[InputType.Color]: string;
 }
 
 export type InputValue<T extends InputType> = InputValueMap[T];
 
-export function parseInputValue<T extends InputType>(
+export function isDateInputType(type: InputType): type is DateInputType {
+	return (DATE_INPUT_TYPE_VALUES as readonly InputType[]).includes(type);
+}
+
+export function parseInputValue<T extends DateInputType>(
+	type: T,
+	element: HTMLInputElement,
+	// eslint-disable-next-line @typescript-eslint/unified-signatures -- merging with the overload below would make context optional for every InputType, defeating the point of having two overloads.
+	context: DateTimeContext
+): InputValue<T>;
+export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
 	type: T,
 	element: HTMLInputElement
+): InputValue<T>;
+export function parseInputValue<T extends InputType>(
+	type: T,
+	element: HTMLInputElement,
+	context?: DateTimeContext
 ): InputValue<T> {
 	switch (type) {
 		case InputType.Number:
 			return element.valueAsNumber as InputValue<T>;
 		case InputType.Date:
-			return (element.valueAsDate ?? new Date(NaN)) as InputValue<T>;
+			// Guaranteed by the overloads above: DateInputType always comes with a context.
+			return ZonedDateTime.fromHtmlDate(element.value, context as DateTimeContext) as InputValue<T>;
+		case InputType.Time:
+			return ZonedDateTime.fromHtmlTime(element.value, context as DateTimeContext) as InputValue<T>;
 		case InputType.DatetimeLocal:
-			return new Date(element.value) as InputValue<T>;
+			return ZonedDateTime.fromHtmlDateTime(
+				element.value,
+				context as DateTimeContext
+			) as InputValue<T>;
+		case InputType.Month:
+			return ZonedDateTime.fromHtmlMonth(
+				element.value,
+				context as DateTimeContext
+			) as InputValue<T>;
+		case InputType.Week:
+			return ZonedDateTime.fromHtmlWeek(element.value, context as DateTimeContext) as InputValue<T>;
 		default:
 			return element.value as InputValue<T>;
 	}
@@ -67,13 +113,19 @@ export function parseInputValue<T extends InputType>(
 export function formatInputValue<T extends InputType>(type: T, value: InputValue<T>): string {
 	switch (type) {
 		case InputType.Number:
-			return Number.isNaN(value) ? '' : String(value);
+			return typeof value === 'number' && !Number.isNaN(value) ? String(value) : '';
 		case InputType.Date:
-			return formatDate(toDate(value), 10, false);
+			return (value as ZonedDateTime).htmlDate();
+		case InputType.Time:
+			return (value as ZonedDateTime).htmlTime();
 		case InputType.DatetimeLocal:
-			return formatDate(toDate(value), 16, true);
+			return (value as ZonedDateTime).htmlDateTime();
+		case InputType.Month:
+			return (value as ZonedDateTime).htmlMonth();
+		case InputType.Week:
+			return (value as ZonedDateTime).htmlWeek();
 		default:
-			return String(value);
+			return typeof value === 'string' ? value : '';
 	}
 }
 

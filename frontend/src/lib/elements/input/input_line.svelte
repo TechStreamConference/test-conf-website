@@ -1,8 +1,11 @@
 <script lang="ts" generics="T extends InputType">
 	import type { AriaAttributes } from 'svelte/elements';
 	import type { HTMLInputAttributes } from 'svelte/elements';
+	import type { InputContextProp } from '$lib/helper/input';
 	import type { InputValue } from '$lib/helper/input';
 	import type { InputType } from '$lib/helper/input';
+	import type { DateTimeContext } from '$lib/helper/zoned_date_time';
+	import { isDateInputType } from '$lib/helper/input';
 	import { isMaxLengthOrange } from '$lib/helper/input';
 	import { isMaxLengthRed } from '$lib/helper/input';
 	import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
@@ -11,34 +14,38 @@
 	import { validate_unsigned_int } from '$lib/helper/numbers';
 	import { isMaxLengthVisible } from '$lib/helper/input';
 
-	interface Props
-		extends
-			Pick<
-				HTMLInputAttributes,
-				| 'autocomplete'
-				| 'class'
-				| 'disabled'
-				| 'max'
-				| 'min'
-				| 'name'
-				| 'placeholder'
-				| 'readonly'
-				| 'required'
-				| 'step'
-			>,
-			AriaAttributes {
-		id: string;
-		label: string;
-		type: T;
-		maxlength?: number | undefined;
-		value: InputValue<T>;
-	}
-	let { id, label, type, maxlength, value = $bindable(), ...rest }: Props = $props();
+	type Props = Pick<
+		HTMLInputAttributes,
+		| 'autocomplete'
+		| 'class'
+		| 'disabled'
+		| 'max'
+		| 'min'
+		| 'name'
+		| 'placeholder'
+		| 'readonly'
+		| 'required'
+		| 'step'
+	> &
+		AriaAttributes &
+		InputContextProp<T> & {
+			id: string;
+			label: string;
+			type: T;
+			maxlength?: number | undefined;
+			value: InputValue<T>;
+		};
+	let { id, label, type, maxlength, value = $bindable(), context, ...rest }: Props = $props();
 
 	const validMaxLength: number | undefined = $derived(validate_unsigned_int(maxlength));
 
 	function oninput(event: Event & { currentTarget: HTMLInputElement }) {
-		value = parseInputValue(type, event.currentTarget);
+		const element = event.currentTarget;
+		value = (
+			isDateInputType(type)
+				? parseInputValue(type, element, context as DateTimeContext)
+				: parseInputValue(type, element)
+		) as InputValue<T>;
 	}
 </script>
 
