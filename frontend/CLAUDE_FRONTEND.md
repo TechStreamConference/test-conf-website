@@ -18,6 +18,7 @@ Guide for how to work in this repo (Frontend of TestConf).
 6. **EOF.** All files end with an empty line (a trailing `\n`).
 7. **Accessibility** is extremely important. Check all (your) implementations against it.
 8. **English** is used everywhere — in code as well as in comments and any other files.
+9. **`nocommit` markers.** When you add code that only exists for testing/debugging and must not be committed — or whenever you are unsure whether a change should stay as it is — put a `nocommit CLAUDE` marker in a comment (using the correct comment syntax for that file) right next to it. This keeps test-only code from sneaking into production. The `CLAUDE` suffix marks it as added by you, not by the user.
 
 ## Completion Workflow
 
