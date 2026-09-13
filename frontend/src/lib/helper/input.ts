@@ -70,41 +70,32 @@ export function isDateInputType(type: InputType): type is DateInputType {
 	return (DATE_INPUT_TYPE_VALUES as readonly InputType[]).includes(type);
 }
 
-export function parseInputValue<T extends DateInputType>(
+export function parseDateInputValue<T extends DateInputType>(
 	type: T,
 	element: HTMLInputElement,
-	// eslint-disable-next-line @typescript-eslint/unified-signatures -- merging with the overload below would make context optional for every InputType, defeating the point of having two overloads.
 	context: DateTimeContext
-): InputValue<T>;
+): InputValue<T> {
+	switch (type) {
+		case InputType.Date:
+			return ZonedDateTime.fromHtmlDate(element.value, context);
+		case InputType.Time:
+			return ZonedDateTime.fromHtmlTime(element.value, context);
+		case InputType.DatetimeLocal:
+			return ZonedDateTime.fromHtmlDateTime(element.value, context);
+		case InputType.Month:
+			return ZonedDateTime.fromHtmlMonth(element.value, context);
+		case InputType.Week:
+			return ZonedDateTime.fromHtmlWeek(element.value, context);
+	}
+}
+
 export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
 	type: T,
 	element: HTMLInputElement
-): InputValue<T>;
-export function parseInputValue<T extends InputType>(
-	type: T,
-	element: HTMLInputElement,
-	context?: DateTimeContext
 ): InputValue<T> {
 	switch (type) {
 		case InputType.Number:
 			return element.valueAsNumber as InputValue<T>;
-		case InputType.Date:
-			// Guaranteed by the overloads above: DateInputType always comes with a context.
-			return ZonedDateTime.fromHtmlDate(element.value, context as DateTimeContext) as InputValue<T>;
-		case InputType.Time:
-			return ZonedDateTime.fromHtmlTime(element.value, context as DateTimeContext) as InputValue<T>;
-		case InputType.DatetimeLocal:
-			return ZonedDateTime.fromHtmlDateTime(
-				element.value,
-				context as DateTimeContext
-			) as InputValue<T>;
-		case InputType.Month:
-			return ZonedDateTime.fromHtmlMonth(
-				element.value,
-				context as DateTimeContext
-			) as InputValue<T>;
-		case InputType.Week:
-			return ZonedDateTime.fromHtmlWeek(element.value, context as DateTimeContext) as InputValue<T>;
 		default:
 			return element.value as InputValue<T>;
 	}

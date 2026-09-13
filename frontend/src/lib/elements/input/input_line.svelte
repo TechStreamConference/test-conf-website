@@ -9,6 +9,7 @@
 	import { isMaxLengthOrange } from '$lib/helper/input';
 	import { isMaxLengthRed } from '$lib/helper/input';
 	import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
+	import { parseDateInputValue } from '$lib/helper/input';
 	import { parseInputValue } from '$lib/helper/input';
 	import { formatInputValue } from '$lib/helper/input';
 	import { validate_unsigned_int } from '$lib/helper/numbers';
@@ -43,7 +44,7 @@
 		const element = event.currentTarget;
 		value = (
 			isDateInputType(type)
-				? parseInputValue(type, element, context as DateTimeContext)
+				? parseDateInputValue(type, element, context as DateTimeContext)
 				: parseInputValue(type, element)
 		) as InputValue<T>;
 	}

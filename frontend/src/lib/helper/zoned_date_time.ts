@@ -66,7 +66,7 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
 		private readonly value: DateTime,
 		private readonly context: DateTimeContext,
 		private readonly kind: K
-	) { }
+	) {}
 
 	static fromUtc<K extends DateTimeKind>(
 		value: string,
