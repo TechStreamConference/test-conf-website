@@ -125,6 +125,12 @@ export default defineConfig(
 				{
 					selector: 'SvelteStartTag > SvelteSpreadAttribute:not(:first-child)',
 					message: 'Spread attributes (e.g. `{...rest}`) must be the first attribute.'
+				},
+				// Markup comments are not covered by `no-warning-comments`, so match
+				// the Svelte AST node for `<!-- ... -->` directly.
+				{
+					selector: 'SvelteHTMLComment[value=/nocommit/i]',
+					message: "Unexpected 'nocommit' comment."
 				}
 			],
 			'@typescript-eslint/no-unused-vars': [
@@ -140,17 +146,7 @@ export default defineConfig(
 			'@typescript-eslint/no-unsafe-call': 'error',
 			'@typescript-eslint/no-unsafe-member-access': 'error',
 			'@typescript-eslint/no-unsafe-return': 'error',
-			'@typescript-eslint/no-unsafe-argument': 'error',
-
-			// Markup comments are not covered by `no-warning-comments`, so match
-			// the Svelte AST node for `<!-- ... -->` directly.
-			'no-restricted-syntax': [
-				'error',
-				{
-					selector: 'SvelteHTMLComment[value=/nocommit/i]',
-					message: "Unexpected 'nocommit' comment."
-				}
-			]
+			'@typescript-eslint/no-unsafe-argument': 'error'
 		}
 	}
 );
