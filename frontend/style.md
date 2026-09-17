@@ -69,6 +69,23 @@ If a documentation block is used, all applicable documentation tags for that ele
 | generic                    | PascalCase              | T, TInput         |
 | file                       | kebab-case              | input-types.ts    |
 
+### Import Order
+
+1. External packages (npm packages, Node built-ins).
+2. Project aliases, grouped by alias (e.g. `$lib`, `$bff`, `$gen`, `$env`, `$logging`, ...). Each alias forms its own group, separated from the other alias groups by an empty line. Groups are ordered alphabetically by alias name.
+3. Other imports (relative imports, e.g. `./$types`, `./fixtures/Foo.svelte`).
+
+Within every group (the external-packages group and each individual alias group):
+
+1. Type imports
+2. Constants
+3. Functions
+4. Other values (e.g. components, enums used as values)
+
+Within each of these four tiers, imports are ordered alphabetically by imported symbol name.
+
+Imports are always written one symbol per line (no `{ a, b, c }` combined imports), even when importing multiple symbols from the same module.
+
 ### Props Properties
 
 | declaration                  | meaning                                |
@@ -81,27 +98,17 @@ If a documentation block is used, all applicable documentation tags for that ele
 ### Example
 
 ```ts
-// imports (imports are always in single lines and the import order needs to be present)
-/*
- * Import Order:
- *
- * 1. External packages
- * 2. Project aliases ($lib)
- * 3. other imports
- *
- * Within each group:
- * 1. Type imports
- * 2. Constants
- * 3. Functions
- * 4. Other values
- */
+// imports (see "Import Order" above)
 import type { HTMLImgAttributes } from 'svelte/elements';
 import type { HTMLInputAttributes } from 'svelte/elements';
 import { get } from 'svelte/store';
 
+import MAX_LENGTH from '$lib/constants';
 import { image } from '$lib/stores';
 
-import MAX_LENGTH from '$lib/constants';
+import { loadGlobals } from '$bff/v1/globals.server';
+
+import type { PageProps } from './$types';
 
 // Props (only in svelte)
 interface Props extends Omit<HTMLInputAttributes, 'specificvalue' | 'unoptional'> {
