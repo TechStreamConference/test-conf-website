@@ -2,11 +2,17 @@ import { describe, expect, it } from 'vitest';
 import {
 	InputType,
 	formatInputValue,
+	isDateInputType,
 	isMaxLengthOrange,
 	isMaxLengthRed,
 	isMaxLengthVisible,
+	parseDateInputValue,
 	parseInputValue
 } from '$lib/helper/input';
+import type { DateTimeContext } from '$lib/helper/zoned_date_time';
+import { ZonedDateTime } from '$lib/helper/zoned_date_time';
+
+const BERLIN: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'de-DE' };
 
 describe('isMaxLengthVisible', () => {
 	it('should be false when the value is well below the max length', () => {
@@ -76,18 +82,42 @@ describe('isMaxLengthOrange', () => {
 });
 
 describe('isMaxLengthOrange and isMaxLengthRed interlocking', () => {
-	it('should never both be true at once, for any max length and value length', () => {
-		for (const maxLength of [0, 1, 5, 10, 20, 33, 100]) {
+	it.each([0, 1, 5, 10, 20, 33, 100])(
+		'never both true for maxLength=%i, across every value length up to 2x maxLength',
+		(maxLength) => {
 			for (let length = 0; length <= maxLength * 2 + 1; length++) {
 				const value = 'a'.repeat(length);
-				const orange = isMaxLengthOrange(maxLength, value);
-				const red = isMaxLengthRed(maxLength, value);
 				expect(
-					orange && red,
-					`maxLength=${maxLength.toString()}, length=${length.toString()}`
+					isMaxLengthOrange(maxLength, value) && isMaxLengthRed(maxLength, value),
+					`length=${length.toString()}`
 				).toBe(false);
 			}
 		}
+	);
+});
+
+describe('isDateInputType', () => {
+	it.each([
+		InputType.Date,
+		InputType.Time,
+		InputType.DatetimeLocal,
+		InputType.Month,
+		InputType.Week
+	])('is true for %s', (type) => {
+		expect(isDateInputType(type)).toBe(true);
+	});
+
+	it.each([
+		InputType.Text,
+		InputType.Password,
+		InputType.Email,
+		InputType.Search,
+		InputType.Url,
+		InputType.Tel,
+		InputType.Number,
+		InputType.Color
+	])('is false for %s', (type) => {
+		expect(isDateInputType(type)).toBe(false);
 	});
 });
 
@@ -96,7 +126,6 @@ describe('formatInputValue', () => {
 		expect(formatInputValue(InputType.Text, 'hello world')).toBe('hello world');
 		expect(formatInputValue(InputType.Text, '')).toBe('');
 		expect(formatInputValue(InputType.Color, '#ff0000')).toBe('#ff0000');
-		expect(formatInputValue(InputType.Time, '13:45')).toBe('13:45');
 	});
 
 	it('should format a finite number as a string', () => {
@@ -112,27 +141,29 @@ describe('formatInputValue', () => {
 		expect(formatInputValue(InputType.Number, NaN)).toBe('');
 	});
 
-	it('should format a valid date as an ISO date (YYYY-MM-DD) in UTC', () => {
-		expect(formatInputValue(InputType.Date, new Date('2026-09-02T20:51:00Z'))).toBe('2026-09-02');
+	it('should format a Floating date value as YYYY-MM-DD', () => {
+		const value = ZonedDateTime.fromHtmlDate('2026-09-10', BERLIN);
+		expect(formatInputValue(InputType.Date, value)).toBe('2026-09-10');
 	});
 
-	it('should format an invalid date as an empty string', () => {
-		expect(formatInputValue(InputType.Date, new Date(NaN))).toBe('');
+	it('should format a Floating time value as HH:mm', () => {
+		const value = ZonedDateTime.fromHtmlTime('14:30', BERLIN);
+		expect(formatInputValue(InputType.Time, value)).toBe('14:30');
 	});
 
-	it('should format a valid datetime-local value as local YYYY-MM-DDTHH:mm', () => {
-		const date = new Date('2026-09-02T20:51:30.123Z');
-		const expected =
-			`${String(date.getFullYear())}-` +
-			`${String(date.getMonth() + 1).padStart(2, '0')}-` +
-			`${String(date.getDate()).padStart(2, '0')}T` +
-			`${String(date.getHours()).padStart(2, '0')}:` +
-			String(date.getMinutes()).padStart(2, '0');
-		expect(formatInputValue(InputType.DatetimeLocal, date)).toBe(expected);
+	it('should format an Instant value as local YYYY-MM-DDTHH:mm', () => {
+		const value = ZonedDateTime.fromHtmlDateTime('2026-06-13T09:05', BERLIN);
+		expect(formatInputValue(InputType.DatetimeLocal, value)).toBe('2026-06-13T09:05');
 	});
 
-	it('should format an invalid datetime-local value as an empty string', () => {
-		expect(formatInputValue(InputType.DatetimeLocal, new Date(NaN))).toBe('');
+	it('should format a Floating month value as YYYY-MM', () => {
+		const value = ZonedDateTime.fromHtmlMonth('2026-09', BERLIN);
+		expect(formatInputValue(InputType.Month, value)).toBe('2026-09');
+	});
+
+	it('should format a Floating week value as YYYY-Www', () => {
+		const value = ZonedDateTime.fromHtmlWeek('2026-W37', BERLIN);
+		expect(formatInputValue(InputType.Week, value)).toBe('2026-W37');
 	});
 });
 
@@ -158,33 +189,47 @@ describe('parseInputValue', () => {
 		expect(Number.isNaN(parseInputValue(InputType.Number, element))).toBe(true);
 	});
 
-	it('should read the parsed date for a date input', () => {
-		const date = new Date('2026-09-02T00:00:00Z');
-		const element = createInputElement({ valueAsDate: date });
-		expect(parseInputValue(InputType.Date, element)).toBe(date);
-	});
-
-	it('should return an invalid date when a date input has no value', () => {
-		const element = createInputElement({ valueAsDate: null });
-		const result = parseInputValue(InputType.Date, element);
-		expect(result).toBeInstanceOf(Date);
-		expect(Number.isNaN(result.getTime())).toBe(true);
-	});
-
-	it('should parse the raw string as a local date-time for a datetime-local input', () => {
-		const element = createInputElement({ value: '2026-09-02T20:51' });
-		const result = parseInputValue(InputType.DatetimeLocal, element);
-		expect(result.getTime()).toBe(new Date('2026-09-02T20:51').getTime());
-	});
-
-	it('should return an invalid date for an empty datetime-local input', () => {
-		const element = createInputElement({ value: '' });
-		const result = parseInputValue(InputType.DatetimeLocal, element);
-		expect(Number.isNaN(result.getTime())).toBe(true);
-	});
-
 	it('should read the raw string value for text-like inputs', () => {
 		const element = createInputElement({ value: 'hello@example.com' });
 		expect(parseInputValue(InputType.Email, element)).toBe('hello@example.com');
+	});
+});
+
+describe('parseDateInputValue', () => {
+	it('should parse a date input into a Floating value', () => {
+		const element = createInputElement({ value: '2026-09-10' });
+		expect(parseDateInputValue(InputType.Date, element, BERLIN).htmlDate()).toBe('2026-09-10');
+	});
+
+	it('should parse a time input into a Floating value', () => {
+		const element = createInputElement({ value: '14:30' });
+		expect(parseDateInputValue(InputType.Time, element, BERLIN).htmlTime()).toBe('14:30');
+	});
+
+	it('should parse a month input into a Floating value', () => {
+		const element = createInputElement({ value: '2026-09' });
+		expect(parseDateInputValue(InputType.Month, element, BERLIN).htmlMonth()).toBe('2026-09');
+	});
+
+	it('should parse a week input into a Floating value', () => {
+		const element = createInputElement({ value: '2026-W37' });
+		expect(parseDateInputValue(InputType.Week, element, BERLIN).htmlWeek()).toBe('2026-W37');
+	});
+
+	it('should parse a datetime-local input into an Instant, converted via the given timezone', () => {
+		const element = createInputElement({ value: '2026-06-13T09:05' });
+		expect(parseDateInputValue(InputType.DatetimeLocal, element, BERLIN).utc()).toBe(
+			'2026-06-13T07:05:00.000Z'
+		);
+	});
+
+	it('should shift the UTC day when the local wall-clock time is close to midnight', () => {
+		// 2026-09-10 23:30 in New York (UTC-4 in September) is already 2026-09-11 in UTC.
+		const element = createInputElement({ value: '2026-09-10T23:30' });
+		const result = parseDateInputValue(InputType.DatetimeLocal, element, {
+			timeZone: 'America/New_York',
+			locale: 'en-US'
+		});
+		expect(result.utc()).toBe('2026-09-11T03:30:00.000Z');
 	});
 });
