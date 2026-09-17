@@ -206,7 +206,10 @@ describe('formatRange', () => {
 describe('equals', () => {
 	it('is true for the same instant represented in two different timezones', () => {
 		const berlin = ZonedDateTime.fromHtmlDateTime('2026-06-13T09:05', BERLIN_DE);
-		const utc = ZonedDateTime.fromHtmlDateTime('2026-06-13T07:05', { ...BERLIN_DE, timeZone: 'UTC' });
+		const utc = ZonedDateTime.fromHtmlDateTime('2026-06-13T07:05', {
+			...BERLIN_DE,
+			timeZone: 'UTC'
+		});
 		expect(berlin.equals(utc)).toBe(true);
 	});
 
