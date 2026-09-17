@@ -32,7 +32,7 @@ services:
         condition: service_healthy
 
   zitadel-api:
-    image: ghcr.io/zitadel/zitadel:${ZITADEL_VERSION}
+    image: ghcr.io/zitadel/zitadel:v4.17.1  # keep in sync with zitadel-login below
     restart: unless-stopped
     user: "0"
     command: start-from-init --masterkey "${ZITADEL_MASTERKEY}"
@@ -58,6 +58,11 @@ services:
       ZITADEL_SAML_DEFAULTLOGINURLV2: ${ZITADEL_PUBLIC_SCHEME}://${ZITADEL_DOMAIN}:${ZITADEL_EXTERNALPORT}/ui/v2/login/login?samlRequest=
 
       ZITADEL_LOGSTORE_ACCESS_STDOUT_ENABLED: ${ZITADEL_ACCESS_LOG_STDOUT_ENABLED}
+
+      # Override the default HTTPClient DenyList to allow calls to the internal twitch-normalizer.
+      # Docker assigns container IPs from 172.16.0.0/12 (the Zitadel default blocks this range).
+      # All other private/loopback/link-local ranges remain blocked.
+      ZITADEL_HTTPCLIENT_DENYLIST: "localhost,0.0.0.0/8,10.0.0.0/8,100.64.0.0/10,127.0.0.0/8,169.254.0.0/16,192.168.0.0/16,198.18.0.0/15,::/128,::1/128,fc00::/7,fe80::/10"
 
       ZITADEL_INSTRUMENTATION_TRACE_EXPORTER_TYPE: ${ZITADEL_INSTRUMENTATION_TRACE_EXPORTER_TYPE}
       ZITADEL_INSTRUMENTATION_TRACE_EXPORTER_ENDPOINT: ${ZITADEL_INSTRUMENTATION_TRACE_EXPORTER_ENDPOINT}
@@ -124,11 +129,12 @@ services:
       - traefik.http.routers.zitadel-canonical-websecure.priority=100
 
   zitadel-login:
-    image: ghcr.io/zitadel/zitadel-login:${ZITADEL_VERSION}
+    image: ghcr.io/zitadel/zitadel-login:v4.17.1  # keep in sync with zitadel-api above
     restart: unless-stopped
     user: "0"
     environment:
       ZITADEL_API_URL: http://zitadel-api:8080
+      EMAIL_VERIFICATION: "true"
       NEXT_PUBLIC_BASE_PATH: /ui/v2/login
       ZITADEL_SERVICE_USER_TOKEN_FILE: /zitadel/bootstrap/login-client.pat
       CUSTOM_REQUEST_HEADERS: Host:${ZITADEL_DOMAIN},X-Forwarded-Proto:${ZITADEL_PUBLIC_SCHEME}
@@ -204,6 +210,29 @@ services:
       - postgres-data:/var/lib/postgresql/data:rw
     networks:
       - zitadel
+
+  twitch-normalizer:
+    image: python:3.12-slim
+    restart: unless-stopped
+    environment:
+      TWITCH_CLIENT_ID: ${TWITCH_CLIENT_ID}
+      TWITCH_IDP_ID: ${TWITCH_IDP_ID}
+    command: ["python", "/app/main.py"]
+    volumes:
+      - ./normalize-service/main.py:/app/main.py:ro
+    networks:
+      - zitadel
+    # Internal only — not published to host.
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      zitadel-api:
+        condition: service_healthy
 
   redis:
     image: ${REDIS_IMAGE}

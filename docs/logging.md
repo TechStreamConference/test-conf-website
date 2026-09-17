@@ -110,6 +110,28 @@ A persistent Grafana+Loki instance runs at `https://logs.test-conf.de`. Access i
 
 Alloy runs alongside each deployment (`alloy.staging.compose.yaml`, `alloy.production.compose.yaml`) and ships Docker container logs to the central Loki instance via `LOKI_URL`.
 
+Start the central observability stack before a deployment's Alloy service. The
+central stack creates the external `observability-central` Docker network used
+to reach Loki without exposing its ingestion endpoint publicly.
+
+Configure each staging/production deployment's `.env` with the complete Loki
+push endpoint and the deployment's Docker Compose project label:
+
+```dotenv
+LOKI_URL=http://loki:3100/loki/api/v1/push
+ALLOY_DOCKER_COMPOSE_PROJECT=stagingtest-confde
+```
+
+Determine the exact project label from any running application container:
+
+```bash
+docker inspect backend-staging \
+  --format '{{ index .Config.Labels "com.docker.compose.project" }}'
+```
+
+Alloy uses this automatically assigned Compose label to collect every service
+in the deployment while excluding unrelated containers on the same host.
+
 Log retention: **90 days**.
 
 ---

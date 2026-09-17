@@ -11,10 +11,21 @@ discovery.docker "production_containers" {
 discovery.relabel "docker_service_labels" {
   targets = discovery.docker.production_containers.targets
 
+  // Only collect containers belonging to this Docker Compose project.
   rule {
-    source_labels = ["__meta_docker_container_name"]
-    regex         = "/?(.+?)(?:-[a-z]+)?$"
-    target_label  = "service_name"
+    source_labels = [
+      "__meta_docker_container_label_com_docker_compose_project",
+    ]
+    regex  = sys.env("ALLOY_DOCKER_COMPOSE_PROJECT")
+    action = "keep"
+  }
+
+  // Use Compose's service name directly: backend, frontend, nginx, etc.
+  rule {
+    source_labels = [
+      "__meta_docker_container_label_com_docker_compose_service",
+    ]
+    target_label = "service_name"
   }
 }
 
@@ -58,6 +69,6 @@ loki.process "production_pipeline" {
 loki.write "central" {
   endpoint {
     // Set LOKI_URL to the internal address of the central observability server.
-    url = env("LOKI_URL")
+    url = sys.env("LOKI_URL")
   }
 }

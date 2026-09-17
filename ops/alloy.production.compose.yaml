@@ -7,6 +7,13 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./alloy/production.alloy:/etc/alloy/config.alloy:ro
     environment:
-      LOKI_URL: ${LOKI_URL:-http://127.0.0.1:3100}
-    network_mode: host
+      LOKI_URL: ${LOKI_URL:-http://loki:3100/loki/api/v1/push}
+      ALLOY_DOCKER_COMPOSE_PROJECT: ${ALLOY_DOCKER_COMPOSE_PROJECT:?Set ALLOY_DOCKER_COMPOSE_PROJECT in .env}
+    networks:
+      - observability
     restart: unless-stopped
+
+networks:
+  observability:
+    external: true
+    name: observability-central

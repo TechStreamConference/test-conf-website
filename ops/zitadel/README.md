@@ -48,7 +48,10 @@ Key points:
 | `.env.example` | ✅ Yes | Template with safe placeholders — **no real secrets** |
 | `.env` | ❌ No (Git-ignored) | Private config with real secrets |
 | `.gitignore` | ✅ Yes | Ensures `.env` is never committed |
+| `actions/add-test-conf-groups.js` | ✅ Yes | Actions V1 script that maps project roles to OIDC `groups` |
 | `README.md` | ✅ Yes | This file |
+| `social-login-setup.md` | ✅ Yes | Step-by-step guide: add Google / Twitch as IdPs |
+| `normalize-service/main.py` | ✅ Yes | Actions V2 target: fetch Twitch Helix profile and rewrite `createUser` payload |
 
 > **Never commit `.env`.**
 > The root `.gitignore` already ignores `**/.env`; this directory also has its own
@@ -134,8 +137,9 @@ the database schema.
 
 To upgrade to a new Zitadel version:
 
-1. Update `ZITADEL_VERSION` in `.env` (and `.env.example` if it is a stable release).
+1. Update both Zitadel image tags in `compose.yml` (and the same in `.env.example` if it is a stable release).
 2. Pull new images and restart:
+
    ```bash
    cd ops/zitadel
    docker compose pull
@@ -203,6 +207,34 @@ For `staging-gate` (oauth2-proxy), use application type **Web** with the
 
 For the website apps, use the flow appropriate to the frontend framework (SvelteKit
 typically uses Code flow with PKCE).
+
+---
+
+## Access-group Action
+
+[`actions/add-test-conf-groups.js`](actions/add-test-conf-groups.js) adds the
+`groups` claim consumed by oauth2-proxy. Before installing it, replace
+`CHANGE_ME_ACCESS_PROJECT_ID` with the ID of the ZITADEL project containing these
+roles:
+
+| Project role | Emitted groups | Effect |
+|--------------|----------------|--------|
+| `staging-access` | `staging-access`, `observability-access` | Staging and observability access |
+| `observability-access` | `observability-access` | Observability access |
+| `observability-admin` | `observability-access`, `observability-admin` | Observability access with Grafana organization Admin mapping |
+
+Install it in ZITADEL as follows:
+
+1. Create an Actions V1 Action named `addTestConfGroups`. The Action name must
+   match the JavaScript function name.
+2. Paste the script after replacing the project-ID placeholder.
+3. Add the Action to **Complement Token → Pre Userinfo creation**.
+4. Grant the appropriate project role to each user.
+5. Start a new OIDC session and confirm that the resulting token contains the
+   expected `groups` claim.
+
+Actions V1 are planned for removal in ZITADEL v5. Migrate this claim mapping to
+an Actions V2 function before upgrading to that major version.
 
 ---
 

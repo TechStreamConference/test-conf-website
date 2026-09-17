@@ -1,0 +1,30 @@
+name: Zitadel version sync
+
+on:
+  pull_request:
+    paths:
+      - ops/zitadel/compose.yml
+
+permissions:
+  contents: read
+
+jobs:
+  check-versions-match:
+    name: zitadel and zitadel-login use the same tag
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract image tags and compare
+        run: |
+          api_tag="$(grep -oE 'ghcr\.io/zitadel/zitadel:[^ ]+' ops/zitadel/compose.yml | grep -v 'zitadel-login' | sed 's/.*://')"
+          login_tag="$(grep -oE 'ghcr\.io/zitadel/zitadel-login:[^ ]+' ops/zitadel/compose.yml | sed 's/.*://')"
+
+          echo "zitadel:       $api_tag"
+          echo "zitadel-login: $login_tag"
+
+          if [[ "$api_tag" != "$login_tag" ]]; then
+            echo "::error file=ops/zitadel/compose.yml::zitadel ($api_tag) and zitadel-login ($login_tag) must use the same version tag."
+            exit 1
+          fi
