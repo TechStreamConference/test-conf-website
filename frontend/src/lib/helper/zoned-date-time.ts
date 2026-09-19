@@ -52,7 +52,7 @@ const HTML_WEEK_FORMAT = "kkkk-'W'WW";
 const FLOATING_TIME_REFERENCE_DATE = '1970-01-01';
 
 /**
- * Wraps a point in time together with the timezone/locale needed to render it,
+ * @brief Wraps a point in time together with the timezone/locale needed to render it,
  * so callers never juggle raw `Date`/Luxon values and timezones themselves.
  *
  * Values built from a bare calendar concept (date, time, month, week) are `DateTimeKind.Floating`:
@@ -137,7 +137,10 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
             : this.value.setZone(this.context.timeZone);
     }
 
-    /** Serializes to UTC, for sending to the backend. */
+    /**
+     * @brief Serializes to UTC, for sending to the backend.
+     * @returns the value as an ISO 8601 string in UTC
+     */
     utc(): string {
         return this.value.toUTC().toISO() ?? '';
     }
@@ -162,12 +165,20 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         return this.zoned().toFormat(HTML_WEEK_FORMAT);
     }
 
-    /** Renders for display, using the locale-aware Intl preset behind `format`. */
+    /**
+     * @brief Renders for display, using the locale-aware Intl preset behind `format`.
+     * @param format the preset used to render the value
+     * @returns the localized, human-readable value
+     */
     format(format: DateTimeFormat): string {
         return this.zoned().setLocale(this.context.locale).toLocaleString(PRESET_BY_FORMAT[format]);
     }
 
-    /** Whether this instant and `other` represent the same point in time. */
+    /**
+     * @brief Whether this instant and `other` represent the same point in time.
+     * @param other the instant to compare with
+     * @returns true if both represent the same point in time
+     */
     equals(
         this: ZonedDateTime<DateTimeKind.Instant>,
         other: ZonedDateTime<DateTimeKind.Instant>
@@ -175,7 +186,11 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         return this.value.toMillis() === other.value.toMillis();
     }
 
-    /** Whether this instant occurs before `other`. */
+    /**
+     * @brief Whether this instant occurs before `other`.
+     * @param other the instant to compare with
+     * @returns true if this instant is earlier than `other`
+     */
     isBefore(
         this: ZonedDateTime<DateTimeKind.Instant>,
         other: ZonedDateTime<DateTimeKind.Instant>
@@ -183,7 +198,11 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         return this.value.toMillis() < other.value.toMillis();
     }
 
-    /** Whether this instant occurs after `other`. */
+    /**
+     * @brief Whether this instant occurs after `other`.
+     * @param other the instant to compare with
+     * @returns true if this instant is later than `other`
+     */
     isAfter(
         this: ZonedDateTime<DateTimeKind.Instant>,
         other: ZonedDateTime<DateTimeKind.Instant>
@@ -191,7 +210,11 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         return this.value.toMillis() > other.value.toMillis();
     }
 
-    /** Negative if this instant is before `other`, positive if after, zero if equal. */
+    /**
+     * @brief Compares this instant with `other`.
+     * @param other the instant to compare with
+     * @returns negative if this instant is before `other`, positive if after, zero if equal
+     */
     compareTo(
         this: ZonedDateTime<DateTimeKind.Instant>,
         other: ZonedDateTime<DateTimeKind.Instant>
@@ -200,9 +223,13 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
     }
 
     /**
-     * Renders `start`–`end` as a single locale-aware range (e.g. "13.–14.06.2026"), collapsing
+     * @brief Renders `start`–`end` as a single locale-aware range (e.g. "13.–14.06.2026"), collapsing
      * the parts both ends share, via the native `Intl.DateTimeFormat.formatRange`. `start` and
      * `end` must share the same `DateTimeContext` — the range is rendered in `start`'s locale/zone.
+     * @param start the beginning of the range
+     * @param end the end of the range
+     * @param format the preset used to render both ends
+     * @returns the combined, localized range
      */
     static formatRange(start: ZonedDateTime, end: ZonedDateTime, format: DateTimeFormat): string {
         if (

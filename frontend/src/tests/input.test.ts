@@ -1,16 +1,17 @@
-import { describe, expect, it } from 'vitest';
-import {
-    InputType,
-    formatInputValue,
-    isDateInputType,
-    isMaxLengthOrange,
-    isMaxLengthRed,
-    isMaxLengthVisible,
-    parseDateInputValue,
-    parseInputValue
-} from '$lib/helper/input';
-import type { DateTimeContext } from '$lib/helper/zoned_date_time';
-import { ZonedDateTime } from '$lib/helper/zoned_date_time';
+import { describe } from 'vitest';
+import { expect } from 'vitest';
+import { it } from 'vitest';
+
+import type { DateTimeContext } from '$lib/helper/zoned-date-time';
+import { formatInputValue } from '$lib/helper/input';
+import { isDateInputType } from '$lib/helper/input';
+import { isMaxLengthOrange } from '$lib/helper/input';
+import { isMaxLengthRed } from '$lib/helper/input';
+import { isMaxLengthVisible } from '$lib/helper/input';
+import { parseDateInputValue } from '$lib/helper/input';
+import { parseInputValue } from '$lib/helper/input';
+import { InputType } from '$lib/helper/input';
+import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 
 const BERLIN: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'de-DE' };
 

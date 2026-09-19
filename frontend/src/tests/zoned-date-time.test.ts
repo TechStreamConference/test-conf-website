@@ -1,6 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
-import { DateTimeFormat, DateTimeKind, ZonedDateTime } from '$lib/helper/zoned_date_time';
-import type { DateTimeContext } from '$lib/helper/zoned_date_time';
+import { describe } from 'vitest';
+import { expect } from 'vitest';
+import { it } from 'vitest';
+import { vi } from 'vitest';
+
+import type { DateTimeContext } from '$lib/helper/zoned-date-time';
+import { DateTimeFormat } from '$lib/helper/zoned-date-time';
+import { DateTimeKind } from '$lib/helper/zoned-date-time';
+import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 
 const BERLIN_DE: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'de-DE' };
 const BERLIN_EN: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'en-US' };
