@@ -19,8 +19,8 @@ importers:
         specifier: ^0.99.0
         version: 0.99.0(typescript@6.0.3)
       '@lucide/svelte':
-        specifier: ^1.39.0
-        version: 1.39.0(svelte@5.57.0(@typescript-eslint/types@8.70.0))
+        specifier: ^1.46.0
+        version: 1.46.0(svelte@5.57.0(@typescript-eslint/types@8.70.0))
       '@storybook/addon-a11y':
         specifier: ^10.5.10
         version: 10.5.10(storybook@10.5.10(prettier@3.9.6)(react@19.2.8))
@@ -403,8 +403,8 @@ packages:
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
 
-  '@lucide/svelte@1.39.0':
-    resolution: {integrity: sha512-jCgA/RqDv9uWHs4DiIUef4kpf5TfLl9y8OMGrh+W4aQTCOscT4X2BX14ta65J+5ooslrN1bXXiO9AaeAOHAcPA==}
+  '@lucide/svelte@1.46.0':
+    resolution: {integrity: sha512-Ru8jDjoCVLJ7J7pPRUdY+odSBV2BI6rj68JTmT+ENq/ZwYOPGPAiKVvKz+XLyAoK4HAwlRTzZHpsMvrHfsetqg==}
     peerDependencies:
       svelte: ^5
 
@@ -2615,7 +2615,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@lucide/svelte@1.39.0(svelte@5.57.0(@typescript-eslint/types@8.70.0))':
+  '@lucide/svelte@1.46.0(svelte@5.57.0(@typescript-eslint/types@8.70.0))':
     dependencies:
       svelte: 5.57.0(@typescript-eslint/types@8.70.0)
 
