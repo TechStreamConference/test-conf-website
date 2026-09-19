@@ -4,6 +4,10 @@ The Style Guide does not apply to generated code like the Frontend Client.
 However, this style guide applies to code written by an IDE or AI.
 If a documentation block is used, all applicable documentation tags for that element must be provided. Do not partially document an element.
 
+## Indentation
+
+Indentation always uses 4 space characters. The tab character is not allowed anywhere in the code base (including code examples in this guide).
+
 ## Svelte
 
 ### Casing
@@ -112,10 +116,10 @@ import type { PageProps } from './$types';
 
 // Props (only in svelte)
 interface Props extends Omit<HTMLInputAttributes, 'specificvalue' | 'unoptional'> {
-	// props can also be omitted to remove them from the component.
-	nonvalue: string; //  a value, that is not existing in the Attributes
-	specificvalue: string; // a value, that type is more narrowed here.
-	unoptional: string; // a value that is existing in the Attribues but now is non-optional.
+    // props can also be omitted to remove them from the component.
+    nonvalue: string; //  a value, that is not existing in the Attributes
+    specificvalue: string; // a value, that type is more narrowed here.
+    unoptional: string; // a value that is existing in the Attribues but now is non-optional.
 }
 let { nonvalue, specificvalue, unoptional = $bindable(), ...rest }: Props = $props(); // destructuring assignment. Arguments, that should be bindable by the caller needs to be marked as so. When there is no argument bindable, the props needs to be marked as const. Components wrapping a native HTML element must destructure remaining native attributes into `...rest` and forward them to the corresponding native element.
 
@@ -132,7 +136,7 @@ export type InputValue = string;
  * @brief If the task of that interface, class, type is ambiguous.
  */
 interface InputProps extends HTMLImgAttributes {
-	value: InputValue;
+    value: InputValue;
 }
 
 // Functions
@@ -146,11 +150,11 @@ interface InputProps extends HTMLImgAttributes {
  * @throws if there where a throw
  */
 export function getImageUrl(value: InputValue): string {
-	return get(image);
+    return get(image);
 }
 
 function getMaxLength(): number {
-	return MAX_LENGTH;
+    return MAX_LENGTH;
 }
 ```
 
@@ -172,12 +176,12 @@ function getMaxLength(): number {
 
 ```html
 <input
-	id="user-email"
-	class="input-field"
-	type="email"
-	maxlength="100"
-	aria-label="Email address"
-	data-testid="email-input"
+    id="user-email"
+    class="input-field"
+    type="email"
+    maxlength="100"
+    aria-label="Email address"
+    data-testid="email-input"
 />
 ```
 
@@ -191,38 +195,38 @@ CSS always uses kebab-case.
 
 ```css
 div {
-	/* layout */
-	display: flex;
-	flex-direction: column;
+    /* layout */
+    display: flex;
+    flex-direction: column;
 
-	/* box */
-	gap: 1rem;
-	padding: 2rem;
+    /* box */
+    gap: 1rem;
+    padding: 2rem;
 
-	/* appearance */
-	background-color: var(--background-color-500);
-	border-radius: var(--border-radius);
+    /* appearance */
+    background-color: var(--background-color-500);
+    border-radius: var(--border-radius);
 
-	/* typography */
-	font-size: 1rem;
-	line-height: 1.5rem;
+    /* typography */
+    font-size: 1rem;
+    line-height: 1.5rem;
 
-	/* effects */
-	box-shadow: 10px 2px 1px white;
+    /* effects */
+    box-shadow: 10px 2px 1px white;
 
-	/* animations */
-	transition:
-		font-size var(--transition-duration-fast),
-		background-color var(--transition-duration);
+    /* animations */
+    transition:
+        font-size var(--transition-duration-fast),
+        background-color var(--transition-duration);
 }
 
 /* Other selectors for the same html tag, class or id */
 div:hover {
-	background-color: white;
-	font-size: 2rem;
+    background-color: white;
+    font-size: 2rem;
 }
 
 .green-color {
-	color: green;
+    color: green;
 }
 ```
