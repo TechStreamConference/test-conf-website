@@ -1,3 +1,4 @@
+import time
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import Final
@@ -18,6 +19,8 @@ from backend.seed.cli import _run  # type: ignore[reportPrivateUsage]
 
 _POSTGRES = PostgresContainer("postgres:16-alpine")
 _MIGRATIONS_PATH = Path(__file__).resolve().parents[3] / "alembic"
+_MAX_BACKEND_REACHABILITY_ATTEMPTS = 5
+_BACKEND_REACHABILITY_RETRY_DELAY_SECONDS = 1.0
 
 
 @pytest.fixture(scope="package")
@@ -25,14 +28,24 @@ def backend_is_reachable() -> bool:
     # Share one reachability check between the explicit backend test and the
     # integration setup, which skips the remaining integration tests when the
     # backend is unavailable.
-    try:
-        response: Final = httpx.get(
-            f"{SETTINGS.backend_root_uri}/openapi.json",
-            timeout=2.0,
-        )
-    except httpx.RequestError:
-        return False
-    return response.is_success
+    # CI starts the backend in a separate process, so tolerate brief transient
+    # failures after its initial readiness probe.
+    for attempt in range(_MAX_BACKEND_REACHABILITY_ATTEMPTS):
+        try:
+            response = httpx.get(
+                f"{SETTINGS.backend_root_uri}/openapi.json",
+                timeout=2.0,
+            )
+        except httpx.RequestError:
+            pass
+        else:
+            if response.is_success:
+                return True
+
+        if attempt + 1 < _MAX_BACKEND_REACHABILITY_ATTEMPTS:
+            time.sleep(_BACKEND_REACHABILITY_RETRY_DELAY_SECONDS)
+
+    return False
 
 
 @pytest_asyncio.fixture(scope="package")
