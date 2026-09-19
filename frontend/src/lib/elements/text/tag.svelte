@@ -14,7 +14,12 @@
 	const theme_color: ThemeColor = $derived(get_theme_color(tag_color));
 </script>
 
-<p style:background-color={theme_color.background} style:color={theme_color.text} {...rest}>
+<p
+	{...rest}
+	class:normal-font={true}
+	style:background-color={theme_color.background}
+	style:color={theme_color.text}
+>
 	{@render children()}
 </p>
 

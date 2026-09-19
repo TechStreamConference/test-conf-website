@@ -111,22 +111,42 @@ export default defineConfig(
 		},
 
 		rules: {
+			// Disallow `class="..."` on native HTML elements (components are fine).
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector:
+						'SvelteElement[kind="html"] > SvelteStartTag > SvelteAttribute[key.name="class"]',
+					message:
+						'Do not use `class="..."` on native HTML elements. Use it only on components. Use `class:...={true}` instead'
+				},
+				// Spread attributes (e.g. `{...rest}`) must always be the first attribute,
+				// both on native HTML tags and on components.
+				{
+					selector: 'SvelteStartTag > SvelteSpreadAttribute:not(:first-child)',
+					message: 'Spread attributes (e.g. `{...rest}`) must be the first attribute.'
+				},
+				// Markup comments are not covered by `no-warning-comments`, so match
+				// the Svelte AST node for `<!-- ... -->` directly.
+				{
+					selector: 'SvelteHTMLComment[value=/nocommit/i]',
+					message: "Unexpected 'nocommit' comment."
+				}
+			],
+			'@typescript-eslint/no-unused-vars': [
+				'error',
+				{
+					argsIgnorePattern: '^_',
+					varsIgnorePattern: '^_',
+					caughtErrorsIgnorePattern: '^_'
+				}
+			],
 			'@typescript-eslint/no-explicit-any': 'error',
 			'@typescript-eslint/no-unsafe-assignment': 'error',
 			'@typescript-eslint/no-unsafe-call': 'error',
 			'@typescript-eslint/no-unsafe-member-access': 'error',
 			'@typescript-eslint/no-unsafe-return': 'error',
-			'@typescript-eslint/no-unsafe-argument': 'error',
-
-			// Markup comments are not covered by `no-warning-comments`, so match
-			// the Svelte AST node for `<!-- ... -->` directly.
-			'no-restricted-syntax': [
-				'error',
-				{
-					selector: 'SvelteHTMLComment[value=/nocommit/i]',
-					message: "Unexpected 'nocommit' comment."
-				}
-			]
+			'@typescript-eslint/no-unsafe-argument': 'error'
 		}
 	}
 );
