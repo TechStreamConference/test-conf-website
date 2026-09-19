@@ -3,11 +3,11 @@ import type { StoryObj } from '@storybook/sveltekit';
 
 import ThemeSelectComponent from '$lib/elements/theme/ThemeSelect.svelte';
 
-const meta = {
-	title: 'Components/Theme',
-	component: ThemeSelectComponent
+const META = {
+    title: 'Components/Theme',
+    component: ThemeSelectComponent
 } satisfies Meta<typeof ThemeSelectComponent>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default META;
+type Story = StoryObj<typeof META>;
 export const ThemeSelect: Story = {};

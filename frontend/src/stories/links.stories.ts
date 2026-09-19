@@ -1,37 +1,39 @@
-import type { Meta, StoryObj } from '@storybook/sveltekit';
 import type { ComponentProps } from 'svelte';
+import type { Meta } from '@storybook/sveltekit';
+import type { StoryObj } from '@storybook/sveltekit';
 
 import { LinkTarget } from '$lib/helper/link-options';
+
 import LinkStory from './fixtures/LinkStory.svelte';
 
-const meta = {
-	title: 'Components/Links',
-	component: LinkStory,
-	args: {
-		variant: 'inline',
-		label: 'Visit the conference website',
-		href: 'https://tech-stream.org',
-		aria_label: 'Visit the Tech Stream Conference website',
-		target: LinkTarget.NewTab
-	},
-	argTypes: {
-		variant: {
-			control: 'inline-radio',
-			options: ['inline', 'button']
-		},
-		target: {
-			control: 'select',
-			options: Object.values(LinkTarget)
-		}
-	}
+const META = {
+    title: 'Components/Links',
+    component: LinkStory,
+    args: {
+        variant: 'inline',
+        label: 'Visit the conference website',
+        href: 'https://tech-stream.org',
+        'aria-label': 'Visit the Tech Stream Conference website',
+        target: LinkTarget.NewTab
+    },
+    argTypes: {
+        variant: {
+            control: 'inline-radio',
+            options: ['inline', 'button']
+        },
+        target: {
+            control: 'select',
+            options: Object.values(LinkTarget)
+        }
+    }
 } satisfies Meta<ComponentProps<typeof LinkStory>>;
 
-export default meta;
+export default META;
 
-type Story = StoryObj<typeof meta>;
+type Story = StoryObj<typeof META>;
 export const Inline: Story = {};
 export const Button: Story = {
-	args: {
-		variant: 'button'
-	}
+    args: {
+        variant: 'button'
+    }
 };

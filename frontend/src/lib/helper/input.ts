@@ -108,6 +108,7 @@ export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
  *
  * @param type the type the value should be formatted from.
  * @param value the value formatted from.
+ * @returns the formatted string, suitable for the native input's `value` attribute.
  */
 export function formatInputValue<T extends InputType>(type: T, value: InputValue<T>): string {
 	switch (type) {
@@ -133,7 +134,9 @@ export function isMaxLengthVisible(maxLength: number, value: string): boolean {
 }
 
 export function isMaxLengthOrange(maxLength: number, value: string): boolean {
-	return !isMaxLengthRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length;
+	return (
+		!isMaxLengthRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length
+	);
 }
 export function isMaxLengthRed(maxLength: number, value: string): boolean {
 	return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;

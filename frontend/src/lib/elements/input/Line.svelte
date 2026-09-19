@@ -58,7 +58,7 @@
 		{id}
 		{type}
 		value={formatInputValue(type, value)}
-		oninput={onInput}
+		{oninput}
 		maxlength={validMaxLength}
 	/>
 	{#if validMaxLength !== undefined && MAX_LENGTH_INPUT_TYPE.has(type) && typeof value === 'string'}
@@ -77,8 +77,8 @@
 <!-- svelte-ignore css_unused_selector -->
 <style>
 	/*
-	 * Unused textarea selector because it is the same selector as input.
-	 * Also ESLint does not get, that the svelte-ignore is actually doing stuff.
-	 */
+     * Unused textarea selector because it is the same selector as input.
+     * Also ESLint does not get, that the svelte-ignore is actually doing stuff.
+     */
 	@import 'static/css/input.css';
 </style>

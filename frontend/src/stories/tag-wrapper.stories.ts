@@ -1,21 +1,21 @@
+import type { ComponentProps } from 'svelte';
 import type { Meta } from '@storybook/sveltekit';
 import type { StoryObj } from '@storybook/sveltekit';
-import type { ComponentProps } from 'svelte';
 
 import TagWrapperComponent from '$lib/elements/text/TagWrapper.svelte';
 
-const meta = {
-	title: 'Components/Text',
-	component: TagWrapperComponent,
-	args: {
-		tags: [
-			{ id: 1, color_id: 1, text: 'Testing' },
-			{ id: 2, color_id: 2, text: 'Frontend' },
-			{ id: 3, color_id: 1, text: 'Svelte' }
-		]
-	}
+const META = {
+    title: 'Components/Text',
+    component: TagWrapperComponent,
+    args: {
+        tags: [
+            { id: 1, color_id: 1, text: 'Testing' },
+            { id: 2, color_id: 2, text: 'Frontend' },
+            { id: 3, color_id: 1, text: 'Svelte' }
+        ]
+    }
 } satisfies Meta<ComponentProps<typeof TagWrapperComponent>>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default META;
+type Story = StoryObj<typeof META>;
 export const TagWrapper: Story = {};
