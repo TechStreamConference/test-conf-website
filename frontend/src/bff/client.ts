@@ -1,21 +1,22 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { parseSetCookie } from 'set-cookie-parser';
 
-import { client } from '$gen/client.gen';
 import { env } from '$env/dynamic/private';
+
+import { client } from '$gen/client.gen';
 
 export { client };
 
 function configureClient(): void {
-	const backendUrl: string | undefined = env['BACKEND_ROOT_URI'];
+    const backendUrl: string | undefined = env['BACKEND_ROOT_URI'];
 
-	if (!backendUrl) {
-		throw new Error('BACKEND_ROOT_URI is not configured');
-	}
+    if (!backendUrl) {
+        throw new Error('BACKEND_ROOT_URI is not configured');
+    }
 
-	client.setConfig({
-		baseUrl: backendUrl
-	});
+    client.setConfig({
+        baseUrl: backendUrl
+    });
 }
 
 /**
@@ -25,21 +26,21 @@ function configureClient(): void {
  * real response, which does not happen automatically for a cross-service call.
  */
 export function backendFetch(event: RequestEvent): typeof fetch {
-	configureClient();
+    configureClient();
 
-	return async (input, init) => {
-		const response = await event.fetch(input, init);
+    return async (input, init) => {
+        const response = await event.fetch(input, init);
 
-		for (const { name, value, ...options } of parseSetCookie(response)) {
-			// `sameSite` is untyped as a plain `string` by the parser; safe to assert
-			// here because the backend is the only source and always sends `lax`.
-			event.cookies.set(name, value, {
-				path: options.path ?? '/',
-				...options,
-				sameSite: options.sameSite as 'lax' | 'strict' | 'none' | undefined
-			});
-		}
+        for (const { name, value, ...options } of parseSetCookie(response)) {
+            // `sameSite` is untyped as a plain `string` by the parser; safe to assert
+            // here because the backend is the only source and always sends `lax`.
+            event.cookies.set(name, value, {
+                path: options.path ?? '/',
+                ...options,
+                sameSite: options.sameSite as 'lax' | 'strict' | 'none' | undefined
+            });
+        }
 
-		return response;
-	};
+        return response;
+    };
 }

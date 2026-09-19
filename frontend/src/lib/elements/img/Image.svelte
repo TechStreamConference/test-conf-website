@@ -1,28 +1,28 @@
 <script lang="ts">
-	import type { HTMLImgAttributes } from 'svelte/elements';
+    import type { HTMLImgAttributes } from 'svelte/elements';
 
-	import { warnIfBothImageDimensionsSet } from '$lib/helper/runtime-checks';
+    import { warnIfBothImageDimensionsSet } from '$lib/helper/runtime-checks';
 
-	interface Props extends HTMLImgAttributes {
-		src: string;
-		alt: string;
-		height?: string | undefined;
-		width?: string | undefined;
-	}
-	const { src, alt, height, width, ...rest }: Props = $props();
+    interface Props extends HTMLImgAttributes {
+        src: string;
+        alt: string;
+        height?: string | undefined;
+        width?: string | undefined;
+    }
+    const { src, alt, height, width, ...rest }: Props = $props();
 
-	$effect(() => {
-		warnIfBothImageDimensionsSet(height, width, src);
-	});
+    $effect(() => {
+        warnIfBothImageDimensionsSet(height, width, src);
+    });
 </script>
 
 <img {...rest} {src} {alt} style:width style:height />
 
 <style>
-	img {
-		display: block;
+    img {
+        display: block;
 
-		height: auto;
-		width: auto;
-	}
+        height: auto;
+        width: auto;
+    }
 </style>

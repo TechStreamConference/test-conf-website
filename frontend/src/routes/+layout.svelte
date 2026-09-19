@@ -1,13 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { initTheme } from '$lib/helper/light-dark';
-	import type { LayoutProps } from './$types';
+    import { onMount } from 'svelte';
 
-	let { children }: LayoutProps = $props();
+    import { initTheme } from '$lib/helper/light-dark';
 
-	onMount(() => {
-		initTheme();
-	});
+    import type { LayoutProps } from './$types';
+
+    let { children }: LayoutProps = $props();
+
+    onMount(() => {
+        initTheme();
+    });
 </script>
 
 {@render children()}

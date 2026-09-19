@@ -1,13 +1,14 @@
+import type { ComponentProps } from 'svelte';
 import type { Meta } from '@storybook/sveltekit';
 import type { StoryObj } from '@storybook/sveltekit';
-import type { ComponentProps } from 'svelte';
+
 import ShowcaseStory from './fixtures/ShowcaseStory.svelte';
 
-const meta = {
-	title: 'Pages',
-	component: ShowcaseStory
+const META = {
+    title: 'Pages',
+    component: ShowcaseStory
 } satisfies Meta<ComponentProps<typeof ShowcaseStory>>;
 
-export default meta;
-type Story = StoryObj<typeof meta>;
+export default META;
+type Story = StoryObj<typeof META>;
 export const Home: Story = {};

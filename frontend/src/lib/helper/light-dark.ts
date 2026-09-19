@@ -1,7 +1,7 @@
 export enum Theme {
-	System = 'system',
-	Light = 'light',
-	Dark = 'dark'
+    System = 'system',
+    Light = 'light',
+    Dark = 'dark'
 }
 
 // when changing these: remember that there are corresponding values in 'src/app.html' and 'static/main.css'
@@ -12,33 +12,33 @@ const CSS_TRANSITION_CLASS: string = 'theme-transition';
 const CSS_TRANSITION_TIME_MILLISECONDS: number = 500;
 const PREFERRED_THEME_QUERY: string = '(prefers-color-scheme: dark)';
 
-let css_transition_timer: number | undefined;
+let cssTransitionTimer: number | undefined;
 let initialized: boolean = false;
 
 function parseTheme(value: string | null): Theme {
-	switch (value) {
-		case Theme.Light:
-			return Theme.Light;
+    switch (value) {
+        case Theme.Light:
+            return Theme.Light;
 
-		case Theme.Dark:
-			return Theme.Dark;
+        case Theme.Dark:
+            return Theme.Dark;
 
-		case Theme.System:
-		default:
-			return Theme.System;
-	}
+        case Theme.System:
+        default:
+            return Theme.System;
+    }
 }
 
 function nextTheme(theme: Theme): Theme {
-	switch (theme) {
-		case Theme.Dark:
-			return Theme.Light;
-		case Theme.Light:
-			return Theme.System;
-		case Theme.System:
-		default:
-			return Theme.Dark;
-	}
+    switch (theme) {
+        case Theme.Dark:
+            return Theme.Light;
+        case Theme.Light:
+            return Theme.System;
+        case Theme.System:
+        default:
+            return Theme.Dark;
+    }
 }
 
 /**
@@ -46,7 +46,7 @@ function nextTheme(theme: Theme): Theme {
  * @param theme the enum value
  */
 function saveTheme(theme: Theme): void {
-	localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(STORAGE_KEY, theme);
 }
 
 /**
@@ -54,23 +54,23 @@ function saveTheme(theme: Theme): void {
  * @param theme the enum value
  */
 function applyTheme(theme: Theme): void {
-	const root = document.documentElement;
-	root.classList.remove(CSS_LIGHT_MODE, CSS_DARK_MODE);
+    const root = document.documentElement;
+    root.classList.remove(CSS_LIGHT_MODE, CSS_DARK_MODE);
 
-	switch (theme) {
-		case Theme.Light:
-			root.classList.add(CSS_LIGHT_MODE);
-			break;
+    switch (theme) {
+        case Theme.Light:
+            root.classList.add(CSS_LIGHT_MODE);
+            break;
 
-		case Theme.Dark:
-			root.classList.add(CSS_DARK_MODE);
-			break;
+        case Theme.Dark:
+            root.classList.add(CSS_DARK_MODE);
+            break;
 
-		case Theme.System:
-		default:
-			// no css class. Browser follows user preference.
-			break;
-	}
+        case Theme.System:
+        default:
+            // no css class. Browser follows user preference.
+            break;
+    }
 }
 
 /**
@@ -79,17 +79,17 @@ function applyTheme(theme: Theme): void {
  * Removes the css transition class once the transition is done.
  */
 function applyTransition(): void {
-	const root = document.documentElement;
-	root.classList.add(CSS_TRANSITION_CLASS);
+    const root = document.documentElement;
+    root.classList.add(CSS_TRANSITION_CLASS);
 
-	if (css_transition_timer !== undefined) {
-		clearTimeout(css_transition_timer);
-	}
+    if (cssTransitionTimer !== undefined) {
+        clearTimeout(cssTransitionTimer);
+    }
 
-	css_transition_timer = window.setTimeout(() => {
-		root.classList.remove(CSS_TRANSITION_CLASS);
-		css_transition_timer = undefined;
-	}, CSS_TRANSITION_TIME_MILLISECONDS);
+    cssTransitionTimer = window.setTimeout(() => {
+        root.classList.remove(CSS_TRANSITION_CLASS);
+        cssTransitionTimer = undefined;
+    }, CSS_TRANSITION_TIME_MILLISECONDS);
 }
 
 /**
@@ -97,19 +97,19 @@ function applyTransition(): void {
  * Also sets an event listener for the system theme change.
  */
 export function initTheme(): void {
-	if (initialized) {
-		return;
-	}
+    if (initialized) {
+        return;
+    }
 
-	applyTheme(getTheme());
-	window.matchMedia(PREFERRED_THEME_QUERY).addEventListener('change', () => {
-		if (getTheme() === Theme.System) {
-			applyTheme(Theme.System);
-			applyTransition();
-		}
-	});
+    applyTheme(getTheme());
+    window.matchMedia(PREFERRED_THEME_QUERY).addEventListener('change', () => {
+        if (getTheme() === Theme.System) {
+            applyTheme(Theme.System);
+            applyTransition();
+        }
+    });
 
-	initialized = true;
+    initialized = true;
 }
 
 /**
@@ -117,7 +117,7 @@ export function initTheme(): void {
  * @returns the enum value
  */
 export function getTheme(): Theme {
-	return parseTheme(localStorage.getItem(STORAGE_KEY));
+    return parseTheme(localStorage.getItem(STORAGE_KEY));
 }
 
 /**
@@ -125,9 +125,9 @@ export function getTheme(): Theme {
  * @param theme the enum value
  */
 export function setTheme(theme: Theme): void {
-	saveTheme(theme);
-	applyTheme(theme);
-	applyTransition();
+    saveTheme(theme);
+    applyTheme(theme);
+    applyTransition();
 }
 
 /**
@@ -135,7 +135,7 @@ export function setTheme(theme: Theme): void {
  * @returns the new theme
  */
 export function toggleTheme(): Theme {
-	const next = nextTheme(getTheme());
-	setTheme(next);
-	return next;
+    const next = nextTheme(getTheme());
+    setTheme(next);
+    return next;
 }

@@ -1,27 +1,26 @@
 <script lang="ts">
-	import Headline from '$lib/elements/text/Headline.svelte';
-	import Paragraph from '$lib/elements/text/Paragraph.svelte';
-	import SubHeadline from '$lib/elements/text/SubHeadline.svelte';
-	import Tag from '$lib/elements/text/Tag.svelte';
+    import Headline from '$lib/elements/text/Headline.svelte';
+    import Paragraph from '$lib/elements/text/Paragraph.svelte';
+    import SubHeadline from '$lib/elements/text/SubHeadline.svelte';
+    import Tag from '$lib/elements/text/Tag.svelte';
+    import { TagColor } from '$lib/helper/tag';
 
-	import { TagColor } from '$lib/helper/tag';
-
-	interface Props {
-		variant: 'headline' | 'subheadline' | 'paragraph' | 'tag';
-		text: string;
-		render_line: boolean;
-		preserve_newlines: boolean;
-		tag_color: TagColor;
-	}
-	let { variant, text, render_line, preserve_newlines, tag_color }: Props = $props();
+    interface Props {
+        variant: 'headline' | 'subheadline' | 'paragraph' | 'tag';
+        text: string;
+        renderLine: boolean;
+        preserveNewlines: boolean;
+        tagColor: TagColor;
+    }
+    let { variant, text, renderLine, preserveNewlines, tagColor }: Props = $props();
 </script>
 
 {#if variant === 'headline'}
-	<Headline {render_line}>{text}</Headline>
+    <Headline {renderLine}>{text}</Headline>
 {:else if variant === 'subheadline'}
-	<SubHeadline>{text}</SubHeadline>
+    <SubHeadline>{text}</SubHeadline>
 {:else if variant === 'paragraph'}
-	<Paragraph {preserve_newlines}>{text}</Paragraph>
+    <Paragraph {preserveNewlines}>{text}</Paragraph>
 {:else}
-	<Tag {tag_color}>{text}</Tag>
+    <Tag {tagColor}>{text}</Tag>
 {/if}

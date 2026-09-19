@@ -1,24 +1,24 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
-	import type { HTMLAttributes } from 'svelte/elements';
+    import type { HTMLAttributes } from 'svelte/elements';
+    import type { Snippet } from 'svelte';
 
-	interface Props extends HTMLAttributes<HTMLParagraphElement> {
-		children: Snippet;
-		preserve_newlines?: boolean;
-	}
-	const { children, preserve_newlines = false, ...rest }: Props = $props();
+    interface Props extends HTMLAttributes<HTMLParagraphElement> {
+        children: Snippet;
+        preserveNewlines?: boolean;
+    }
+    const { children, preserveNewlines = false, ...rest }: Props = $props();
 </script>
 
-<p {...rest} class:normal-font={true} class:preserve-newlines={preserve_newlines}>
-	{@render children()}
+<p {...rest} class:normal-font={true} class:preserve-newlines={preserveNewlines}>
+    {@render children()}
 </p>
 
 <style>
-	p {
-		font-size: var(--paragraph-font-size);
-	}
+    p {
+        font-size: var(--paragraph-font-size);
+    }
 
-	.preserve-newlines {
-		white-space: pre-line;
-	}
+    .preserve-newlines {
+        white-space: pre-line;
+    }
 </style>
