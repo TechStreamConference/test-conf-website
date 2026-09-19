@@ -6,27 +6,27 @@ const MAX_LENGTH_ORANGE_FACTOR = 0.75;
 const MAX_LENGTH_RED_FACTOR = 0.9;
 
 export enum InputType {
-	Text = 'text',
-	Password = 'password',
-	Email = 'email',
-	Search = 'search',
-	Url = 'url',
-	Tel = 'tel',
-	Number = 'number',
-	Date = 'date',
-	Time = 'time',
-	DatetimeLocal = 'datetime-local',
-	Month = 'month',
-	Week = 'week',
-	Color = 'color'
+    Text = 'text',
+    Password = 'password',
+    Email = 'email',
+    Search = 'search',
+    Url = 'url',
+    Tel = 'tel',
+    Number = 'number',
+    Date = 'date',
+    Time = 'time',
+    DatetimeLocal = 'datetime-local',
+    Month = 'month',
+    Week = 'week',
+    Color = 'color'
 }
 
 const DATE_INPUT_TYPE_VALUES = [
-	InputType.Date,
-	InputType.Time,
-	InputType.DatetimeLocal,
-	InputType.Month,
-	InputType.Week
+    InputType.Date,
+    InputType.Time,
+    InputType.DatetimeLocal,
+    InputType.Month,
+    InputType.Week
 ] as const;
 
 export type DateInputType = (typeof DATE_INPUT_TYPE_VALUES)[number];
@@ -36,75 +36,75 @@ export type DateInputType = (typeof DATE_INPUT_TYPE_VALUES)[number];
  * `DateTimeContext` to parse the raw HTML input value into a `ZonedDateTime`), absent otherwise.
  */
 export type InputContextProp<T extends InputType> = T extends DateInputType
-	? { context: DateTimeContext }
-	: { context?: undefined };
+    ? { context: DateTimeContext }
+    : { context?: undefined };
 
 export const MAX_LENGTH_INPUT_TYPE = new Set<InputType>([
-	InputType.Text,
-	InputType.Password,
-	InputType.Email,
-	InputType.Search,
-	InputType.Tel,
-	InputType.Url
+    InputType.Text,
+    InputType.Password,
+    InputType.Email,
+    InputType.Search,
+    InputType.Tel,
+    InputType.Url
 ]);
 
 /**
  * @brief this interface defines the value types for each input type.
  */
 export interface InputValueMap {
-	[InputType.Text]: string;
-	[InputType.Password]: string;
-	[InputType.Email]: string;
-	[InputType.Search]: string;
-	[InputType.Url]: string;
-	[InputType.Tel]: string;
-	[InputType.Number]: number;
-	[InputType.Date]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
-	[InputType.Time]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
-	[InputType.DatetimeLocal]: ZonedDateTime<DateTimeKind.TimeZoneAware>;
-	[InputType.Month]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
-	[InputType.Week]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
-	[InputType.Color]: string;
+    [InputType.Text]: string;
+    [InputType.Password]: string;
+    [InputType.Email]: string;
+    [InputType.Search]: string;
+    [InputType.Url]: string;
+    [InputType.Tel]: string;
+    [InputType.Number]: number;
+    [InputType.Date]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
+    [InputType.Time]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
+    [InputType.DatetimeLocal]: ZonedDateTime<DateTimeKind.TimeZoneAware>;
+    [InputType.Month]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
+    [InputType.Week]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
+    [InputType.Color]: string;
 }
 export type InputValue<T extends InputType> = InputValueMap[T];
 
 export function isDateInputType(type: InputType): type is DateInputType {
-	return (DATE_INPUT_TYPE_VALUES as readonly InputType[]).includes(type);
+    return (DATE_INPUT_TYPE_VALUES as readonly InputType[]).includes(type);
 }
 
 type DateInputParser<T extends DateInputType> = (
-	value: string,
-	context: DateTimeContext
+    value: string,
+    context: DateTimeContext
 ) => InputValue<T>;
 
 // One parser per date input type, so that TypeScript checks each return type against
 // `InputValueMap` individually instead of against the intersection of all of them.
 const DATE_INPUT_PARSERS: { [K in DateInputType]: DateInputParser<K> } = {
-	[InputType.Date]: (value, context) => ZonedDateTime.fromHtmlDate(value, context),
-	[InputType.Time]: (value, context) => ZonedDateTime.fromHtmlTime(value, context),
-	[InputType.DatetimeLocal]: (value, context) => ZonedDateTime.fromHtmlDateTime(value, context),
-	[InputType.Month]: (value, context) => ZonedDateTime.fromHtmlMonth(value, context),
-	[InputType.Week]: (value, context) => ZonedDateTime.fromHtmlWeek(value, context)
+    [InputType.Date]: (value, context) => ZonedDateTime.fromHtmlDate(value, context),
+    [InputType.Time]: (value, context) => ZonedDateTime.fromHtmlTime(value, context),
+    [InputType.DatetimeLocal]: (value, context) => ZonedDateTime.fromHtmlDateTime(value, context),
+    [InputType.Month]: (value, context) => ZonedDateTime.fromHtmlMonth(value, context),
+    [InputType.Week]: (value, context) => ZonedDateTime.fromHtmlWeek(value, context)
 };
 
 export function parseDateInputValue<T extends DateInputType>(
-	type: T,
-	element: HTMLInputElement,
-	context: DateTimeContext
+    type: T,
+    element: HTMLInputElement,
+    context: DateTimeContext
 ): InputValue<T> {
-	return DATE_INPUT_PARSERS[type](element.value, context);
+    return DATE_INPUT_PARSERS[type](element.value, context);
 }
 
 export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
-	type: T,
-	element: HTMLInputElement
+    type: T,
+    element: HTMLInputElement
 ): InputValue<T> {
-	switch (type) {
-		case InputType.Number:
-			return element.valueAsNumber as InputValue<T>;
-		default:
-			return element.value as InputValue<T>;
-	}
+    switch (type) {
+        case InputType.Number:
+            return element.valueAsNumber as InputValue<T>;
+        default:
+            return element.value as InputValue<T>;
+    }
 }
 
 /**
@@ -115,33 +115,33 @@ export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
  * @returns the formatted string, suitable for the native input's `value` attribute.
  */
 export function formatInputValue<T extends InputType>(type: T, value: InputValue<T>): string {
-	switch (type) {
-		case InputType.Number:
-			return typeof value === 'number' && !Number.isNaN(value) ? String(value) : '';
-		case InputType.Date:
-			return (value as ZonedDateTime).htmlDate();
-		case InputType.Time:
-			return (value as ZonedDateTime).htmlTime();
-		case InputType.DatetimeLocal:
-			return (value as ZonedDateTime).htmlDateTime();
-		case InputType.Month:
-			return (value as ZonedDateTime).htmlMonth();
-		case InputType.Week:
-			return (value as ZonedDateTime).htmlWeek();
-		default:
-			return typeof value === 'string' ? value : '';
-	}
+    switch (type) {
+        case InputType.Number:
+            return typeof value === 'number' && !Number.isNaN(value) ? String(value) : '';
+        case InputType.Date:
+            return (value as ZonedDateTime).htmlDate();
+        case InputType.Time:
+            return (value as ZonedDateTime).htmlTime();
+        case InputType.DatetimeLocal:
+            return (value as ZonedDateTime).htmlDateTime();
+        case InputType.Month:
+            return (value as ZonedDateTime).htmlMonth();
+        case InputType.Week:
+            return (value as ZonedDateTime).htmlWeek();
+        default:
+            return typeof value === 'string' ? value : '';
+    }
 }
 
 export function isMaxLengthVisible(maxLength: number, value: string): boolean {
-	return value.length >= maxLength * MAX_LENGTH_VISIBLE_FACTOR;
+    return value.length >= maxLength * MAX_LENGTH_VISIBLE_FACTOR;
 }
 
 export function isMaxLengthOrange(maxLength: number, value: string): boolean {
-	return (
-		!isMaxLengthRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length
-	);
+    return (
+        !isMaxLengthRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length
+    );
 }
 export function isMaxLengthRed(maxLength: number, value: string): boolean {
-	return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;
+    return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;
 }
