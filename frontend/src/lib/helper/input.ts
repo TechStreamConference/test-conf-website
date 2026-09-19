@@ -1,5 +1,6 @@
-import type { DateTimeContext, DateTimeKind } from '$lib/helper/zoned_date_time';
-import { ZonedDateTime } from '$lib/helper/zoned_date_time';
+import type { DateTimeContext } from '$lib/helper/zoned-date-time';
+import type { DateTimeKind } from '$lib/helper/zoned-date-time';
+import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 
 const MAX_LENGTH_VISIBLE_FACTOR = 0.5;
 const MAX_LENGTH_ORANGE_FACTOR = 0.75;
@@ -32,7 +33,7 @@ const DATE_INPUT_TYPE_VALUES = [
 export type DateInputType = (typeof DATE_INPUT_TYPE_VALUES)[number];
 
 /**
- * Ties the `context` field to `T`: required for the date/time input types (they need a
+ * @brief Ties the `context` field to `T`: required for the date/time input types (they need a
  * `DateTimeContext` to parse the raw HTML input value into a `ZonedDateTime`), absent otherwise.
  */
 export type InputContextProp<T extends InputType> = T extends DateInputType

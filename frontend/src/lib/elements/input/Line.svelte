@@ -1,19 +1,20 @@
 <script lang="ts" generics="T extends InputType">
     import type { AriaAttributes } from 'svelte/elements';
     import type { HTMLInputAttributes } from 'svelte/elements';
+
+    import type { DateTimeContext } from '$lib/helper/zoned-date-time';
     import type { InputContextProp } from '$lib/helper/input';
-    import type { InputValue } from '$lib/helper/input';
     import type { InputType } from '$lib/helper/input';
-    import type { DateTimeContext } from '$lib/helper/zoned_date_time';
+    import type { InputValue } from '$lib/helper/input';
+    import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
+    import { formatInputValue } from '$lib/helper/input';
     import { isDateInputType } from '$lib/helper/input';
     import { isMaxLengthOrange } from '$lib/helper/input';
     import { isMaxLengthRed } from '$lib/helper/input';
-    import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
+    import { isMaxLengthVisible } from '$lib/helper/input';
     import { parseDateInputValue } from '$lib/helper/input';
     import { parseInputValue } from '$lib/helper/input';
-    import { formatInputValue } from '$lib/helper/input';
     import { unsignedIntOr } from '$lib/helper/numbers';
-    import { isMaxLengthVisible } from '$lib/helper/input';
 
     type Props = Pick<
         HTMLInputAttributes,
@@ -40,7 +41,7 @@
 
     const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength, undefined));
 
-    function oninput(event: Event & { currentTarget: HTMLInputElement }) {
+    function handleInput(event: Event & { currentTarget: HTMLInputElement }) {
         const element = event.currentTarget;
         value = (
             isDateInputType(type)
@@ -58,7 +59,7 @@
         {id}
         {type}
         value={formatInputValue(type, value)}
-        {oninput}
+        oninput={handleInput}
         maxlength={validMaxLength}
     />
     {#if validMaxLength !== undefined && MAX_LENGTH_INPUT_TYPE.has(type) && typeof value === 'string'}
