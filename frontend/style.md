@@ -99,6 +99,16 @@ Imports are always written one symbol per line (no `{ a, b, c }` combined import
 | value?: string;              | May be omitted                         |
 | value?: string \| undefined; | May be omitted or explicitly undefined |
 
+Most props that mirror a native HTML/ARIA attribute already get the correct casing for free via `Pick<HTMLAttributes, ...>` / `Omit<HTMLAttributes, ...>` — you never spell them out yourself. The exception is when you redeclare such an attribute yourself (e.g. to narrow its optionality). In that case, keep the prop key spelled exactly like the HTML attribute (kebab-case, quoted), and alias it to camelCase when destructuring:
+
+```ts
+// `aria-label` was optional on HTMLAnchorAttributes; this narrows it to required.
+interface Props extends Omit<HTMLAnchorAttributes, 'aria-label'> {
+    'aria-label': string;
+}
+const { 'aria-label': ariaLabel, ...rest }: Props = $props();
+```
+
 ### Example
 
 ```ts
