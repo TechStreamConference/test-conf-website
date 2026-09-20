@@ -23,7 +23,7 @@ dependencies = [
     "sqlalchemy[asyncio, postgresql-psycopg2binary]>=2.0.52",
     "sqlmodel>=0.0.42",
     "typer>=0.27.2",
-    "uvicorn>=0.52.4",
+    "uvicorn>=0.53.0",
 ]
 
 [dependency-groups]
