@@ -27,6 +27,30 @@ jobs:
         with:
           context: ${{ matrix.project-part }}
           push: false
+          load: true
+          tags: test-conf-${{ matrix.project-part }}:ci
+
+      - name: Smoke-test frontend container
+        if: matrix.project-part == 'frontend'
+        run: |
+          docker run --detach \
+            --name frontend-smoke \
+            --publish 127.0.0.1:3000:3000 \
+            test-conf-frontend:ci
+
+          curl --fail --silent --show-error \
+            --retry 15 \
+            --retry-delay 1 \
+            --retry-all-errors \
+            http://127.0.0.1:3000/robots.txt > /dev/null
+
+      - name: Show frontend container logs
+        if: always() && matrix.project-part == 'frontend'
+        run: docker logs frontend-smoke || true
+
+      - name: Stop frontend container
+        if: always() && matrix.project-part == 'frontend'
+        run: docker rm --force frontend-smoke || true
 
   ci:
     name: ${{ matrix.project-part }}-${{ matrix.command }}
