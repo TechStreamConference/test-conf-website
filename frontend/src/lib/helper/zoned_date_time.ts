@@ -5,9 +5,16 @@ export interface DateTimeContext {
 	locale: string;
 }
 
+/*
+ * Values built from a bare calendar concept (date, time, month, week) are `DateTimeKind.TimeZoneUnaware`:
+ * they never go through a timezone conversion, on the way in or out, because a calendar
+ * day, a time of day, a month or a week has no instant of its own — converting one through
+ * a timezone would shift it onto a different day depending on the offset. Only values that
+ * represent a real instant (`DateTimeKind.Instant`) are projected into `timeZone`.
+ */
 export enum DateTimeKind {
-	Instant = 'Instant',
-	Floating = 'Floating'
+	TimeZoneAware = 'TimeZoneAware',
+	TimeZoneUnaware = 'TimeZoneUnaware'
 }
 
 export enum DateTimeFormat {
@@ -45,24 +52,18 @@ const HTML_MONTH_FORMAT = 'yyyy-MM';
 const HTML_WEEK_FORMAT = "kkkk-'W'WW";
 
 // Reference date used to anchor a bare time-of-day value; it carries no meaning of its own.
-const FLOATING_TIME_REFERENCE_DATE = '1970-01-01';
+const TIME_ZONE_UNAWARE_TIME_REFERENCE_DATE = '1970-01-01';
 
 /**
  * Wraps a point in time together with the timezone/locale needed to render it,
  * so callers never juggle raw `Date`/Luxon values and timezones themselves.
- *
- * Values built from a bare calendar concept (date, time, month, week) are `DateTimeKind.Floating`:
- * they never go through a timezone conversion, on the way in or out, because a calendar
- * day, a time of day, a month or a week has no instant of its own — converting one through
- * a timezone would shift it onto a different day depending on the offset. Only values that
- * represent a real instant (`DateTimeKind.Instant`) are projected into `timeZone`.
  */
 export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
 	private constructor(
 		private readonly value: DateTime,
 		private readonly context: DateTimeContext,
 		private readonly kind: K
-	) {}
+	) { }
 
 	static fromUtc<K extends DateTimeKind>(
 		value: string,
@@ -75,60 +76,60 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
 	static fromHtmlDateTime(
 		value: string,
 		context: DateTimeContext
-	): ZonedDateTime<DateTimeKind.Instant> {
-		return new ZonedDateTime<DateTimeKind.Instant>(
+	): ZonedDateTime<DateTimeKind.TimeZoneAware> {
+		return new ZonedDateTime<DateTimeKind.TimeZoneAware>(
 			DateTime.fromISO(value, { zone: context.timeZone }),
 			context,
-			DateTimeKind.Instant
+			DateTimeKind.TimeZoneAware
 		);
 	}
 
 	static fromHtmlDate(
 		value: string,
 		context: DateTimeContext
-	): ZonedDateTime<DateTimeKind.Floating> {
-		return new ZonedDateTime<DateTimeKind.Floating>(
+	): ZonedDateTime<DateTimeKind.TimeZoneUnaware> {
+		return new ZonedDateTime<DateTimeKind.TimeZoneUnaware>(
 			DateTime.fromISO(value, { zone: 'utc' }),
 			context,
-			DateTimeKind.Floating
+			DateTimeKind.TimeZoneUnaware
 		);
 	}
 
 	static fromHtmlTime(
 		value: string,
 		context: DateTimeContext
-	): ZonedDateTime<DateTimeKind.Floating> {
-		return new ZonedDateTime<DateTimeKind.Floating>(
-			DateTime.fromISO(`${FLOATING_TIME_REFERENCE_DATE}T${value}`, { zone: 'utc' }),
+	): ZonedDateTime<DateTimeKind.TimeZoneUnaware> {
+		return new ZonedDateTime<DateTimeKind.TimeZoneUnaware>(
+			DateTime.fromISO(`${TIME_ZONE_UNAWARE_TIME_REFERENCE_DATE}T${value}`, { zone: 'utc' }),
 			context,
-			DateTimeKind.Floating
+			DateTimeKind.TimeZoneUnaware
 		);
 	}
 
 	static fromHtmlMonth(
 		value: string,
 		context: DateTimeContext
-	): ZonedDateTime<DateTimeKind.Floating> {
-		return new ZonedDateTime<DateTimeKind.Floating>(
+	): ZonedDateTime<DateTimeKind.TimeZoneUnaware> {
+		return new ZonedDateTime<DateTimeKind.TimeZoneUnaware>(
 			DateTime.fromISO(`${value}-01`, { zone: 'utc' }),
 			context,
-			DateTimeKind.Floating
+			DateTimeKind.TimeZoneUnaware
 		);
 	}
 
 	static fromHtmlWeek(
 		value: string,
 		context: DateTimeContext
-	): ZonedDateTime<DateTimeKind.Floating> {
-		return new ZonedDateTime<DateTimeKind.Floating>(
+	): ZonedDateTime<DateTimeKind.TimeZoneUnaware> {
+		return new ZonedDateTime<DateTimeKind.TimeZoneUnaware>(
 			DateTime.fromISO(`${value}-1`, { zone: 'utc' }),
 			context,
-			DateTimeKind.Floating
+			DateTimeKind.TimeZoneUnaware
 		);
 	}
 
 	private zoned(): DateTime {
-		return this.kind === DateTimeKind.Floating
+		return this.kind === DateTimeKind.TimeZoneUnaware
 			? this.value
 			: this.value.setZone(this.context.timeZone);
 	}
@@ -165,32 +166,32 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
 
 	/** Whether this instant and `other` represent the same point in time. */
 	equals(
-		this: ZonedDateTime<DateTimeKind.Instant>,
-		other: ZonedDateTime<DateTimeKind.Instant>
+		this: ZonedDateTime<DateTimeKind.TimeZoneAware>,
+		other: ZonedDateTime<DateTimeKind.TimeZoneAware>
 	): boolean {
 		return this.value.toMillis() === other.value.toMillis();
 	}
 
 	/** Whether this instant occurs before `other`. */
 	isBefore(
-		this: ZonedDateTime<DateTimeKind.Instant>,
-		other: ZonedDateTime<DateTimeKind.Instant>
+		this: ZonedDateTime<DateTimeKind.TimeZoneAware>,
+		other: ZonedDateTime<DateTimeKind.TimeZoneAware>
 	): boolean {
 		return this.value.toMillis() < other.value.toMillis();
 	}
 
 	/** Whether this instant occurs after `other`. */
 	isAfter(
-		this: ZonedDateTime<DateTimeKind.Instant>,
-		other: ZonedDateTime<DateTimeKind.Instant>
+		this: ZonedDateTime<DateTimeKind.TimeZoneAware>,
+		other: ZonedDateTime<DateTimeKind.TimeZoneAware>
 	): boolean {
 		return this.value.toMillis() > other.value.toMillis();
 	}
 
 	/** Negative if this instant is before `other`, positive if after, zero if equal. */
 	compareTo(
-		this: ZonedDateTime<DateTimeKind.Instant>,
-		other: ZonedDateTime<DateTimeKind.Instant>
+		this: ZonedDateTime<DateTimeKind.TimeZoneAware>,
+		other: ZonedDateTime<DateTimeKind.TimeZoneAware>
 	): number {
 		return this.value.toMillis() - other.value.toMillis();
 	}
