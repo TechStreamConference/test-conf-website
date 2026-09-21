@@ -10,7 +10,7 @@
 	const { children, preserve_newlines = false, ...rest }: Props = $props();
 </script>
 
-<p class:preserve-newlines={preserve_newlines} {...rest}>
+<p {...rest} class:normal-font={true} class:preserve-newlines={preserve_newlines}>
 	{@render children()}
 </p>
 

@@ -1,3 +1,3 @@
 export function to_kebab_case(value: string): string {
-	return value.toLowerCase().replace('_', '-');
+	return value.toLowerCase().replaceAll('_', '-');
 }

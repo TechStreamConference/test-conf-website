@@ -9,7 +9,7 @@
 	const { src, alt, height, width, ...rest }: Props = $props();
 </script>
 
-<img {src} {alt} style:width style:height {...rest} />
+<img {...rest} {src} {alt} style:width style:height />
 
 <style>
 	img {

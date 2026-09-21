@@ -19,7 +19,8 @@
 
     --secondary-color: #ccff57;
 
-    --error-color: orange;
+    --error-color: light-dark(#c00000, #ff6b6b);
+    --warning-color: light-dark(#a35c00, #ffb84d);
     --success-color: green;
 
     --white-color: white;
