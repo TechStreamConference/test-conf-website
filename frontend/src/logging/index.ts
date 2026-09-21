@@ -33,6 +33,9 @@ import type { LogEvent } from './events.gen';
 
 type SeverityText = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
 
+/**
+ * @brief A log record as it is written to `stdout` and to the log file, aligned with the OpenTelemetry Logs Data Model.
+ */
 type LogRecord = {
     readonly timestamp: string;
     readonly severity_text: SeverityText;
@@ -80,6 +83,12 @@ const SEVERITY_COLORS: Record<SeverityText, string> = {
     CRITICAL: BOLD_RED
 };
 
+/**
+ * @brief Renders a value as indented JSON with ANSI colors for the pretty output during development.
+ * @param value the value to render.
+ * @param indent the current nesting level.
+ * @returns the colored, multi-line string.
+ */
 function colorizeJson(value: unknown, indent = 0): string {
     const pad = '  '.repeat(indent);
     const inner = '  '.repeat(indent + 1);
@@ -115,6 +124,11 @@ function colorizeJson(value: unknown, indent = 0): string {
     return JSON.stringify(value);
 }
 
+/**
+ * @brief Renders a log record for the development console: a colored header line followed by the colored record.
+ * @param record the record to render.
+ * @returns the multi-line string.
+ */
 function formatPretty(record: LogRecord): string {
     const severityColor = SEVERITY_COLORS[record.severity_text];
     const header = `${BOLD}${BLUE}[${SERVICE_NAME}]${RESET} ${severityColor}${BOLD}${record.severity_text.padEnd(8)}${RESET} ${BOLD}${record['event.name']}${RESET}`;
@@ -137,6 +151,12 @@ function buildRecord(event: LogEvent, severityText: SeverityText): LogRecord {
     };
 }
 
+/**
+ * @brief Writes an event to `stdout` and, if `LOG_FILE` is set, to the log file.
+ * `stdout` gets the pretty output in development and JSON lines otherwise. The file always gets JSON lines.
+ * @param event the event to log.
+ * @param severityText the severity of the record.
+ */
 function emit(event: LogEvent, severityText: SeverityText): void {
     const record = buildRecord(event, severityText);
     const line = JSON.stringify(record) + '\n';

@@ -7,7 +7,7 @@
 <script lang="ts">
     import type { HTMLAttributes } from 'svelte/elements';
 
-    import { getTagColor } from '$lib/helper/tag';
+    import { tagColorFromId } from '$lib/helper/tag';
     import Tag from '$lib/elements/text/Tag.svelte';
 
     import type { PlaceholderBackendTagClass } from '$src/placeholder/tag';
@@ -20,7 +20,7 @@
 
 <div {...rest}>
     {#each tags as tag (tag.id)}
-        <Tag tagColor={getTagColor(tag.color_id)}>{tag.text}</Tag>
+        <Tag tagColor={tagColorFromId(tag.color_id)}>{tag.text}</Tag>
     {/each}
 </div>
 

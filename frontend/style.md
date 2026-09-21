@@ -56,6 +56,14 @@ The following files have no header:
 - `src/app.html` and `src/app.d.ts`.
 - Tool configuration files in the project root (e.g. `vite.config.ts`, `eslint.config.js`, `svelte.config.ts`).
 
+## Documentation
+
+Elements that are self-explanatory do not need a documentation block. An element needs one if its name does not show right away what it does or what it is, or if it is comparatively long.
+
+Before writing a documentation block, check whether the element can be renamed (or split, or restructured) so that it explains itself. A better name is preferred over a documentation block that makes up for a bad one.
+
+If a documentation block is used, all applicable tags must be provided (see above). Additional comments that explain a detail either flow into the documentation block or stay next to the code they explain.
+
 ## Svelte
 
 ### Casing

@@ -10,6 +10,7 @@
 
     interface Props extends HTMLAttributes<HTMLParagraphElement> {
         children: Snippet;
+        // renders a decorative line below the headline.
         renderLine?: boolean;
     }
 

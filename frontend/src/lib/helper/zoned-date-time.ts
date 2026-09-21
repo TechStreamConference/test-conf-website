@@ -52,6 +52,7 @@ const PRESET_BY_FORMAT: Record<DateTimeFormat, Intl.DateTimeFormatOptions> = {
     [DateTimeFormat.DateTimeLong]: DateTime.DATETIME_FULL
 };
 
+// Luxon format tokens for the values of the native date/time inputs.
 const HTML_DATE_FORMAT = 'yyyy-MM-dd';
 const HTML_TIME_FORMAT = 'HH:mm';
 const HTML_DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm";
@@ -72,6 +73,13 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         private readonly kind: K
     ) {}
 
+    /**
+     * @brief Reconstructs a value from a UTC timestamp, e.g. one received from the backend.
+     * @param value the timestamp as an ISO 8601 string in UTC.
+     * @param context the timezone and locale the value is rendered in.
+     * @param kind whether the value is a real instant or a calendar concept without a timezone.
+     * @returns the value.
+     */
     static fromUtc<K extends DateTimeKind>(
         value: string,
         context: DateTimeContext,
@@ -80,6 +88,12 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         return new ZonedDateTime(DateTime.fromISO(value, { zone: 'utc' }), context, kind);
     }
 
+    /**
+     * @brief Parses the value of a `datetime-local` input. It is interpreted in the timezone of the context.
+     * @param value the value of the input, e.g. `2026-06-13T09:05`.
+     * @param context the timezone and locale of the user.
+     * @returns the value as a real instant.
+     */
     static fromHtmlDateTime(
         value: string,
         context: DateTimeContext
@@ -91,6 +105,12 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         );
     }
 
+    /**
+     * @brief Parses the value of a `date` input. It is not converted through a timezone.
+     * @param value the value of the input, e.g. `2026-09-10`.
+     * @param context the timezone and locale of the user.
+     * @returns the value without timezone.
+     */
     static fromHtmlDate(
         value: string,
         context: DateTimeContext
@@ -102,6 +122,12 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         );
     }
 
+    /**
+     * @brief Parses the value of a `time` input. It is not converted through a timezone.
+     * @param value the value of the input, e.g. `14:30`.
+     * @param context the timezone and locale of the user.
+     * @returns the value without timezone.
+     */
     static fromHtmlTime(
         value: string,
         context: DateTimeContext
@@ -113,6 +139,12 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         );
     }
 
+    /**
+     * @brief Parses the value of a `month` input. It is not converted through a timezone.
+     * @param value the value of the input, e.g. `2026-09`.
+     * @param context the timezone and locale of the user.
+     * @returns the value without timezone, set to the first day of the month.
+     */
     static fromHtmlMonth(
         value: string,
         context: DateTimeContext
@@ -124,6 +156,12 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         );
     }
 
+    /**
+     * @brief Parses the value of a `week` input. It is not converted through a timezone.
+     * @param value the value of the input, e.g. `2026-W37`.
+     * @param context the timezone and locale of the user.
+     * @returns the value without timezone, set to the Monday of the week.
+     */
     static fromHtmlWeek(
         value: string,
         context: DateTimeContext
@@ -135,6 +173,10 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         );
     }
 
+    /**
+     * @brief Gets the value in the timezone of the context. A value without timezone is returned unchanged.
+     * @returns the value to render.
+     */
     private zoned(): DateTime {
         return this.kind === DateTimeKind.TimeZoneUnaware
             ? this.value
@@ -149,22 +191,42 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
         return this.value.toUTC().toISO() ?? '';
     }
 
+    /**
+     * @brief Formats the value for a `date` input.
+     * @returns the value of the input, e.g. `2026-09-10`.
+     */
     htmlDate(): string {
         return this.zoned().toFormat(HTML_DATE_FORMAT);
     }
 
+    /**
+     * @brief Formats the value for a `time` input.
+     * @returns the value of the input, e.g. `14:30`.
+     */
     htmlTime(): string {
         return this.zoned().toFormat(HTML_TIME_FORMAT);
     }
 
+    /**
+     * @brief Formats the value for a `datetime-local` input.
+     * @returns the value of the input, e.g. `2026-06-13T09:05`.
+     */
     htmlDateTime(): string {
         return this.zoned().toFormat(HTML_DATE_TIME_FORMAT);
     }
 
+    /**
+     * @brief Formats the value for a `month` input.
+     * @returns the value of the input, e.g. `2026-09`.
+     */
     htmlMonth(): string {
         return this.zoned().toFormat(HTML_MONTH_FORMAT);
     }
 
+    /**
+     * @brief Formats the value for a `week` input.
+     * @returns the value of the input, e.g. `2026-W37`.
+     */
     htmlWeek(): string {
         return this.zoned().toFormat(HTML_WEEK_FORMAT);
     }

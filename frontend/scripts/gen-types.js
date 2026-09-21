@@ -17,6 +17,11 @@ import { parseArgs } from 'node:util';
 import { statSync } from 'node:fs';
 import path from 'node:path';
 
+// Usage: `node gen-types.js --input <openapi-schema-file> --output <output-directory>`
+//
+// Exits with code 2 if the input file does not exist or is not a file.
+// The output directory is created if it does not exist.
+
 const { values } = parseArgs({
     options: {
         input: {

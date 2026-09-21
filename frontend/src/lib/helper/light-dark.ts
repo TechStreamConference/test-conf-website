@@ -19,9 +19,16 @@ const CSS_TRANSITION_CLASS: string = 'theme-transition';
 const CSS_TRANSITION_TIME_MILLISECONDS: number = 500;
 const PREFERRED_THEME_QUERY: string = '(prefers-color-scheme: dark)';
 
+// Timer that removes the transition class again. Kept so that it can be restarted.
 let cssTransitionTimer: number | undefined;
+// Guards `initTheme` against registering the system theme listener twice.
 let initialized: boolean = false;
 
+/**
+ * @brief Parses a stored theme value.
+ * @param value the raw value from the local storage.
+ * @returns the matching theme, `Theme.System` for missing or unknown values.
+ */
 function parseTheme(value: string | null): Theme {
     switch (value) {
         case Theme.Light:
@@ -36,6 +43,11 @@ function parseTheme(value: string | null): Theme {
     }
 }
 
+/**
+ * @brief Determines the theme that follows `theme` when toggling: Dark, Light, System, Dark, ...
+ * @param theme the current theme.
+ * @returns the next theme.
+ */
 function nextTheme(theme: Theme): Theme {
     switch (theme) {
         case Theme.Dark:

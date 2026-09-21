@@ -22,7 +22,7 @@
     let currentTheme: Theme | undefined = $state(undefined);
     let isOpen: boolean = $state(false);
 
-    function select(theme: Theme): void {
+    function selectTheme(theme: Theme): void {
         setTheme(theme);
         isOpen = false;
         currentTheme = theme;
@@ -47,19 +47,19 @@
             class:selected={currentTheme === Theme.System}
             type="button"
             aria-pressed={currentTheme === Theme.System}
-            onclick={() => select(Theme.System)}><SunMoon aria-hidden="true" /> System</button
+            onclick={() => selectTheme(Theme.System)}><SunMoon aria-hidden="true" /> System</button
         >
         <button
             class:selected={currentTheme === Theme.Light}
             type="button"
             aria-pressed={currentTheme === Theme.Light}
-            onclick={() => select(Theme.Light)}><Sun aria-hidden="true" /> Light</button
+            onclick={() => selectTheme(Theme.Light)}><Sun aria-hidden="true" /> Light</button
         >
         <button
             class:selected={currentTheme === Theme.Dark}
             type="button"
             aria-pressed={currentTheme === Theme.Dark}
-            onclick={() => select(Theme.Dark)}><Moon aria-hidden="true" /> Dark</button
+            onclick={() => selectTheme(Theme.Dark)}><Moon aria-hidden="true" /> Dark</button
         >
     </div>
 </details>

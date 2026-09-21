@@ -12,7 +12,7 @@
     import type { InputContextProp } from '$lib/helper/input';
     import type { InputType } from '$lib/helper/input';
     import type { InputValue } from '$lib/helper/input';
-    import { MAX_LENGTH_INPUT_TYPE } from '$lib/helper/input';
+    import { INPUT_TYPES_WITH_MAX_LENGTH } from '$lib/helper/input';
     import { formatInputValue } from '$lib/helper/input';
     import { isDateInputType } from '$lib/helper/input';
     import { isMaxLengthOrange } from '$lib/helper/input';
@@ -47,6 +47,10 @@
 
     const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength, undefined));
 
+    /**
+     * @brief Reads the value of the native input element and stores it in `value`, parsed according to `type`.
+     * @param event the input event of the native element.
+     */
     function handleInput(event: Event & { currentTarget: HTMLInputElement }) {
         const element = event.currentTarget;
         value = (
@@ -68,7 +72,7 @@
         oninput={handleInput}
         maxlength={validMaxLength}
     />
-    {#if validMaxLength !== undefined && MAX_LENGTH_INPUT_TYPE.has(type) && typeof value === 'string'}
+    {#if validMaxLength !== undefined && INPUT_TYPES_WITH_MAX_LENGTH.has(type) && typeof value === 'string'}
         <p
             class:visible={isMaxLengthVisible(validMaxLength, value)}
             class:normal-font={true}

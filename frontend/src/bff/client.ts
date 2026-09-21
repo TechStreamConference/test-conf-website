@@ -14,6 +14,10 @@ import { client } from '$gen/client.gen';
 
 export { client };
 
+/**
+ * @brief Sets the base URL of the generated backend client from `BACKEND_ROOT_URI`.
+ * @throws Error if `BACKEND_ROOT_URI` is not configured.
+ */
 function configureClient(): void {
     const backendUrl: string | undefined = env['BACKEND_ROOT_URI'];
 

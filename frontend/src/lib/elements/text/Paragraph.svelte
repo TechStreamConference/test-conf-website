@@ -10,6 +10,7 @@
 
     interface Props extends HTMLAttributes<HTMLParagraphElement> {
         children: Snippet;
+        // keeps the line breaks of the text instead of collapsing them.
         preserveNewlines?: boolean;
     }
     const { children, preserveNewlines = false, ...rest }: Props = $props();

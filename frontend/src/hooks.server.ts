@@ -29,6 +29,12 @@ process.on('SIGTERM', () => {
     logger.info(applicationStopping({}));
 });
 
+/**
+ * @brief Logs every request when it is received and when it is completed, including status code and duration.
+ * @param event the current request event.
+ * @param resolve renders the response for the event.
+ * @returns the resolved response.
+ */
 export const handle: Handle = async ({ event, resolve }) => {
     const start = performance.now();
     logger.info(httpRequestReceived({ method: event.request.method, path: event.url.pathname }));

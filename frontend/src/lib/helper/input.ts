@@ -9,6 +9,7 @@ import type { DateTimeContext } from '$lib/helper/zoned-date-time';
 import type { DateTimeKind } from '$lib/helper/zoned-date-time';
 import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 
+// Share of the max length at which the character counter becomes visible, orange and red.
 const MAX_LENGTH_VISIBLE_FACTOR = 0.5;
 const MAX_LENGTH_ORANGE_FACTOR = 0.75;
 const MAX_LENGTH_RED_FACTOR = 0.9;
@@ -37,6 +38,9 @@ const DATE_INPUT_TYPE_VALUES = [
     InputType.Week
 ] as const;
 
+/**
+ * @brief The input types whose value is a `ZonedDateTime`.
+ */
 export type DateInputType = (typeof DATE_INPUT_TYPE_VALUES)[number];
 
 /**
@@ -47,7 +51,7 @@ export type InputContextProp<T extends InputType> = T extends DateInputType
     ? { context: DateTimeContext }
     : { context?: undefined };
 
-export const MAX_LENGTH_INPUT_TYPE = new Set<InputType>([
+export const INPUT_TYPES_WITH_MAX_LENGTH = new Set<InputType>([
     InputType.Text,
     InputType.Password,
     InputType.Email,
@@ -156,15 +160,33 @@ export function formatInputValue<T extends InputType>(type: T, value: InputValue
     }
 }
 
+/**
+ * @brief Whether the character counter should be shown.
+ * @param maxLength the max length of the input.
+ * @param value the current value of the input.
+ * @returns true once the value has reached the visibility threshold of the max length.
+ */
 export function isMaxLengthVisible(maxLength: number, value: string): boolean {
     return value.length >= maxLength * MAX_LENGTH_VISIBLE_FACTOR;
 }
 
+/**
+ * @brief Whether the character counter should be shown as a warning (orange).
+ * @param maxLength the max length of the input.
+ * @param value the current value of the input.
+ * @returns true if the warning threshold is reached but the error threshold (red) is not.
+ */
 export function isMaxLengthOrange(maxLength: number, value: string): boolean {
     return (
         !isMaxLengthRed(maxLength, value) && maxLength * MAX_LENGTH_ORANGE_FACTOR <= value.length
     );
 }
+/**
+ * @brief Whether the character counter should be shown as an error (red).
+ * @param maxLength the max length of the input.
+ * @param value the current value of the input.
+ * @returns true once the value has reached the error threshold of the max length.
+ */
 export function isMaxLengthRed(maxLength: number, value: string): boolean {
     return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;
 }

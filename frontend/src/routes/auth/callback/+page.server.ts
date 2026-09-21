@@ -13,8 +13,16 @@ import type { LoginCallbackV1Error } from '$gen/types.gen';
 
 import type { PageServerLoad } from './$types';
 
+/**
+ * @brief The page data of the callback page. It is only rendered if the login failed.
+ */
 export type LoginCallbackPageData = { error: LoginCallbackV1Error };
 
+/**
+ * @brief Forwards the identity provider callback to the backend. Redirects on success.
+ * @param event the request event of the callback.
+ * @returns the error to render if the login failed.
+ */
 export const load: PageServerLoad = async (event) => {
     const result = await forwardLoginCallback(event);
 

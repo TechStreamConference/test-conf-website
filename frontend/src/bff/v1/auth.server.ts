@@ -19,6 +19,11 @@ import { logger } from '$logging';
 export type LoginCallbackResult =
     { ok: true; data: LoginCallbackResponseV1 } | { ok: false; error: LoginCallbackV1Error };
 
+/**
+ * @brief Forwards the identity provider callback (`state`, `code` and `error` query parameters) to the backend.
+ * @param event the request event of the callback.
+ * @returns the backend response on success, the backend error otherwise.
+ */
 export async function forwardLoginCallback(event: RequestEvent): Promise<LoginCallbackResult> {
     const start = performance.now();
     const { data, error, response } = await loginCallbackV1({

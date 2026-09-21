@@ -5,6 +5,9 @@
 // Link targets and the matching rel attribute.
 //
 
+/**
+ * @brief The targets a link can be opened in. The values are the native `target` attribute values.
+ */
 export enum LinkTarget {
     SameTab = '_self', // Open in the current tab (default).
     NewTab = '_blank', // Open in a new tab/window.
