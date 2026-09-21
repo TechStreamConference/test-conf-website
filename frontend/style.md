@@ -220,15 +220,16 @@ function getMaxLength(): number {
 
 ### Casing
 
-| element                                                                                | convention      | example               |
-| -------------------------------------------------------------------------------------- | --------------- | --------------------- |
-| tags                                                                                   | lowercase       | \<input/>             |
-| attribute                                                                              | lowercase       | maxlength             |
-| `data-*` attributes                                                                    | kebab-lowercase | data-testid           |
-| `aria-*` attributes                                                                    | kebab-lowercase | aria-label            |
-| id                                                                                     | kebab-case      | id="input-container"  |
-| class                                                                                  | kebab-case      | class="input-wrapper" |
-| kebab-lowercase means that the prefix is added in kebab-case to a lowercase attribute. |
+| element             | convention      | example               |
+| ------------------- | --------------- | --------------------- |
+| tags                | lowercase       | \<input/>             |
+| attribute           | lowercase       | maxlength             |
+| `data-*` attributes | kebab-lowercase | data-testid           |
+| `aria-*` attributes | kebab-lowercase | aria-label            |
+| id                  | kebab-case      | id="input-container"  |
+| class               | kebab-case      | class="input-wrapper" |
+
+kebab-lowercase means that the prefix is added in kebab-case to a lowercase attribute.
 
 ### Example
 

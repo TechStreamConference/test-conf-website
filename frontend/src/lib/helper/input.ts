@@ -95,6 +95,14 @@ const DATE_INPUT_PARSERS: { [K in DateInputType]: DateInputParser<K> } = {
     [InputType.Week]: (value, context) => ZonedDateTime.fromHtmlWeek(value, context)
 };
 
+/**
+ * @brief Parses the raw value of a date/time input element into a `ZonedDateTime`.
+ *
+ * @param type the date/time input type of the element.
+ * @param element the native input element the value is read from.
+ * @param context the timezone and locale the value is interpreted in.
+ * @returns the parsed value, typed according to the input type.
+ */
 export function parseDateInputValue<T extends DateInputType>(
     type: T,
     element: HTMLInputElement,
@@ -103,6 +111,13 @@ export function parseDateInputValue<T extends DateInputType>(
     return DATE_INPUT_PARSERS[type](element.value, context);
 }
 
+/**
+ * @brief Parses the raw value of a non-date input element into its typed value.
+ *
+ * @param type the input type of the element.
+ * @param element the native input element the value is read from.
+ * @returns the number for number inputs, otherwise the raw string value.
+ */
 export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
     type: T,
     element: HTMLInputElement

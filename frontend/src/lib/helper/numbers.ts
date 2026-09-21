@@ -19,7 +19,9 @@ export function unsignedIntOr<T>(value: number | undefined | null, defaultValue:
     }
 
     if (!isUnsignedInt(value)) {
-        console.log(`VALIDATOR: ${value.toString()} is not unsigned int - set to undefined`);
+        console.log(
+            `VALIDATOR: ${value.toString()} is not an unsigned int - using the default value`
+        );
         return defaultValue;
     }
 
