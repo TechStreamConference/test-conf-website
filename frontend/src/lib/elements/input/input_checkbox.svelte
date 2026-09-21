@@ -3,9 +3,7 @@
 	import type { HTMLInputAttributes } from 'svelte/elements';
 
 	interface Props
-		extends
-			Pick<HTMLInputAttributes, 'class' | 'disabled' | 'name' | 'readonly' | 'required'>,
-			AriaAttributes {
+		extends Pick<HTMLInputAttributes, 'class' | 'disabled' | 'name' | 'required'>, AriaAttributes {
 		id: string;
 		label: string;
 		checked: boolean;

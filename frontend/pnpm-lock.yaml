@@ -8,11 +8,14 @@ importers:
 
   .:
     dependencies:
+      luxon:
+        specifier: ^3.7.2
+        version: 3.7.2
       set-cookie-parser:
         specifier: ^3.1.2
         version: 3.1.2
       zod:
-        specifier: ^4.5.4
+        specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
       '@eslint/js':
