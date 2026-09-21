@@ -81,21 +81,21 @@ describe('fromHtmlWeek', () => {
 });
 
 describe('fromUtc', () => {
-	it('reconstructs an Instant value and projects it into the given timezone', () => {
+	it('reconstructs a TimeZoneAware value and projects it into the given timezone', () => {
 		const value = ZonedDateTime.fromUtc(
 			'2026-06-13T07:05:00.000Z',
 			BERLIN_DE,
-			DateTimeKind.Instant
+			DateTimeKind.TimeZoneAware
 		);
 		expect(value.htmlDateTime()).toBe('2026-06-13T09:05');
 		expect(value.utc()).toBe('2026-06-13T07:05:00.000Z');
 	});
 
-	it('reconstructs a Floating value without projecting it into the given timezone', () => {
+	it('reconstructs a TimeZoneUnaware value without projecting it into the given timezone', () => {
 		const value = ZonedDateTime.fromUtc(
 			'2026-09-10T00:00:00.000Z',
 			NEW_YORK_DE,
-			DateTimeKind.Floating
+			DateTimeKind.TimeZoneUnaware
 		);
 		expect(value.htmlDate()).toBe('2026-09-10');
 		expect(value.utc()).toBe('2026-09-10T00:00:00.000Z');

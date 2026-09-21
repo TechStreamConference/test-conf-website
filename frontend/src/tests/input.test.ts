@@ -141,27 +141,27 @@ describe('formatInputValue', () => {
 		expect(formatInputValue(InputType.Number, NaN)).toBe('');
 	});
 
-	it('should format a Floating date value as YYYY-MM-DD', () => {
+	it('should format a TimeZoneUnaware date value as YYYY-MM-DD', () => {
 		const value = ZonedDateTime.fromHtmlDate('2026-09-10', BERLIN);
 		expect(formatInputValue(InputType.Date, value)).toBe('2026-09-10');
 	});
 
-	it('should format a Floating time value as HH:mm', () => {
+	it('should format a TimeZoneUnaware time value as HH:mm', () => {
 		const value = ZonedDateTime.fromHtmlTime('14:30', BERLIN);
 		expect(formatInputValue(InputType.Time, value)).toBe('14:30');
 	});
 
-	it('should format an Instant value as local YYYY-MM-DDTHH:mm', () => {
+	it('should format a TimeZoneAware value as local YYYY-MM-DDTHH:mm', () => {
 		const value = ZonedDateTime.fromHtmlDateTime('2026-06-13T09:05', BERLIN);
 		expect(formatInputValue(InputType.DatetimeLocal, value)).toBe('2026-06-13T09:05');
 	});
 
-	it('should format a Floating month value as YYYY-MM', () => {
+	it('should format a TimeZoneUnaware month value as YYYY-MM', () => {
 		const value = ZonedDateTime.fromHtmlMonth('2026-09', BERLIN);
 		expect(formatInputValue(InputType.Month, value)).toBe('2026-09');
 	});
 
-	it('should format a Floating week value as YYYY-Www', () => {
+	it('should format a TimeZoneUnaware week value as YYYY-Www', () => {
 		const value = ZonedDateTime.fromHtmlWeek('2026-W37', BERLIN);
 		expect(formatInputValue(InputType.Week, value)).toBe('2026-W37');
 	});
@@ -196,27 +196,27 @@ describe('parseInputValue', () => {
 });
 
 describe('parseDateInputValue', () => {
-	it('should parse a date input into a Floating value', () => {
+	it('should parse a date input into a TimeZoneUnaware value', () => {
 		const element = createInputElement({ value: '2026-09-10' });
 		expect(parseDateInputValue(InputType.Date, element, BERLIN).htmlDate()).toBe('2026-09-10');
 	});
 
-	it('should parse a time input into a Floating value', () => {
+	it('should parse a time input into a TimeZoneUnaware value', () => {
 		const element = createInputElement({ value: '14:30' });
 		expect(parseDateInputValue(InputType.Time, element, BERLIN).htmlTime()).toBe('14:30');
 	});
 
-	it('should parse a month input into a Floating value', () => {
+	it('should parse a month input into a TimeZoneUnaware value', () => {
 		const element = createInputElement({ value: '2026-09' });
 		expect(parseDateInputValue(InputType.Month, element, BERLIN).htmlMonth()).toBe('2026-09');
 	});
 
-	it('should parse a week input into a Floating value', () => {
+	it('should parse a week input into a TimeZoneUnaware value', () => {
 		const element = createInputElement({ value: '2026-W37' });
 		expect(parseDateInputValue(InputType.Week, element, BERLIN).htmlWeek()).toBe('2026-W37');
 	});
 
-	it('should parse a datetime-local input into an Instant, converted via the given timezone', () => {
+	it('should parse a datetime-local input into a TimeZoneAware, converted via the given timezone', () => {
 		const element = createInputElement({ value: '2026-06-13T09:05' });
 		expect(parseDateInputValue(InputType.DatetimeLocal, element, BERLIN).utc()).toBe(
 			'2026-06-13T07:05:00.000Z'

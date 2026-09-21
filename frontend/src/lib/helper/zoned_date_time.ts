@@ -10,7 +10,7 @@ export interface DateTimeContext {
  * they never go through a timezone conversion, on the way in or out, because a calendar
  * day, a time of day, a month or a week has no instant of its own — converting one through
  * a timezone would shift it onto a different day depending on the offset. Only values that
- * represent a real instant (`DateTimeKind.Instant`) are projected into `timeZone`.
+ * represent a real instant (`DateTimeKind.TimeZoneAware`) are projected into `timeZone`.
  */
 export enum DateTimeKind {
 	TimeZoneAware = 'TimeZoneAware',
@@ -63,7 +63,7 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
 		private readonly value: DateTime,
 		private readonly context: DateTimeContext,
 		private readonly kind: K
-	) { }
+	) {}
 
 	static fromUtc<K extends DateTimeKind>(
 		value: string,

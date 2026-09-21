@@ -1,4 +1,4 @@
-import type { DateTimeContext } from '$lib/helper/zoned_date_time';
+import type { DateTimeContext, DateTimeKind } from '$lib/helper/zoned_date_time';
 import { ZonedDateTime } from '$lib/helper/zoned_date_time';
 
 const MAX_LENGTH_VISIBLE_FACTOR = 0.5;
@@ -56,11 +56,11 @@ export interface InputValueMap {
 	[InputType.Url]: string;
 	[InputType.Tel]: string;
 	[InputType.Number]: number;
-	[InputType.Date]: ZonedDateTime;
-	[InputType.Time]: ZonedDateTime;
-	[InputType.DatetimeLocal]: ZonedDateTime;
-	[InputType.Month]: ZonedDateTime;
-	[InputType.Week]: ZonedDateTime;
+	[InputType.Date]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
+	[InputType.Time]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
+	[InputType.DatetimeLocal]: ZonedDateTime<DateTimeKind.TimeZoneAware>;
+	[InputType.Month]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
+	[InputType.Week]: ZonedDateTime<DateTimeKind.TimeZoneUnaware>;
 	[InputType.Color]: string;
 }
 
@@ -70,23 +70,27 @@ export function isDateInputType(type: InputType): type is DateInputType {
 	return (DATE_INPUT_TYPE_VALUES as readonly InputType[]).includes(type);
 }
 
+type DateInputParser<T extends DateInputType> = (
+	value: string,
+	context: DateTimeContext
+) => InputValue<T>;
+
+// One parser per date input type, so that TypeScript checks each return type against
+// `InputValueMap` individually instead of against the intersection of all of them.
+const DATE_INPUT_PARSERS: { [K in DateInputType]: DateInputParser<K> } = {
+	[InputType.Date]: (value, context) => ZonedDateTime.fromHtmlDate(value, context),
+	[InputType.Time]: (value, context) => ZonedDateTime.fromHtmlTime(value, context),
+	[InputType.DatetimeLocal]: (value, context) => ZonedDateTime.fromHtmlDateTime(value, context),
+	[InputType.Month]: (value, context) => ZonedDateTime.fromHtmlMonth(value, context),
+	[InputType.Week]: (value, context) => ZonedDateTime.fromHtmlWeek(value, context)
+};
+
 export function parseDateInputValue<T extends DateInputType>(
 	type: T,
 	element: HTMLInputElement,
 	context: DateTimeContext
 ): InputValue<T> {
-	switch (type) {
-		case InputType.Date:
-			return ZonedDateTime.fromHtmlDate(element.value, context);
-		case InputType.Time:
-			return ZonedDateTime.fromHtmlTime(element.value, context);
-		case InputType.DatetimeLocal:
-			return ZonedDateTime.fromHtmlDateTime(element.value, context);
-		case InputType.Month:
-			return ZonedDateTime.fromHtmlMonth(element.value, context);
-		case InputType.Week:
-			return ZonedDateTime.fromHtmlWeek(element.value, context);
-	}
+	return DATE_INPUT_PARSERS[type](element.value, context);
 }
 
 export function parseInputValue<T extends Exclude<InputType, DateInputType>>(
