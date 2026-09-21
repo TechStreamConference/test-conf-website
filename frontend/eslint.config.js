@@ -1,15 +1,16 @@
+import { defineConfig } from 'eslint/config';
+import { includeIgnoreFile } from 'eslint/config';
+import globals from 'globals';
 import js from '@eslint/js';
 import path from 'node:path';
 import prettier from 'eslint-config-prettier';
-import globals from 'globals';
-import ts from 'typescript-eslint';
-import { defineConfig, includeIgnoreFile } from 'eslint/config';
 import svelte from 'eslint-plugin-svelte';
+import ts from 'typescript-eslint';
 
-const gitignorePath = path.resolve(import.meta.dirname, '.gitignore');
+const GITIGNORE_PATH = path.resolve(import.meta.dirname, '.gitignore');
 
 export default defineConfig(
-    includeIgnoreFile(gitignorePath),
+    includeIgnoreFile(GITIGNORE_PATH),
 
     {
         ignores: ['src/generated/**']

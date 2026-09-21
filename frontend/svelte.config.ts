@@ -1,8 +1,8 @@
-import adapter from '@sveltejs/adapter-node';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import type { Config } from '@sveltejs/kit';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from '@sveltejs/adapter-node';
 
-const config: Config = {
+const CONFIG: Config = {
     preprocess: vitePreprocess(),
 
     compilerOptions: {
@@ -22,4 +22,4 @@ const config: Config = {
     }
 };
 
-export default config;
+export default CONFIG;

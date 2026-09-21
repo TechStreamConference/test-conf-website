@@ -6,7 +6,7 @@ export interface DateTimeContext {
 }
 
 /*
- * Values built from a bare calendar concept (date, time, month, week) are `DateTimeKind.TimeZoneUnaware`:
+ * @brief Values built from a bare calendar concept (date, time, month, week) are `DateTimeKind.TimeZoneUnaware`:
  * they never go through a timezone conversion, on the way in or out, because a calendar
  * day, a time of day, a month or a week has no instant of its own — converting one through
  * a timezone would shift it onto a different day depending on the offset. Only values that

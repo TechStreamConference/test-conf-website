@@ -5,7 +5,7 @@ import '../static/css/font.css';
 import '../static/css/main.css';
 import './preview.css';
 
-const preview: Preview = {
+const PREVIEW: Preview = {
     parameters: {
         controls: {
             matchers: {
@@ -17,4 +17,4 @@ const preview: Preview = {
     }
 };
 
-export default preview;
+export default PREVIEW;

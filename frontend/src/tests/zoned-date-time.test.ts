@@ -157,7 +157,9 @@ describe('format', () => {
 
     it('renders DateTimeLong', () => {
         expect(instantDe.format(DateTimeFormat.DateTimeLong)).toBe('13. Juni 2026 um 09:05 MESZ');
-        expect(instantEn.format(DateTimeFormat.DateTimeLong)).toBe('June 13, 2026 at 9:05 AM GMT+2');
+        expect(instantEn.format(DateTimeFormat.DateTimeLong)).toBe(
+            'June 13, 2026 at 9:05 AM GMT+2'
+        );
     });
 });
 

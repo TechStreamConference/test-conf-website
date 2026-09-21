@@ -1,9 +1,8 @@
-import path from 'node:path';
-
 import { defineConfig } from 'vitest/config';
 import { loadEnv } from 'vite';
 import { playwright } from '@vitest/browser-playwright';
 import { sveltekit } from '@sveltejs/kit/vite';
+import path from 'node:path';
 
 export default defineConfig(({ mode }) => {
     // Load ../.env into process.env
