@@ -7,6 +7,16 @@ export type ClientOptions = {
 };
 
 /**
+ * EmailNotVerifiedResponseV1
+ */
+export type EmailNotVerifiedResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'The email address of this account is not verified.';
+};
+
+/**
  * EventNotFoundResponseV1
  */
 export type EventNotFoundResponseV1 = {
@@ -139,6 +149,16 @@ export type HttpValidationError = {
 };
 
 /**
+ * IdentityProviderErrorResponseV1
+ */
+export type IdentityProviderErrorResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'The identity provider did not authenticate the user.';
+};
+
+/**
  * ImprintPageContentNotFoundResponseV1
  */
 export type ImprintPageContentNotFoundResponseV1 = {
@@ -159,6 +179,26 @@ export type ImprintResponseV1 = {
 };
 
 /**
+ * InvalidLoginTransactionResponseV1
+ */
+export type InvalidLoginTransactionResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Invalid or expired login transaction.';
+};
+
+/**
+ * InvalidRedirectUrlResponseV1
+ */
+export type InvalidRedirectUrlResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Invalid redirect URL.';
+};
+
+/**
  * InvalidSequenceNumberResponseV1
  */
 export type InvalidSequenceNumberResponseV1 = {
@@ -166,6 +206,44 @@ export type InvalidSequenceNumberResponseV1 = {
      * Detail
      */
     detail?: 'Invalid sequence number.';
+};
+
+/**
+ * LoginCallbackResponseV1
+ */
+export type LoginCallbackResponseV1 = {
+    /**
+     * Redirect Url
+     */
+    redirect_url: string;
+};
+
+/**
+ * MeResponseV1
+ */
+export type MeResponseV1 = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Email
+     */
+    email: string;
+    /**
+     * Username
+     */
+    username: string;
+};
+
+/**
+ * NotAuthenticatedResponseV1
+ */
+export type NotAuthenticatedResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Not authenticated.';
 };
 
 /**
@@ -195,6 +273,110 @@ export type ValidationError = {
         [key: string]: unknown;
     };
 };
+
+export type LoginV1Data = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Redirect Url
+         */
+        redirect_url: string;
+    };
+    url: '/v1/auth/login';
+};
+
+export type LoginV1Errors = {
+    /**
+     * Returned when the provided redirect URL points to a location external to the frontend application.
+     */
+    400: InvalidRedirectUrlResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LoginV1Error = LoginV1Errors[keyof LoginV1Errors];
+
+export type LoginCallbackV1Data = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * State
+         */
+        state?: string | null;
+        /**
+         * Code
+         */
+        code?: string | null;
+        /**
+         * Error
+         */
+        error?: string | null;
+    };
+    url: '/v1/auth/callback';
+};
+
+export type LoginCallbackV1Errors = {
+    /**
+     * Returned when the login transaction is unknown, expired or was started by another browser.
+     */
+    400: InvalidLoginTransactionResponseV1;
+    /**
+     * Returned when the identity provider reported an error instead of an authorization code.
+     */
+    401: IdentityProviderErrorResponseV1;
+    /**
+     * Returned when the authenticated account has an unverified email address.
+     */
+    403: EmailNotVerifiedResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type LoginCallbackV1Error = LoginCallbackV1Errors[keyof LoginCallbackV1Errors];
+
+export type LoginCallbackV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: LoginCallbackResponseV1;
+};
+
+export type LoginCallbackV1Response = LoginCallbackV1Responses[keyof LoginCallbackV1Responses];
+
+export type GetCurrentUserV1Data = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/auth/me';
+};
+
+export type GetCurrentUserV1Errors = {
+    /**
+     * Unauthorized
+     */
+    401: NotAuthenticatedResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetCurrentUserV1Error = GetCurrentUserV1Errors[keyof GetCurrentUserV1Errors];
+
+export type GetCurrentUserV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: MeResponseV1;
+};
+
+export type GetCurrentUserV1Response = GetCurrentUserV1Responses[keyof GetCurrentUserV1Responses];
 
 export type GetCurrentEventV1Data = {
     body?: never;

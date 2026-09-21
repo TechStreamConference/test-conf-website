@@ -167,25 +167,111 @@ class TestFileLogging:
         finally:
             logging_core_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]
 
-    def test_log_file_appends(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-        """Records are appended, not overwritten."""
-        log_path: Final = tmp_path / "append.jsonl"
-        import backend.logging._core as logging_core_module
 
-        original_file: Final = logging_core_module._LOG_FILE  # type: ignore[reportPrivateUsage]
-        try:
-            with log_path.open("a", encoding="utf-8") as file_handle:
-                logging_core_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
-                devnull: Final = StringIO()
-                original_stdout: Final = sys.stdout
-                sys.stdout = devnull  # type: ignore[assignment]
-                try:
-                    logging_core_module.info(ApplicationStarted(host="h", port=1))
-                    logging_core_module.info(ApplicationStopping())
-                finally:
-                    sys.stdout = original_stdout
+def test_dev_environment_pretty_prints_log(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import backend.logging._core as logging_core_module
 
-            lines: Final = log_path.read_text(encoding="utf-8").strip().split("\n")
-            assert len(lines) == 2
-        finally:
-            logging_core_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]
+    settings: Final = logging_core_module.SETTINGS.model_copy(update={"environment": "dev"})
+    monkeypatch.setattr(logging_core_module, "SETTINGS", settings)
+
+    logging_core_module.info(ApplicationStarted(host="localhost", port=8080))
+
+    output: Final = capsys.readouterr().out
+    assert "[backend]" in output
+    assert "INFO" in output
+    assert "application.started" in output
+    assert '"localhost"' in output
+    assert "\033[" in output
+
+
+@pytest.mark.parametrize(
+    ("value", "expected_fragment"),
+    [
+        (True, "true"),
+        (False, "false"),
+        (3, "3"),
+        (2.5, "2.5"),
+        ('quote"and\\slash', 'quote\\"and\\\\slash'),
+        (None, "null"),
+        ({}, "{}"),
+        ([], "[]"),
+        ({"nested": [1, None]}, '"nested"'),
+        ([{"value": True}], '"value"'),
+    ],
+)
+def test_colorize_json_handles_json_value_types(value: object, expected_fragment: str) -> None:
+    import backend.logging._core as logging_core_module
+
+    result: Final = logging_core_module._colorize_json(value)  # type: ignore[reportPrivateUsage]
+
+    assert expected_fragment in result
+
+
+def test_colorize_json_falls_back_to_repr() -> None:
+    import backend.logging._core as logging_core_module
+
+    value: Final = object()
+
+    assert logging_core_module._colorize_json(value) == repr(value)  # type: ignore[reportPrivateUsage]
+
+
+def test_try_open_log_file_returns_none_without_path() -> None:
+    import backend.logging._core as logging_core_module
+
+    assert logging_core_module._try_open_log_file(None) is None  # type: ignore[reportPrivateUsage]
+
+
+def test_try_open_log_file_creates_parent_and_appends(tmp_path: Path) -> None:
+    import backend.logging._core as logging_core_module
+
+    path: Final = tmp_path / "nested" / "backend.jsonl"
+    handle: Final = logging_core_module._try_open_log_file(path)  # type: ignore[reportPrivateUsage]
+    assert handle is not None
+    try:
+        _ = handle.write("record\n")
+    finally:
+        handle.close()
+
+    assert path.read_text(encoding="utf-8") == "record\n"
+
+
+def test_try_open_log_file_reports_failure(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    import backend.logging._core as logging_core_module
+
+    parent_file: Final = tmp_path / "not-a-directory"
+    _ = parent_file.write_text("content", encoding="utf-8")
+
+    result: Final = logging_core_module._try_open_log_file(parent_file / "backend.jsonl")  # type: ignore[reportPrivateUsage]
+
+    assert result is None
+    assert "failed to open log file" in capsys.readouterr().err
+
+
+def test_log_file_appends(tmp_path: Path) -> None:
+    """Records are appended, not overwritten."""
+    log_path: Final = tmp_path / "append.jsonl"
+    import backend.logging._core as logging_core_module
+
+    original_file: Final = logging_core_module._LOG_FILE  # type: ignore[reportPrivateUsage]
+    try:
+        with log_path.open("a", encoding="utf-8") as file_handle:
+            logging_core_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
+            devnull: Final = StringIO()
+            original_stdout: Final = sys.stdout
+            sys.stdout = devnull  # type: ignore[assignment]
+            try:
+                logging_core_module.info(ApplicationStarted(host="h", port=1))
+                logging_core_module.info(ApplicationStopping())
+            finally:
+                sys.stdout = original_stdout
+
+        lines: Final = log_path.read_text(encoding="utf-8").strip().split("\n")
+        assert len(lines) == 2
+    finally:
+        logging_core_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]

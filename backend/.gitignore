@@ -5,3 +5,4 @@ coverage_html/
 .coverage
 **/__pycache__/
 .idea/
+**/*.bak
