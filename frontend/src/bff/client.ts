@@ -4,17 +4,19 @@ import { parseSetCookie } from 'set-cookie-parser';
 import { client } from '$gen/client.gen';
 import { env } from '$env/dynamic/private';
 
-const BACKEND_URL: string | undefined = env['BACKEND_ROOT_URI'];
-
-if (!BACKEND_URL) {
-	throw new Error('BACKEND_ROOT_URI is not configured');
-}
-
-client.setConfig({
-	baseUrl: BACKEND_URL
-});
-
 export { client };
+
+function configureClient(): void {
+	const backendUrl: string | undefined = env['BACKEND_ROOT_URI'];
+
+	if (!backendUrl) {
+		throw new Error('BACKEND_ROOT_URI is not configured');
+	}
+
+	client.setConfig({
+		baseUrl: backendUrl
+	});
+}
 
 /**
  * A `fetch` bound to `event` for calls to the backend. Forwarding the browser's
@@ -23,6 +25,8 @@ export { client };
  * real response, which does not happen automatically for a cross-service call.
  */
 export function backendFetch(event: RequestEvent): typeof fetch {
+	configureClient();
+
 	return async (input, init) => {
 		const response = await event.fetch(input, init);
 
