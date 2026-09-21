@@ -5,6 +5,29 @@ on:
   workflow_dispatch:
 
 jobs:
+  container-build:
+    name: ${{ matrix.project-part }}-container-build
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project-part:
+          - frontend
+          - backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.project-part }} container image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.project-part }}
+          push: false
+
   ci:
     name: ${{ matrix.project-part }}-${{ matrix.command }}
     runs-on: ubuntu-latest
