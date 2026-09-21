@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Tag colors and their theme colors.
+//
+
 import { pascalToKebab } from '$lib/helper/casing';
 
 export enum TagColor {

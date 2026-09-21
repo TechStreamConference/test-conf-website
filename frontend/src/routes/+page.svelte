@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Main page.
+-->
 <script lang="ts">
     import type { GlobalsResponseV1 } from '$gen/types.gen';
 

@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Generates the frontend API client from the OpenAPI schema.
+//
+
 // Using a JavaScript file here because the native TypeScript implementation in newer
 // Node.js versions currently causes the following warning:
 //

@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Single-line input for text, number and date/time types with an optional character counter.
+-->
 <script lang="ts" generics="T extends InputType">
     import type { AriaAttributes } from 'svelte/elements';
     import type { HTMLInputAttributes } from 'svelte/elements';

@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Storybook preview configuration and global CSS imports.
+//
+
 import type { Preview } from '@storybook/sveltekit';
 
 import '../static/css/breakpoints.css';

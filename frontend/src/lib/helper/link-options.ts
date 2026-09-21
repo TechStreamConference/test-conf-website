@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Link targets and the matching rel attribute.
+//
+
 export enum LinkTarget {
     SameTab = '_self', // Open in the current tab (default).
     NewTab = '_blank', // Open in a new tab/window.

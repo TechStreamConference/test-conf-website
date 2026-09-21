@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Storybook fixture for the text elements.
+-->
 <script lang="ts">
     import Headline from '$lib/elements/text/Headline.svelte';
     import Paragraph from '$lib/elements/text/Paragraph.svelte';

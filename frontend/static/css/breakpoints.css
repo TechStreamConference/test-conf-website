@@ -1,3 +1,10 @@
+/*
+ * Tech Stream Conference
+ * 2026
+ *
+ * Screen-size dependent design values.
+ */
+
 :root {
     /* text */
     --headline-font-size: 1rem;

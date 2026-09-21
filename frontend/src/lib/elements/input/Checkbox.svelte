@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Checkbox input with a label.
+-->
 <script lang="ts">
     import type { AriaAttributes } from 'svelte/elements';
     import type { HTMLInputAttributes } from 'svelte/elements';

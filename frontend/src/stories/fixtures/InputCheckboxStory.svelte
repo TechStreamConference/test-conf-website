@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Storybook fixture for the checkbox input.
+-->
 <script lang="ts">
     import InputCheckbox from '$lib/elements/input/Checkbox.svelte';
 

@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Storybook fixture for the logos.
+-->
 <script lang="ts">
     import LogoBig from '$lib/elements/img/LogoBig.svelte';
     import LogoSmall from '$lib/elements/img/LogoSmall.svelte';

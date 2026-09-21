@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Renders a tag from the backend tag data.
+-->
 <script lang="ts">
     import type { HTMLAttributes } from 'svelte/elements';
 

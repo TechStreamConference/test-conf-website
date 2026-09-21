@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Link used within running text.
+-->
 <script lang="ts">
     import type { HTMLAnchorAttributes } from 'svelte/elements';
     import type { Snippet } from 'svelte';

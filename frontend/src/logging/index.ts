@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Structured logging for the server side.
+//
+
 /**
  * Structured logging façade for the SvelteKit BFF (server-side only).
  *

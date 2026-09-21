@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Types, length thresholds and value conversion for the input elements.
+//
+
 import type { DateTimeContext } from '$lib/helper/zoned-date-time';
 import type { DateTimeKind } from '$lib/helper/zoned-date-time';
 import { ZonedDateTime } from '$lib/helper/zoned-date-time';

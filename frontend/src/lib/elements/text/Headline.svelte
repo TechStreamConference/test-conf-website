@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Headline with an optional decorative line.
+-->
 <script lang="ts">
     import type { HTMLAttributes } from 'svelte/elements';
     import type { Snippet } from 'svelte';

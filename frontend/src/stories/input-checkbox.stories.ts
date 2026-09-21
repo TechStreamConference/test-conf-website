@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Storybook stories for the checkbox input.
+//
+
 import type { ComponentProps } from 'svelte';
 import type { Meta } from '@storybook/sveltekit';
 import type { StoryObj } from '@storybook/sveltekit';

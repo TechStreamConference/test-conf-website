@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Storybook fixture for the range input.
+-->
 <script lang="ts">
     import InputRange from '$lib/elements/input/Range.svelte';
 

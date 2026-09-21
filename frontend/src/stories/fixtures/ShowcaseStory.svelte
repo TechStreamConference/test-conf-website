@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Storybook fixture that shows the elements together.
+-->
 <script lang="ts">
     import Headline from '$lib/elements/text/Headline.svelte';
     import InlineLink from '$lib/elements/link/InlineLink.svelte';

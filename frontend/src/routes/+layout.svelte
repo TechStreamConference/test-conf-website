@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Root layout that initializes the theme.
+-->
 <script lang="ts">
     import { onMount } from 'svelte';
 

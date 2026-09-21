@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Number parsing and validation helpers.
+//
+
 export function isNumber(value: unknown): value is number {
     return typeof value === 'number';
 }

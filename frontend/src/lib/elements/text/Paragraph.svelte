@@ -1,3 +1,9 @@
+<!--
+    Tech Stream Conference
+    2026
+
+    Paragraph with optional preservation of line breaks.
+-->
 <script lang="ts">
     import type { HTMLAttributes } from 'svelte/elements';
     import type { Snippet } from 'svelte';

@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Configures the backend client and forwards backend cookies.
+//
+
 import type { RequestEvent } from '@sveltejs/kit';
 import { parseSetCookie } from 'set-cookie-parser';
 

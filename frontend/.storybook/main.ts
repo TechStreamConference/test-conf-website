@@ -1,3 +1,10 @@
+//
+// Tech Stream Conference
+// 2026
+//
+// Storybook configuration: story locations, addons and framework.
+//
+
 import type { StorybookConfig } from '@storybook/sveltekit';
 
 const CONFIG: StorybookConfig = {
