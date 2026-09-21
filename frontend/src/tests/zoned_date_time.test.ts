@@ -124,11 +124,6 @@ describe('format', () => {
 		expect(instantEn.format(DateTimeFormat.FullDateShort)).toBe('06/13/2026');
 	});
 
-	it('renders DateMedium', () => {
-		expect(instantDe.format(DateTimeFormat.DateMedium)).toBe('13. Juni 2026');
-		expect(instantEn.format(DateTimeFormat.DateMedium)).toBe('Jun 13, 2026');
-	});
-
 	it('renders DateLong', () => {
 		expect(instantDe.format(DateTimeFormat.DateLong)).toBe('13. Juni 2026');
 		expect(instantEn.format(DateTimeFormat.DateLong)).toBe('June 13, 2026');
@@ -154,19 +149,9 @@ describe('format', () => {
 		expect(instantEn.format(DateTimeFormat.FullDateTimeShort)).toBe('06/13/2026, 09:05 AM');
 	});
 
-	it('renders DateTimeMedium', () => {
-		expect(instantDe.format(DateTimeFormat.DateTimeMedium)).toBe('13. Juni 2026, 09:05');
-		expect(instantEn.format(DateTimeFormat.DateTimeMedium)).toBe('Jun 13, 2026, 9:05 AM');
-	});
-
 	it('renders DateTimeLong', () => {
 		expect(instantDe.format(DateTimeFormat.DateTimeLong)).toBe('13. Juni 2026 um 09:05 MESZ');
 		expect(instantEn.format(DateTimeFormat.DateTimeLong)).toBe('June 13, 2026 at 9:05 AM GMT+2');
-	});
-
-	it('renders a Floating date without needing zone projection', () => {
-		const value = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
-		expect(value.format(DateTimeFormat.DateMedium)).toBe('13. Juni 2026');
 	});
 });
 

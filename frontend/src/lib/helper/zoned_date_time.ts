@@ -13,20 +13,17 @@ export enum DateTimeKind {
 export enum DateTimeFormat {
 	DateShort = 'DateShort', // de : '13.6.2026', en : '6/13/2026'
 	FullDateShort = 'FullDateShort', // de : '13.06.2026', en : '06/13/2026'
-	DateMedium = 'DateMedium', // de : '13. Juni 2026', en : 'Jun 13, 2026'
 	DateLong = 'DateLong', // de : '13. Juni 2026', en : 'June 13, 2026'
 	TimeShort = 'TimeShort', // de : '09:05', en : '9:05 AM'
 	FullTimeShort = 'FullTimeShort', // de : '09:05', en : '09:05 AM'
 	DateTimeShort = 'DateTimeShort', // de : '13.6.2026, 09:05', en : '6/13/2026, 9:05 AM'
 	FullDateTimeShort = 'FullDateTimeShort', // de : '13.06.2026, 09:05', en : '06/13/2026, 09:05 AM'
-	DateTimeMedium = 'DateTimeMedium', // de : '13. Juni 2026, 09:05', en : 'Jun 13, 2026, 9:05 AM'
 	DateTimeLong = 'DateTimeLong' // de : '13. Juni 2026 um 09:05 MESZ', en : 'June 13, 2026 at 9:05 AM GMT+2'
 }
 
 const PRESET_BY_FORMAT: Record<DateTimeFormat, Intl.DateTimeFormatOptions> = {
 	[DateTimeFormat.DateShort]: DateTime.DATE_SHORT,
 	[DateTimeFormat.FullDateShort]: { year: 'numeric', month: '2-digit', day: '2-digit' },
-	[DateTimeFormat.DateMedium]: DateTime.DATE_MED,
 	[DateTimeFormat.DateLong]: DateTime.DATE_FULL,
 	[DateTimeFormat.TimeShort]: DateTime.TIME_SIMPLE,
 	[DateTimeFormat.FullTimeShort]: { hour: '2-digit', minute: '2-digit' },
@@ -38,7 +35,6 @@ const PRESET_BY_FORMAT: Record<DateTimeFormat, Intl.DateTimeFormatOptions> = {
 		hour: '2-digit',
 		minute: '2-digit'
 	},
-	[DateTimeFormat.DateTimeMedium]: DateTime.DATETIME_MED,
 	[DateTimeFormat.DateTimeLong]: DateTime.DATETIME_FULL
 };
 
