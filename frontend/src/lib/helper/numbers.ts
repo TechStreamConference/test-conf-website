@@ -13,7 +13,10 @@ export function isUnsignedInt(value: number): boolean {
  * @param defaultValue the value returned for anything that is not an unsigned integer.
  * @returns the value or the default value.
  */
-export function unsignedIntOr<T>(value: number | undefined | null, defaultValue: T): number | T {
+export function unsignedIntOr(
+    value: number | undefined | null,
+    defaultValue?: number
+): number | undefined {
     if (!isNumber(value)) {
         return defaultValue;
     }

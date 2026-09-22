@@ -39,7 +39,7 @@
         };
     let { id, label, type, maxlength, value = $bindable(), context, ...rest }: Props = $props();
 
-    const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength, undefined));
+    const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength));
 
     /**
      * @brief Reads the value of the native input element and stores it in `value`, parsed according to `type`.

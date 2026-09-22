@@ -84,42 +84,47 @@ describe('isUnsignedInt', () => {
 
 describe('unsignedIntOr', () => {
     it('should return the value unchanged when it is a valid unsigned int', () => {
-        expect(unsignedIntOr(0, undefined)).toBe(0);
-        expect(unsignedIntOr(42, undefined)).toBe(42);
+        expect(unsignedIntOr(0)).toBe(0);
+        expect(unsignedIntOr(42)).toBe(42);
     });
 
     it('should return undefined for undefined', () => {
-        expect(unsignedIntOr(undefined, undefined)).toBeUndefined();
+        expect(unsignedIntOr(undefined)).toBeUndefined();
     });
 
     it('should return undefined for null', () => {
-        expect(unsignedIntOr(null, undefined)).toBeUndefined();
+        expect(unsignedIntOr(null)).toBeUndefined();
     });
 
     it('should return undefined for a negative number', () => {
-        expect(unsignedIntOr(-5, undefined)).toBeUndefined();
+        expect(unsignedIntOr(-5)).toBeUndefined();
     });
 
     it('should return undefined for a non-integer number', () => {
-        expect(unsignedIntOr(1.5, undefined)).toBeUndefined();
+        expect(unsignedIntOr(1.5)).toBeUndefined();
     });
 
     it('should return undefined for NaN', () => {
-        expect(unsignedIntOr(NaN, undefined)).toBeUndefined();
+        expect(unsignedIntOr(NaN)).toBeUndefined();
+    });
+
+    it('should return the given default value instead of undefined', () => {
+        expect(unsignedIntOr(undefined, 10)).toBe(10);
+        expect(unsignedIntOr(-5, 10)).toBe(10);
     });
 
     it('should log a warning when rejecting an invalid unsigned int', () => {
         const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        unsignedIntOr(-5, undefined);
+        unsignedIntOr(-5);
         expect(logSpy).toHaveBeenCalledOnce();
         logSpy.mockRestore();
     });
 
     it('should not log anything for undefined, null, or a valid value', () => {
         const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        unsignedIntOr(undefined, undefined);
-        unsignedIntOr(null, undefined);
-        unsignedIntOr(3, undefined);
+        unsignedIntOr(undefined);
+        unsignedIntOr(null);
+        unsignedIntOr(3);
         expect(logSpy).not.toHaveBeenCalled();
         logSpy.mockRestore();
     });

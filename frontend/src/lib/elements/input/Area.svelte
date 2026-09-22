@@ -27,7 +27,7 @@
     }
     let { id, label, maxlength, value = $bindable(), ...rest }: Props = $props();
 
-    const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength, undefined));
+    const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength));
 </script>
 
 <div>
