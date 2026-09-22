@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// End-to-end test of the main page.
-//
-
 import { expect } from 'playwright/test';
 import { test } from 'playwright/test';
 

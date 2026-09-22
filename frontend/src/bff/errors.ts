@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Error types for failed backend calls.
-//
-
 /**
  * @brief Thrown when a backend call returns an error response. Carries the error payload.
  */

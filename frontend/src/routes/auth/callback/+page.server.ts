@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Handles the identity provider callback on the server.
-//
-
 import { redirect } from '@sveltejs/kit';
 
 import { forwardLoginCallback } from '$bff/v1/auth.server';

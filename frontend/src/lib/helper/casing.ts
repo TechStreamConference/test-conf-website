@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Conversions between casing styles.
-//
-
 export function snakeToKebab(value: string): string {
     return value.toLowerCase().replaceAll('_', '-');
 }

@@ -8,54 +8,6 @@ If a documentation block is used, all applicable documentation tags for that ele
 
 Indentation always uses 4 space characters. The tab character is not allowed anywhere in the code base (including code examples in this guide).
 
-## File Header
-
-Every source file starts with a comment header at the top of the file. It consists of the project name, the year and a one-line description of the file, separated by an empty comment line. The project name and the year are the same in every file, only the comment syntax and the description depend on the file. The year is the year the file was created and is not updated afterwards.
-
-TypeScript:
-
-```ts
-//
-// Tech Stream Conference
-// 2026
-//
-// Parses and formats the values of the input elements.
-//
-```
-
-CSS:
-
-```css
-/*
- * Tech Stream Conference
- * 2026
- *
- * Shared styling of the input elements.
- */
-```
-
-HTML (also used in Svelte files):
-
-```html
-<!--
-    Tech Stream Conference
-    2026
-
-    Single-line text input with an optional character counter.
--->
-```
-
-- In TypeScript and CSS files, the header is followed by an empty line.
-- In Svelte files, the HTML variant is placed directly above the `<script>` tag, without an empty line. It must not start with `@component`, because Svelte treats such a comment as the documentation of the component.
-- The description is exactly one line and states the purpose of the file.
-
-The following files have no header:
-
-- Generated code (`src/generated`, `*.gen.ts`).
-- Lock files, JSON files and Markdown files.
-- `src/app.html` and `src/app.d.ts`.
-- Tool configuration files in the project root (e.g. `vite.config.ts`, `eslint.config.js`, `svelte.config.ts`).
-
 ## Documentation
 
 Elements that are self-explanatory do not need a documentation block. An element needs one if its name does not show right away what it does or what it is, or if it is comparatively long.

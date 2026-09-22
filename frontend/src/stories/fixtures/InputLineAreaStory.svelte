@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Storybook fixture for the line and area inputs.
--->
 <script lang="ts">
     import InputArea from '$lib/elements/input/Area.svelte';
     import InputLine from '$lib/elements/input/Line.svelte';

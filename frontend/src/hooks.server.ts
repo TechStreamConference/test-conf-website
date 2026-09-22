@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Server hooks for startup, shutdown and request logging.
-//
-
 import type { Handle } from '@sveltejs/kit';
 
 // This hook includes the client and forces it to set the base URL.

@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Forwards the login callback to the backend.
-//
-
 import type { RequestEvent } from '@sveltejs/kit';
 
 import { backendFetch } from '$bff/client';

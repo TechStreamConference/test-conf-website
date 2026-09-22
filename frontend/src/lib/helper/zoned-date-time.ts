@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Date and time wrapper with timezone and locale handling.
-//
-
 import { DateTime } from 'luxon';
 
 export interface DateTimeContext {

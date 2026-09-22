@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Multi-line text input with an optional character counter.
--->
 <script lang="ts">
     import type { AriaAttributes } from 'svelte/elements';
     import type { HTMLTextareaAttributes } from 'svelte/elements';

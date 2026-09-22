@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Link with a configurable target.
--->
 <script lang="ts">
     import type { HTMLAnchorAttributes } from 'svelte/elements';
     import type { Snippet } from 'svelte';

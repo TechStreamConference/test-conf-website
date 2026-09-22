@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Range slider input with a label and a value output.
--->
 <script lang="ts">
     import type { AriaAttributes } from 'svelte/elements';
     import type { HTMLInputAttributes } from 'svelte/elements';

@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Storing and applying the color theme.
-//
-
 export enum Theme {
     System = 'system',
     Light = 'light',

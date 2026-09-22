@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Redirects the login request to the backend.
-//
-
 import { error } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 

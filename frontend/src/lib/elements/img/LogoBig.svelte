@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Large conference logo.
--->
 <script lang="ts">
     import type { HTMLImgAttributes } from 'svelte/elements';
 

@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Buttons to select the color theme.
--->
 <script lang="ts">
     import { onMount } from 'svelte';
     import Hourglass from '@lucide/svelte/icons/hourglass';

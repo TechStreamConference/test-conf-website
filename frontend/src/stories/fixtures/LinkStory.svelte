@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Storybook fixture for the links.
--->
 <script lang="ts">
     import InlineLink from '$lib/elements/link/InlineLink.svelte';
     import Link from '$lib/elements/link/Link.svelte';

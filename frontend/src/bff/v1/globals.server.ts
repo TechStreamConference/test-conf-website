@@ -1,10 +1,3 @@
-//
-// Tech Stream Conference
-// 2026
-//
-// Loads the global data from the backend.
-//
-
 import type { RequestEvent } from '@sveltejs/kit';
 
 import { backendFetch } from '$bff/client';

@@ -1,9 +1,3 @@
-<!--
-    Tech Stream Conference
-    2026
-
-    Image element that warns about conflicting dimensions.
--->
 <script lang="ts">
     import type { HTMLImgAttributes } from 'svelte/elements';
 
