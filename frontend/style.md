@@ -29,6 +29,12 @@ If a documentation block is used, all applicable tags must be provided (see abov
 | `$derived` variables | camelCase               | validMaxLength |
 |                      |                         |                |
 
+### Shorthand Syntax
+
+Casing always wins over shorthand syntax. Use shorthand only when it does not conflict with the casing required above; otherwise, use the explicit `attribute={value}` form.
+
+In practice, this only matters for native html names: e.g. `oninput` or `aria-label`.
+
 ### Example
 
 ```sveltehtml
