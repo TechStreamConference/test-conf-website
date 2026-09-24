@@ -27,6 +27,22 @@ import type { LogEvent } from './events.gen';
 type SeverityText = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
 
 /**
+ * @brief Where a log record originates from.
+ * `bff` records are produced by the server itself and can be trusted.
+ * `browser` records were sent by a client through the log endpoint and have to be treated with suspicion.
+ * The value is always set by the server, never by the client.
+ */
+type LogSource = 'bff' | 'browser';
+
+/**
+ * @brief Additional information about the circumstances of a log call, written to the record next to the event.
+ */
+export interface LogContext {
+    /** The path of the page the browser was on. */
+    page?: string;
+}
+
+/**
  * @brief A log record as it is written to `stdout` and to the log file, aligned with the OpenTelemetry Logs Data Model.
  */
 type LogRecord = {
@@ -34,6 +50,8 @@ type LogRecord = {
     readonly severity_text: SeverityText;
     readonly body: string;
     readonly 'event.name': string;
+    readonly source: LogSource;
+    readonly page?: string;
     readonly attributes: LogEvent['$payload'];
     readonly trace_id: null;
     readonly span_id: null;
@@ -132,12 +150,19 @@ function formatPretty(record: LogRecord): string {
 // Internal helpers
 // ---------------------------------------------------------------------------
 
-function buildRecord(event: LogEvent, severityText: SeverityText): LogRecord {
+function buildRecord(
+    event: LogEvent,
+    severityText: SeverityText,
+    source: LogSource,
+    context: LogContext | undefined
+): LogRecord {
     return {
         timestamp: new Date().toISOString(),
         severity_text: severityText,
         body: event.$meta.body,
         'event.name': event.$meta.eventName,
+        source,
+        ...(context?.page !== undefined && { page: context.page }),
         attributes: event.$payload,
         trace_id: null,
         span_id: null
@@ -149,9 +174,16 @@ function buildRecord(event: LogEvent, severityText: SeverityText): LogRecord {
  * `stdout` gets the pretty output in development and JSON lines otherwise. The file always gets JSON lines.
  * @param event the event to log.
  * @param severityText the severity of the record.
+ * @param source where the event originates from.
+ * @param context additional information about the circumstances of the call.
  */
-function emit(event: LogEvent, severityText: SeverityText): void {
-    const record = buildRecord(event, severityText);
+function emit(
+    event: LogEvent,
+    severityText: SeverityText,
+    source: LogSource,
+    context: LogContext | undefined
+): void {
+    const record = buildRecord(event, severityText, source, context);
     const line = JSON.stringify(record) + '\n';
     process.stdout.write(IS_DEV ? formatPretty(record) + '\n' : line);
     if (LOG_FILE_PATH) {
@@ -163,24 +195,40 @@ function emit(event: LogEvent, severityText: SeverityText): void {
 // Public API
 // ---------------------------------------------------------------------------
 
-export const logger = {
-    debug(event: LogEvent): void {
-        emit(event, 'DEBUG');
-    },
+/**
+ * @brief Creates a logger whose records are all marked with the given source.
+ * @param source the source written to every record.
+ * @returns the logger.
+ */
+function createLogger(source: LogSource) {
+    return {
+        debug(event: LogEvent, context?: LogContext): void {
+            emit(event, 'DEBUG', source, context);
+        },
 
-    info(event: LogEvent): void {
-        emit(event, 'INFO');
-    },
+        info(event: LogEvent, context?: LogContext): void {
+            emit(event, 'INFO', source, context);
+        },
 
-    warning(event: LogEvent): void {
-        emit(event, 'WARNING');
-    },
+        warning(event: LogEvent, context?: LogContext): void {
+            emit(event, 'WARNING', source, context);
+        },
 
-    error(event: LogEvent): void {
-        emit(event, 'ERROR');
-    },
+        error(event: LogEvent, context?: LogContext): void {
+            emit(event, 'ERROR', source, context);
+        },
 
-    critical(event: LogEvent): void {
-        emit(event, 'CRITICAL');
-    }
-};
+        critical(event: LogEvent, context?: LogContext): void {
+            emit(event, 'CRITICAL', source, context);
+        }
+    };
+}
+
+/** The logger for everything the BFF logs itself. */
+export const logger = createLogger('bff');
+
+/**
+ * @brief The logger for events received from the browser through the log endpoint.
+ * Only the log endpoint may use it, because it marks the records as untrusted.
+ */
+export const browserLogger = createLogger('browser');

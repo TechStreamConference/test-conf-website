@@ -51,6 +51,46 @@ class HttpRequestReceived(LogEventBase):
     request_id: str | None = None
 
 
+@final
+class ImageBothDimensionsSet(LogEventBase):
+    LOG_EVENT_NAME: ClassVar[str] = "image.both_dimensions_set"
+    LOG_BODY: ClassVar[str] = "Both image dimensions are set, the aspect ratio may be distorted"
+    url: str | None = None
+    height: str
+    width: str
+
+
+@final
+class ValidatorNotUnsignedInt(LogEventBase):
+    LOG_EVENT_NAME: ClassVar[str] = "validator.not_unsigned_int"
+    LOG_BODY: ClassVar[str] = "Value is not an unsigned int, using the default value"
+    origin: str
+    value: str
+    default_value: float | None = None
+
+
+@final
+class ZonedDateTimeMismatchedContexts(LogEventBase):
+    LOG_EVENT_NAME: ClassVar[str] = "zoned_date_time.mismatched_contexts"
+    LOG_BODY: ClassVar[str] = "Date range formatted with mismatched contexts, using the start context"
+    start_utc: str
+    end_utc: str
+    start_kind: str
+    end_kind: str
+    start_time_zone: str
+    start_locale: str
+    end_time_zone: str
+    end_locale: str
+    format: str
+
+
 type LogEvent = (
-    ApplicationStarted | ApplicationStopping | BackendCallCompleted | HttpRequestCompleted | HttpRequestReceived
+    ApplicationStarted
+    | ApplicationStopping
+    | BackendCallCompleted
+    | HttpRequestCompleted
+    | HttpRequestReceived
+    | ImageBothDimensionsSet
+    | ValidatorNotUnsignedInt
+    | ZonedDateTimeMismatchedContexts
 )

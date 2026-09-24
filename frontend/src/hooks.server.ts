@@ -9,6 +9,7 @@ import { applicationStarted } from '$logging/events.gen';
 import { applicationStopping } from '$logging/events.gen';
 import { httpRequestCompleted } from '$logging/events.gen';
 import { httpRequestReceived } from '$logging/events.gen';
+import { registerServerSink } from '$logging/client';
 import { logger } from '$logging';
 
 logger.info(
@@ -17,6 +18,11 @@ logger.info(
         port: parseInt(env['PORT'] ?? '3000', 10)
     })
 );
+
+// Lets code that also runs in the browser log through the server logger when it runs on the server.
+registerServerSink((event, severity) => {
+    logger[severity](event);
+});
 
 process.on('SIGTERM', () => {
     logger.info(applicationStopping({}));

@@ -196,3 +196,17 @@ def test_parse_schema_dir_empty_directory() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         models = parse_schema_dir(Path(tmp))
     assert models == []
+
+
+def test_parse_model_browser_allowed_defaults_to_false() -> None:
+    assert parse_model(_FULL_SCHEMA, "MyEvent").browser_allowed is False
+
+
+def test_parse_model_browser_allowed_true() -> None:
+    model = parse_model({**_FULL_SCHEMA, "x-browser-allowed": True}, "MyEvent")
+    assert model.browser_allowed is True
+
+
+def test_parse_model_browser_allowed_non_boolean_raises() -> None:
+    with pytest.raises(ValueError, match="x-browser-allowed"):
+        _ = parse_model({**_FULL_SCHEMA, "x-browser-allowed": "yes"}, "MyEvent")

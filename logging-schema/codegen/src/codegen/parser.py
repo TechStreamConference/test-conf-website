@@ -47,6 +47,11 @@ def parse_model(schema: dict[str, object], default_class_name: str) -> EventMode
         msg = f"Schema '{class_name}' is missing a non-empty 'x-event-body' extension field."
         raise ValueError(msg)
 
+    browser_allowed = schema.get("x-browser-allowed", False)
+    if not isinstance(browser_allowed, bool):
+        msg = f"Schema '{class_name}' has a non-boolean 'x-browser-allowed' extension field."
+        raise ValueError(msg)
+
     schema_type = schema.get("type")
     if schema_type != "object":
         msg = f"Schema '{class_name}' has unsupported top-level type '{schema_type}'. Only 'object' schemas are supported."  # noqa: E501
@@ -66,6 +71,7 @@ def parse_model(schema: dict[str, object], default_class_name: str) -> EventMode
         event_name=event_name,
         event_body=event_body,
         fields=fields,
+        browser_allowed=browser_allowed,
     )
 
 

@@ -9,6 +9,10 @@ using TypeSpec.JsonSchema;
  * The `x-event-name` and `x-event-body` extensions carry the stable event
  * identifier and the human-readable log message body.
  *
+ * Events that carry `x-browser-allowed` may be sent by the browser to the
+ * frontend log endpoint. Every other event is rejected there.
+ * The page the browser was on is not part of the events, the endpoint adds it to the record.
+ *
  * Add new events here, then run `just gen-log-schema && just gen-log-models`
  * to regenerate the Pydantic models and Zod schemas.
  */
@@ -85,5 +89,70 @@ namespace LogEvents {
 
     /** Opaque request correlation identifier, if available. */
     request_id?: string;
+  }
+
+  // ─── Frontend helpers ─────────────────────────────────────────────────────
+
+  /** Emitted when an image is rendered with both a width and a height. */
+  @extension("x-event-name", "image.both_dimensions_set")
+  @extension("x-browser-allowed", true)
+  @extension("x-event-body", "Both image dimensions are set, the aspect ratio may be distorted")
+  model ImageBothDimensionsSet {
+    /** Source URL of the image, if available. */
+    url?: string;
+
+    /** The provided height. */
+    height: string;
+
+    /** The provided width. */
+    width: string;
+  }
+
+  /** Emitted when a number that has to be an unsigned integer is not one. */
+  @extension("x-event-name", "validator.not_unsigned_int")
+  @extension("x-browser-allowed", true)
+  @extension("x-event-body", "Value is not an unsigned int, using the default value")
+  model ValidatorNotUnsignedInt {
+    /** Where the check happened, e.g. the component and the property. */
+    origin: string;
+
+    /** The rejected value as text, because NaN and Infinity have no JSON representation. */
+    value: string;
+
+    /** The value that is used instead, if there is one. */
+    default_value?: float64;
+  }
+
+  /** Emitted when a date range is formatted with two different date-time contexts. */
+  @extension("x-event-name", "zoned_date_time.mismatched_contexts")
+  @extension("x-browser-allowed", true)
+  @extension("x-event-body", "Date range formatted with mismatched contexts, using the start context")
+  model ZonedDateTimeMismatchedContexts {
+    /** Start of the range as an ISO 8601 string in UTC. */
+    start_utc: string;
+
+    /** End of the range as an ISO 8601 string in UTC. */
+    end_utc: string;
+
+    /** Kind of the start value (`TimeZoneAware` or `TimeZoneUnaware`). */
+    start_kind: string;
+
+    /** Kind of the end value (`TimeZoneAware` or `TimeZoneUnaware`). */
+    end_kind: string;
+
+    /** Time zone of the start. */
+    start_time_zone: string;
+
+    /** Locale of the start. */
+    start_locale: string;
+
+    /** Time zone of the end. */
+    end_time_zone: string;
+
+    /** Locale of the end. */
+    end_locale: string;
+
+    /** The format preset the range was rendered with. */
+    format: string;
   }
 }

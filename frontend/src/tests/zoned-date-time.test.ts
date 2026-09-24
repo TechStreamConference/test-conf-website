@@ -8,6 +8,9 @@ import { DateTimeFormat } from '$lib/helper/zoned-date-time';
 import { DateTimeKind } from '$lib/helper/zoned-date-time';
 import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 
+import { zonedDateTimeMismatchedContexts } from '$logging/events.gen';
+import { clientLogger } from '$logging/client';
+
 const BERLIN_DE: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'de-DE' };
 const BERLIN_EN: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'en-US' };
 const NEW_YORK_DE: DateTimeContext = { timeZone: 'America/New_York', locale: 'de-DE' };
@@ -173,19 +176,32 @@ describe('formatRange', () => {
     });
 
     it('logs a warning but still renders when start/end contexts differ', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+        const logSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
         const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
         const end = ZonedDateTime.fromHtmlDate('2026-06-14', NEW_YORK_DE);
 
         const result = ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort);
 
         expect(logSpy).toHaveBeenCalledOnce();
+        expect(logSpy).toHaveBeenCalledWith(
+            zonedDateTimeMismatchedContexts({
+                start_utc: start.utc(),
+                end_utc: end.utc(),
+                start_kind: DateTimeKind.TimeZoneUnaware,
+                end_kind: DateTimeKind.TimeZoneUnaware,
+                start_time_zone: BERLIN_DE.timeZone,
+                start_locale: BERLIN_DE.locale,
+                end_time_zone: NEW_YORK_DE.timeZone,
+                end_locale: NEW_YORK_DE.locale,
+                format: DateTimeFormat.FullDateShort
+            })
+        );
         expect(result).toBe('13.–14.06.2026');
         logSpy.mockRestore();
     });
 
     it('does not log anything when start/end share the same context', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+        const logSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
         const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
         const end = ZonedDateTime.fromHtmlDate('2026-06-14', BERLIN_DE);
 

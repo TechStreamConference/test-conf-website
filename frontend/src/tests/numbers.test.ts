@@ -7,6 +7,9 @@ import { isNumber } from '$lib/helper/numbers';
 import { isUnsignedInt } from '$lib/helper/numbers';
 import { unsignedIntOr } from '$lib/helper/numbers';
 
+import { validatorNotUnsignedInt } from '$logging/events.gen';
+import { clientLogger } from '$logging/client';
+
 describe('isNumber', () => {
     it('should be true for integers', () => {
         expect(isNumber(5)).toBe(true);
@@ -82,49 +85,95 @@ describe('isUnsignedInt', () => {
     });
 });
 
+const ORIGIN = 'test.origin';
+
 describe('unsignedIntOr', () => {
     it('should return the value unchanged when it is a valid unsigned int', () => {
-        expect(unsignedIntOr(0)).toBe(0);
-        expect(unsignedIntOr(42)).toBe(42);
+        expect(unsignedIntOr(0, ORIGIN)).toBe(0);
+        expect(unsignedIntOr(42, ORIGIN)).toBe(42);
     });
 
     it('should return undefined for undefined', () => {
-        expect(unsignedIntOr(undefined)).toBeUndefined();
+        expect(unsignedIntOr(undefined, ORIGIN)).toBeUndefined();
     });
 
     it('should return undefined for null', () => {
-        expect(unsignedIntOr(null)).toBeUndefined();
+        expect(unsignedIntOr(null, ORIGIN)).toBeUndefined();
     });
 
     it('should return undefined for a negative number', () => {
-        expect(unsignedIntOr(-5)).toBeUndefined();
+        expect(unsignedIntOr(-5, ORIGIN)).toBeUndefined();
     });
 
     it('should return undefined for a non-integer number', () => {
-        expect(unsignedIntOr(1.5)).toBeUndefined();
+        expect(unsignedIntOr(1.5, ORIGIN)).toBeUndefined();
     });
 
     it('should return undefined for NaN', () => {
-        expect(unsignedIntOr(NaN)).toBeUndefined();
+        expect(unsignedIntOr(NaN, ORIGIN)).toBeUndefined();
     });
 
     it('should return the given default value instead of undefined', () => {
-        expect(unsignedIntOr(undefined, 10)).toBe(10);
-        expect(unsignedIntOr(-5, 10)).toBe(10);
+        expect(unsignedIntOr(undefined, ORIGIN, 10)).toBe(10);
+        expect(unsignedIntOr(-5, ORIGIN, 10)).toBe(10);
     });
 
     it('should log a warning when rejecting an invalid unsigned int', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        unsignedIntOr(-5);
+        const logSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
+        unsignedIntOr(-5, ORIGIN);
         expect(logSpy).toHaveBeenCalledOnce();
+        expect(logSpy).toHaveBeenCalledWith(
+            validatorNotUnsignedInt({ origin: ORIGIN, value: '-5' })
+        );
+        logSpy.mockRestore();
+    });
+
+    it.each([
+        [-5, '-5'],
+        [-0.5, '-0.5'],
+        [1.5, '1.5'],
+        [NaN, 'NaN'],
+        [Infinity, 'Infinity'],
+        [-Infinity, '-Infinity']
+    ])('should log the value %s as the text %s', (value, text) => {
+        const logSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
+        unsignedIntOr(value, ORIGIN);
+        expect(logSpy).toHaveBeenCalledWith(
+            validatorNotUnsignedInt({ origin: ORIGIN, value: text })
+        );
+        logSpy.mockRestore();
+    });
+
+    it('should log the origin so the caller can be found', () => {
+        const logSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
+        unsignedIntOr(-1, 'input.Area.maxlength');
+        expect(logSpy).toHaveBeenCalledWith(
+            validatorNotUnsignedInt({
+                origin: 'input.Area.maxlength',
+                value: '-1'
+            })
+        );
+        logSpy.mockRestore();
+    });
+
+    it('should log the default value that is used instead', () => {
+        const logSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
+        unsignedIntOr(-5, ORIGIN, 10);
+        expect(logSpy).toHaveBeenCalledWith(
+            validatorNotUnsignedInt({
+                origin: ORIGIN,
+                value: '-5',
+                default_value: 10
+            })
+        );
         logSpy.mockRestore();
     });
 
     it('should not log anything for undefined, null, or a valid value', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        unsignedIntOr(undefined);
-        unsignedIntOr(null);
-        unsignedIntOr(3);
+        const logSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
+        unsignedIntOr(undefined, ORIGIN);
+        unsignedIntOr(null, ORIGIN);
+        unsignedIntOr(3, ORIGIN);
         expect(logSpy).not.toHaveBeenCalled();
         logSpy.mockRestore();
     });

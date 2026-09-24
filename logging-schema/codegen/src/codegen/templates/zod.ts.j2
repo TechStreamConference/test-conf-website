@@ -38,3 +38,22 @@ export function {{ model.fn_name }}(payload: {{ model.class_name }}Payload): {{ 
 {% endfor %}
 
 export type LogEvent = {{ models | map(attribute='class_name') | join(' | ') }}
+
+{% set browser_models = models | selectattr('browser_allowed') | list %}
+{#
+  Only events marked with `x-browser-allowed` may be sent by the browser to the log endpoint.
+  Everything else is rejected there.
+#}
+export type BrowserLogEvent = {{ browser_models | map(attribute='class_name') | join(' | ') if browser_models else 'never' }}
+
+export const BROWSER_EVENT_PARSERS: Readonly<
+  Record<string, (payload: unknown) => BrowserLogEvent | undefined>
+> = {
+{% for model in browser_models %}
+  '{{ model.event_name }}': (payload) => {
+    const result = {{ model.class_name }}Schema.safeParse(payload)
+    return result.success ? {{ model.fn_name }}(result.data) : undefined
+  }{{ ',' if not loop.last }}
+
+{% endfor %}
+}

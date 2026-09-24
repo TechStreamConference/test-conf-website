@@ -22,3 +22,4 @@ class EventModel:
     event_name: str  # stable identifier, e.g. "application.started"
     event_body: str  # human-readable message, e.g. "Application started"
     fields: tuple[FieldSpec, ...]
+    browser_allowed: bool = False  # whether the browser may send this event to the log endpoint

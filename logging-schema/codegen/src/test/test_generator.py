@@ -28,6 +28,16 @@ _MINIMAL_SCHEMA: dict[str, object] = {
     "required": ["name", "count"],
 }
 
+_BROWSER_SCHEMA: dict[str, object] = {
+    "$id": "BrowserEvent.json",
+    "type": "object",
+    "x-event-name": "browser.event",
+    "x-event-body": "Browser event",
+    "x-browser-allowed": True,
+    "properties": {"value": {"type": "string"}},
+    "required": ["value"],
+}
+
 _EMPTY_SCHEMA: dict[str, object] = {
     "$id": "EmptyEvent.json",
     "type": "object",
@@ -215,6 +225,26 @@ def test_generate_typescript_deterministic() -> None:
     generate_typescript(models, out1)
     generate_typescript(models, out2)
     assert out1.read_text(encoding="utf-8") == out2.read_text(encoding="utf-8")
+
+
+def _generate_typescript_content(*schemas: dict[str, object]) -> str:
+    models = parse_schema_dir(_schema_dir_with(*schemas))
+    with tempfile.NamedTemporaryFile(suffix=".ts", delete=False) as f:
+        output = Path(f.name)
+    generate_typescript(models, output)
+    return output.read_text(encoding="utf-8")
+
+
+def test_generate_typescript_browser_events_only_contains_allowed() -> None:
+    content = _generate_typescript_content(_MINIMAL_SCHEMA, _BROWSER_SCHEMA)
+    assert "export type BrowserLogEvent = BrowserEvent" in content
+    assert "'browser.event': (payload) =>" in content
+    assert "'sample.event': (payload) =>" not in content
+
+
+def test_generate_typescript_browser_events_empty_is_never() -> None:
+    content = _generate_typescript_content(_MINIMAL_SCHEMA)
+    assert "export type BrowserLogEvent = never" in content
 
 
 # ---------------------------------------------------------------------------

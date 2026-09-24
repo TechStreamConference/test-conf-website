@@ -136,9 +136,129 @@ export function httpRequestReceived(payload: HttpRequestReceivedPayload): HttpRe
     };
 }
 
+// ─── ImageBothDimensionsSet ──────────────────────────────────────────────────
+
+export const ImageBothDimensionsSetSchema = z.object({
+    url: z.string().optional(),
+    height: z.string(),
+    width: z.string()
+});
+
+export type ImageBothDimensionsSetPayload = z.infer<typeof ImageBothDimensionsSetSchema>;
+
+const _IMAGE_BOTH_DIMENSIONS_SET_META = {
+    eventName: 'image.both_dimensions_set',
+    body: 'Both image dimensions are set, the aspect ratio may be distorted'
+} as const;
+
+export type ImageBothDimensionsSet = {
+    readonly $meta: typeof _IMAGE_BOTH_DIMENSIONS_SET_META;
+    readonly $payload: ImageBothDimensionsSetPayload;
+};
+
+export function imageBothDimensionsSet(
+    payload: ImageBothDimensionsSetPayload
+): ImageBothDimensionsSet {
+    return {
+        $meta: _IMAGE_BOTH_DIMENSIONS_SET_META,
+        $payload: payload
+    };
+}
+
+// ─── ValidatorNotUnsignedInt ──────────────────────────────────────────────────
+
+export const ValidatorNotUnsignedIntSchema = z.object({
+    origin: z.string(),
+    value: z.string(),
+    default_value: z.number().optional()
+});
+
+export type ValidatorNotUnsignedIntPayload = z.infer<typeof ValidatorNotUnsignedIntSchema>;
+
+const _VALIDATOR_NOT_UNSIGNED_INT_META = {
+    eventName: 'validator.not_unsigned_int',
+    body: 'Value is not an unsigned int, using the default value'
+} as const;
+
+export type ValidatorNotUnsignedInt = {
+    readonly $meta: typeof _VALIDATOR_NOT_UNSIGNED_INT_META;
+    readonly $payload: ValidatorNotUnsignedIntPayload;
+};
+
+export function validatorNotUnsignedInt(
+    payload: ValidatorNotUnsignedIntPayload
+): ValidatorNotUnsignedInt {
+    return {
+        $meta: _VALIDATOR_NOT_UNSIGNED_INT_META,
+        $payload: payload
+    };
+}
+
+// ─── ZonedDateTimeMismatchedContexts ──────────────────────────────────────────────────
+
+export const ZonedDateTimeMismatchedContextsSchema = z.object({
+    start_utc: z.string(),
+    end_utc: z.string(),
+    start_kind: z.string(),
+    end_kind: z.string(),
+    start_time_zone: z.string(),
+    start_locale: z.string(),
+    end_time_zone: z.string(),
+    end_locale: z.string(),
+    format: z.string()
+});
+
+export type ZonedDateTimeMismatchedContextsPayload = z.infer<
+    typeof ZonedDateTimeMismatchedContextsSchema
+>;
+
+const _ZONED_DATE_TIME_MISMATCHED_CONTEXTS_META = {
+    eventName: 'zoned_date_time.mismatched_contexts',
+    body: 'Date range formatted with mismatched contexts, using the start context'
+} as const;
+
+export type ZonedDateTimeMismatchedContexts = {
+    readonly $meta: typeof _ZONED_DATE_TIME_MISMATCHED_CONTEXTS_META;
+    readonly $payload: ZonedDateTimeMismatchedContextsPayload;
+};
+
+export function zonedDateTimeMismatchedContexts(
+    payload: ZonedDateTimeMismatchedContextsPayload
+): ZonedDateTimeMismatchedContexts {
+    return {
+        $meta: _ZONED_DATE_TIME_MISMATCHED_CONTEXTS_META,
+        $payload: payload
+    };
+}
+
 export type LogEvent =
     | ApplicationStarted
     | ApplicationStopping
     | BackendCallCompleted
     | HttpRequestCompleted
-    | HttpRequestReceived;
+    | HttpRequestReceived
+    | ImageBothDimensionsSet
+    | ValidatorNotUnsignedInt
+    | ZonedDateTimeMismatchedContexts;
+
+export type BrowserLogEvent =
+    ImageBothDimensionsSet | ValidatorNotUnsignedInt | ZonedDateTimeMismatchedContexts;
+
+export const BROWSER_EVENT_PARSERS: Readonly<
+    Record<string, (payload: unknown) => BrowserLogEvent | undefined>
+> = {
+    'image.both_dimensions_set': (payload) => {
+        const result = ImageBothDimensionsSetSchema.safeParse(payload);
+        return result.success ? imageBothDimensionsSet(result.data) : undefined;
+    },
+
+    'validator.not_unsigned_int': (payload) => {
+        const result = ValidatorNotUnsignedIntSchema.safeParse(payload);
+        return result.success ? validatorNotUnsignedInt(result.data) : undefined;
+    },
+
+    'zoned_date_time.mismatched_contexts': (payload) => {
+        const result = ZonedDateTimeMismatchedContextsSchema.safeParse(payload);
+        return result.success ? zonedDateTimeMismatchedContexts(result.data) : undefined;
+    }
+};

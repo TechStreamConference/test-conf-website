@@ -5,31 +5,36 @@ import { vi } from 'vitest';
 
 import { warnIfBothImageDimensionsSet } from '$lib/helper/runtime-checks';
 
+import { imageBothDimensionsSet } from '$logging/events.gen';
+import { clientLogger } from '$logging/client';
+
 describe('warnIfBothImageDimensionsSet', () => {
     it('should warn when both height and width are set', () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const warnSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
         warnIfBothImageDimensionsSet('10rem', '20rem', '/logo.png');
         expect(warnSpy).toHaveBeenCalledOnce();
-        expect(warnSpy.mock.calls[0]?.[1]).toBe('/logo.png');
+        expect(warnSpy).toHaveBeenCalledWith(
+            imageBothDimensionsSet({ url: '/logo.png', height: '10rem', width: '20rem' })
+        );
         warnSpy.mockRestore();
     });
 
     it('should not warn when only the height is set', () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const warnSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
         warnIfBothImageDimensionsSet('10rem', undefined, '/logo.png');
         expect(warnSpy).not.toHaveBeenCalled();
         warnSpy.mockRestore();
     });
 
     it('should not warn when only the width is set', () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const warnSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
         warnIfBothImageDimensionsSet(undefined, '20rem', '/logo.png');
         expect(warnSpy).not.toHaveBeenCalled();
         warnSpy.mockRestore();
     });
 
     it('should not warn when neither dimension is set', () => {
-        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        const warnSpy = vi.spyOn(clientLogger, 'warning').mockImplementation(() => undefined);
         warnIfBothImageDimensionsSet(undefined, undefined, '/logo.png');
         expect(warnSpy).not.toHaveBeenCalled();
         warnSpy.mockRestore();

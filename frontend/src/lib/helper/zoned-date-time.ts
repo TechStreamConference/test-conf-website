@@ -1,5 +1,8 @@
 import { DateTime } from 'luxon';
 
+import { zonedDateTimeMismatchedContexts } from '$logging/events.gen';
+import { clientLogger } from '$logging/client';
+
 export interface DateTimeContext {
     timeZone: string;
     locale: string;
@@ -295,10 +298,18 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
             start.context.timeZone !== end.context.timeZone ||
             start.context.locale !== end.context.locale
         ) {
-            // TODO: replace with the logging service once it exposes a client-side log function.
-            console.log(
-                "ZONED_DATE_TIME: formatRange called with mismatched contexts - rendering with start's context",
-                { start: start.context, end: end.context }
+            clientLogger.warning(
+                zonedDateTimeMismatchedContexts({
+                    start_utc: start.utc(),
+                    end_utc: end.utc(),
+                    start_kind: start.kind,
+                    end_kind: end.kind,
+                    start_time_zone: start.context.timeZone,
+                    start_locale: start.context.locale,
+                    end_time_zone: end.context.timeZone,
+                    end_locale: end.context.locale,
+                    format
+                })
             );
         }
 
