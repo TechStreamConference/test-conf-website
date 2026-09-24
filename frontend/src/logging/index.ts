@@ -16,8 +16,9 @@
  * Data Model so that future trace/span correlation requires no schema changes.
  */
 
-import { appendFileSync, mkdirSync } from 'node:fs';
+import { appendFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import { mkdirSync } from 'node:fs';
 
 import { env } from '$env/dynamic/private';
 
@@ -25,27 +26,30 @@ import type { LogEvent } from './events.gen';
 
 type SeverityText = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL';
 
+/**
+ * @brief A log record as it is written to `stdout` and to the log file, aligned with the OpenTelemetry Logs Data Model.
+ */
 type LogRecord = {
-	readonly timestamp: string;
-	readonly severity_text: SeverityText;
-	readonly body: string;
-	readonly 'event.name': string;
-	readonly attributes: LogEvent['$payload'];
-	readonly trace_id: null;
-	readonly span_id: null;
+    readonly timestamp: string;
+    readonly severity_text: SeverityText;
+    readonly body: string;
+    readonly 'event.name': string;
+    readonly attributes: LogEvent['$payload'];
+    readonly trace_id: null;
+    readonly span_id: null;
 };
 
 // ---------------------------------------------------------------------------
 // File sink (initialised once at module load)
 // ---------------------------------------------------------------------------
 
-const logFilePath: string | undefined = env['LOG_FILE'];
+const LOG_FILE_PATH: string | undefined = env['LOG_FILE'];
 
-if (logFilePath) {
-	mkdirSync(dirname(logFilePath), { recursive: true });
+if (LOG_FILE_PATH) {
+    mkdirSync(dirname(LOG_FILE_PATH), { recursive: true });
 }
 
-const isDev: boolean = env['ENVIRONMENT'] === 'dev';
+const IS_DEV: boolean = env['ENVIRONMENT'] === 'dev';
 
 // ---------------------------------------------------------------------------
 // Dev pretty-printing (stdout only; never touches the file sink)
@@ -65,52 +69,63 @@ const CYAN = '\x1b[36m';
 const BOLD_RED = '\x1b[1;31m';
 
 const SEVERITY_COLORS: Record<SeverityText, string> = {
-	DEBUG: DIM,
-	INFO: GREEN,
-	WARNING: YELLOW,
-	ERROR: RED,
-	CRITICAL: BOLD_RED
+    DEBUG: DIM,
+    INFO: GREEN,
+    WARNING: YELLOW,
+    ERROR: RED,
+    CRITICAL: BOLD_RED
 };
 
+/**
+ * @brief Renders a value as indented JSON with ANSI colors for the pretty output during development.
+ * @param value the value to render.
+ * @param indent the current nesting level.
+ * @returns the colored, multi-line string.
+ */
 function colorizeJson(value: unknown, indent = 0): string {
-	const pad = '  '.repeat(indent);
-	const inner = '  '.repeat(indent + 1);
-	if (value === null) {
-		return `${DIM}null${RESET}`;
-	}
-	if (value === undefined) {
-		return `${DIM}undefined${RESET}`;
-	}
-	if (typeof value === 'boolean') {
-		return `${MAGENTA}${value.toString()}${RESET}`;
-	}
-	if (typeof value === 'number') {
-		return `${YELLOW}${value.toString()}${RESET}`;
-	}
-	if (typeof value === 'string') {
-		const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-		return `${GREEN}"${escaped}"${RESET}`;
-	}
-	if (Array.isArray(value)) {
-		if (value.length === 0) return '[]';
-		const lines = value.map((v) => `${inner}${colorizeJson(v, indent + 1)}`);
-		return `[\n${lines.join(',\n')}\n${pad}]`;
-	}
-	if (typeof value === 'object') {
-		const entries = Object.entries(value as Record<string, unknown>);
-		if (entries.length === 0) return '{}';
-		const lines = entries.map(
-			([k, v]) => `${inner}${BOLD}${CYAN}"${k}"${RESET}: ${colorizeJson(v, indent + 1)}`
-		);
-		return `{\n${lines.join(',\n')}\n${pad}}`;
-	}
-	return JSON.stringify(value);
+    const pad = '  '.repeat(indent);
+    const inner = '  '.repeat(indent + 1);
+    if (value === null) {
+        return `${DIM}null${RESET}`;
+    }
+    if (value === undefined) {
+        return `${DIM}undefined${RESET}`;
+    }
+    if (typeof value === 'boolean') {
+        return `${MAGENTA}${value.toString()}${RESET}`;
+    }
+    if (typeof value === 'number') {
+        return `${YELLOW}${value.toString()}${RESET}`;
+    }
+    if (typeof value === 'string') {
+        const escaped = value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        return `${GREEN}"${escaped}"${RESET}`;
+    }
+    if (Array.isArray(value)) {
+        if (value.length === 0) return '[]';
+        const lines = value.map((v) => `${inner}${colorizeJson(v, indent + 1)}`);
+        return `[\n${lines.join(',\n')}\n${pad}]`;
+    }
+    if (typeof value === 'object') {
+        const entries = Object.entries(value as Record<string, unknown>);
+        if (entries.length === 0) return '{}';
+        const lines = entries.map(
+            ([k, v]) => `${inner}${BOLD}${CYAN}"${k}"${RESET}: ${colorizeJson(v, indent + 1)}`
+        );
+        return `{\n${lines.join(',\n')}\n${pad}}`;
+    }
+    return JSON.stringify(value);
 }
 
+/**
+ * @brief Renders a log record for the development console: a colored header line followed by the colored record.
+ * @param record the record to render.
+ * @returns the multi-line string.
+ */
 function formatPretty(record: LogRecord): string {
-	const severityColor = SEVERITY_COLORS[record.severity_text];
-	const header = `${BOLD}${BLUE}[${SERVICE_NAME}]${RESET} ${severityColor}${BOLD}${record.severity_text.padEnd(8)}${RESET} ${BOLD}${record['event.name']}${RESET}`;
-	return `${header}\n${colorizeJson(record)}`;
+    const severityColor = SEVERITY_COLORS[record.severity_text];
+    const header = `${BOLD}${BLUE}[${SERVICE_NAME}]${RESET} ${severityColor}${BOLD}${record.severity_text.padEnd(8)}${RESET} ${BOLD}${record['event.name']}${RESET}`;
+    return `${header}\n${colorizeJson(record)}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -118,24 +133,30 @@ function formatPretty(record: LogRecord): string {
 // ---------------------------------------------------------------------------
 
 function buildRecord(event: LogEvent, severityText: SeverityText): LogRecord {
-	return {
-		timestamp: new Date().toISOString(),
-		severity_text: severityText,
-		body: event.$meta.body,
-		'event.name': event.$meta.eventName,
-		attributes: event.$payload,
-		trace_id: null,
-		span_id: null
-	};
+    return {
+        timestamp: new Date().toISOString(),
+        severity_text: severityText,
+        body: event.$meta.body,
+        'event.name': event.$meta.eventName,
+        attributes: event.$payload,
+        trace_id: null,
+        span_id: null
+    };
 }
 
+/**
+ * @brief Writes an event to `stdout` and, if `LOG_FILE` is set, to the log file.
+ * `stdout` gets the pretty output in development and JSON lines otherwise. The file always gets JSON lines.
+ * @param event the event to log.
+ * @param severityText the severity of the record.
+ */
 function emit(event: LogEvent, severityText: SeverityText): void {
-	const record = buildRecord(event, severityText);
-	const line = JSON.stringify(record) + '\n';
-	process.stdout.write(isDev ? formatPretty(record) + '\n' : line);
-	if (logFilePath) {
-		appendFileSync(logFilePath, line, 'utf-8');
-	}
+    const record = buildRecord(event, severityText);
+    const line = JSON.stringify(record) + '\n';
+    process.stdout.write(IS_DEV ? formatPretty(record) + '\n' : line);
+    if (LOG_FILE_PATH) {
+        appendFileSync(LOG_FILE_PATH, line, 'utf-8');
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -143,23 +164,23 @@ function emit(event: LogEvent, severityText: SeverityText): void {
 // ---------------------------------------------------------------------------
 
 export const logger = {
-	debug(event: LogEvent): void {
-		emit(event, 'DEBUG');
-	},
+    debug(event: LogEvent): void {
+        emit(event, 'DEBUG');
+    },
 
-	info(event: LogEvent): void {
-		emit(event, 'INFO');
-	},
+    info(event: LogEvent): void {
+        emit(event, 'INFO');
+    },
 
-	warning(event: LogEvent): void {
-		emit(event, 'WARNING');
-	},
+    warning(event: LogEvent): void {
+        emit(event, 'WARNING');
+    },
 
-	error(event: LogEvent): void {
-		emit(event, 'ERROR');
-	},
+    error(event: LogEvent): void {
+        emit(event, 'ERROR');
+    },
 
-	critical(event: LogEvent): void {
-		emit(event, 'CRITICAL');
-	}
+    critical(event: LogEvent): void {
+        emit(event, 'CRITICAL');
+    }
 };

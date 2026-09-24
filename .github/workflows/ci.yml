@@ -85,6 +85,10 @@ jobs:
       - name: Install ${{ matrix.project-part }} project dependencies
         run: nix develop --command just init-ci
 
+      - name: Install Playwright browsers
+        if: matrix.project-part == 'frontend' && matrix.command == 'test'
+        run: nix develop --command just e2e-init
+
       - name: Start backend integration-test stack
         if: matrix.project-part == 'backend' && matrix.command == 'test'
         run: |

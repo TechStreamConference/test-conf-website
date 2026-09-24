@@ -5,16 +5,16 @@ import '../static/css/font.css';
 import '../static/css/main.css';
 import './preview.css';
 
-const preview: Preview = {
-	parameters: {
-		controls: {
-			matchers: {
-				color: /(background|color)$/i,
-				date: /Date$/i
-			}
-		},
-		layout: 'centered'
-	}
+const PREVIEW: Preview = {
+    parameters: {
+        controls: {
+            matchers: {
+                color: /(background|color)$/i,
+                date: /Date$/i
+            }
+        },
+        layout: 'centered'
+    }
 };
 
-export default preview;
+export default PREVIEW;

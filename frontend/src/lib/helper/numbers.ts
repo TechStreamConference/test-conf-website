@@ -1,20 +1,32 @@
-export function is_number(value: unknown): value is number {
-	return typeof value === 'number';
+export function isNumber(value: unknown): value is number {
+    return typeof value === 'number';
 }
 
-export function is_valid_unsigned_int(value: number): boolean {
-	return Number.isInteger(value) && value >= 0;
+export function isUnsignedInt(value: number): boolean {
+    return Number.isInteger(value) && value >= 0;
 }
 
-export function validate_unsigned_int(value: number | undefined | null): number | undefined {
-	if (!is_number(value)) {
-		return undefined;
-	}
+/**
+ * @brief Returns the value if it is an unsigned integer, otherwise the default value.
+ * A number that is not an unsigned integer is logged.
+ * @param value the value to check.
+ * @param defaultValue the value returned for anything that is not an unsigned integer.
+ * @returns the value or the default value.
+ */
+export function unsignedIntOr(
+    value: number | undefined | null,
+    defaultValue?: number
+): number | undefined {
+    if (!isNumber(value)) {
+        return defaultValue;
+    }
 
-	if (!is_valid_unsigned_int(value)) {
-		console.log(`VALIDATOR: ${value.toString()} is not unsigned int - set to undefined`);
-		return undefined;
-	}
+    if (!isUnsignedInt(value)) {
+        console.log(
+            `VALIDATOR: ${value.toString()} is not an unsigned int - using the default value`
+        );
+        return defaultValue;
+    }
 
-	return value;
+    return value;
 }
