@@ -21,11 +21,11 @@ from backend.models.responses import InvalidRedirectUrlResponseV1
 from backend.models.responses import LoginCallbackResponseV1
 from backend.models.responses import MeResponseV1
 from backend.models.responses import NotAuthenticatedResponseV1
-from backend.models.tables import Account
 from backend.models.tables import OidcLoginTransaction
 from backend.oidc import LOGIN_TRANSACTION_LIFETIME
 from backend.oidc import create_authorization_request
 from backend.oidc import exchange_code
+from backend.session import AuthenticatedSession
 from backend.session import create_session
 from backend.session import find_or_create_user
 from backend.session import get_current_user
@@ -201,5 +201,6 @@ async def callback(
     },
     operation_id="get current user v1",
 )
-async def me(current_account: Annotated[Account, Depends(get_current_user)]) -> MeResponseV1:
+async def me(authenticated: Annotated[AuthenticatedSession, Depends(get_current_user)]) -> MeResponseV1:
+    current_account: Final = authenticated.account
     return MeResponseV1(id=current_account.user_id, email=current_account.email, username=current_account.username)
