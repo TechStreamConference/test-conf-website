@@ -15,8 +15,9 @@ _ENV_EXAMPLE_FILE = Path(__file__).resolve().parents[3] / ".env.example"
 
 # Framework response classes carry no generated client model, so the versioning
 # rule cannot apply to them. Matched by identity so that a same-named local class
-# does not slip through.
-_EXEMPT_RESPONSE_TYPES = frozenset[type]({RedirectResponse})
+# does not slip through. `NoneType` is a 204 No Content endpoint: it has no
+# response body and therefore no generated client model either.
+_EXEMPT_RESPONSE_TYPES = frozenset[type]({RedirectResponse, type(None)})
 
 
 def _collect_routes(router: APIRouter) -> list[APIRoute]:
