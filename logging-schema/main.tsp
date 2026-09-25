@@ -86,4 +86,32 @@ namespace LogEvents {
     /** Opaque request correlation identifier, if available. */
     request_id?: string;
   }
+
+  // ─── Regional settings ────────────────────────────────────────────────────
+
+  /**
+   * Emitted after a session's reported regional settings have been processed.
+   * Never includes the raw reported timezone or locale value, per the
+   * regional settings design doc's privacy rules: only opaque identifiers
+   * and categorical outcomes are logged.
+   */
+  @extension("x-event-name", "regional_settings.report.processed")
+  @extension("x-event-body", "Regional settings report processed")
+  model RegionalSettingsReportProcessed {
+    /** Application session id the report belongs to. */
+    session_id: int32;
+
+    /** Whether the report was semantically equivalent to the session's previous report. */
+    is_no_op: boolean;
+
+    /**
+     * Categorical outcome for the timezone field: one of "unchanged",
+     * "initialized", "suggestion_created", "suggestion_replaced", or
+     * "suggestion_cleared". Omitted when `is_no_op` is true.
+     */
+    timezone_outcome?: string;
+
+    /** Categorical outcome for the locale field; see `timezone_outcome`. */
+    locale_outcome?: string;
+  }
 }

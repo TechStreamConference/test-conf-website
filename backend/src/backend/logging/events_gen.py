@@ -51,6 +51,21 @@ class HttpRequestReceived(LogEventBase):
     request_id: str | None = None
 
 
+@final
+class RegionalSettingsReportProcessed(LogEventBase):
+    LOG_EVENT_NAME: ClassVar[str] = "regional_settings.report.processed"
+    LOG_BODY: ClassVar[str] = "Regional settings report processed"
+    session_id: int
+    is_no_op: bool
+    timezone_outcome: str | None = None
+    locale_outcome: str | None = None
+
+
 type LogEvent = (
-    ApplicationStarted | ApplicationStopping | BackendCallCompleted | HttpRequestCompleted | HttpRequestReceived
+    ApplicationStarted
+    | ApplicationStopping
+    | BackendCallCompleted
+    | HttpRequestCompleted
+    | HttpRequestReceived
+    | RegionalSettingsReportProcessed
 )
