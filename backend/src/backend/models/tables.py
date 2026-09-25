@@ -4,7 +4,10 @@ from enum import StrEnum
 from enum import auto
 from typing import Optional
 from typing import final
+from uuid import UUID
+from uuid import uuid4
 
+import sqlalchemy as sa
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -48,6 +51,19 @@ class Account(SQLModel, table=True):
 
 
 @final
+class UserPreferences(SQLModel, table=True):
+    """Confirmed regional preferences. The row itself may not exist yet; once
+    it does, both fields are always set together.
+    """
+
+    __tablename__ = "user_preferences"  # type: ignore[reportAssignmentType]
+
+    user_id: int = Field(foreign_key="users.id", primary_key=True)
+    timezone: str
+    locale: str
+
+
+@final
 class UserSession(SQLModel, table=True):
     __tablename__ = "sessions"  # type: ignore[reportAssignmentType]
 
@@ -61,6 +77,45 @@ class UserSession(SQLModel, table=True):
     expires_at: datetime
     absolute_expires_at: datetime
     revoked_at: Optional[datetime] = None
+
+
+@final
+class ReportedRegionalSettings(SQLModel, table=True):
+    """The session’s latest browser-reported regional settings. Not a
+    preference by itself; see `RegionalSettingsSuggestion`. The row may not
+    exist yet; once it does, all fields are always set together.
+    """
+
+    __tablename__ = "reported_regional_settings"  # type: ignore[reportAssignmentType]
+
+    session_id: int = Field(foreign_key="sessions.id", primary_key=True, ondelete="CASCADE")
+    timezone: str
+    locale: str
+    reported_at: datetime
+
+
+@final
+class RegionalSettingsSuggestion(SQLModel, table=True):
+    """At most one pending regional-settings suggestion per session. The `id`
+    identifies this specific version: replacing the suggestion after a newer
+    browser report assigns a new one, so a stale tab cannot apply a decision
+    to state it never saw.
+    """
+
+    __tablename__ = "regional_settings_suggestions"  # type: ignore[reportAssignmentType]
+    __table_args__ = (
+        sa.CheckConstraint(
+            "timezone IS NOT NULL OR locale IS NOT NULL",
+            name="ck_regional_settings_suggestions_non_empty",
+        ),
+    )
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    session_id: int = Field(foreign_key="sessions.id", unique=True, nullable=False, ondelete="CASCADE")
+    # A null field means there is no pending decision for that setting.
+    timezone: Optional[str] = Field(default=None, nullable=True)
+    locale: Optional[str] = Field(default=None, nullable=True)
+    created_at: datetime = Field(default_factory=utc_now, nullable=False)
 
 
 @final
