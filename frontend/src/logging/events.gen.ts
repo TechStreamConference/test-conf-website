@@ -136,9 +136,42 @@ export function httpRequestReceived(payload: HttpRequestReceivedPayload): HttpRe
     };
 }
 
+// ─── RegionalSettingsReportProcessed ──────────────────────────────────────────────────
+
+export const RegionalSettingsReportProcessedSchema = z.object({
+	session_id: z.number().int(),
+	is_no_op: z.boolean(),
+	timezone_outcome: z.string().optional(),
+	locale_outcome: z.string().optional()
+});
+
+export type RegionalSettingsReportProcessedPayload = z.infer<
+	typeof RegionalSettingsReportProcessedSchema
+>;
+
+const _REGIONAL_SETTINGS_REPORT_PROCESSED_META = {
+	eventName: 'regional_settings.report.processed',
+	body: 'Regional settings report processed'
+} as const;
+
+export type RegionalSettingsReportProcessed = {
+	readonly $meta: typeof _REGIONAL_SETTINGS_REPORT_PROCESSED_META;
+	readonly $payload: RegionalSettingsReportProcessedPayload;
+};
+
+export function regionalSettingsReportProcessed(
+	payload: RegionalSettingsReportProcessedPayload
+): RegionalSettingsReportProcessed {
+	return {
+		$meta: _REGIONAL_SETTINGS_REPORT_PROCESSED_META,
+		$payload: payload
+	};
+}
+
 export type LogEvent =
-    | ApplicationStarted
-    | ApplicationStopping
-    | BackendCallCompleted
-    | HttpRequestCompleted
-    | HttpRequestReceived;
+	| ApplicationStarted
+	| ApplicationStopping
+	| BackendCallCompleted
+	| HttpRequestCompleted
+	| HttpRequestReceived
+	| RegionalSettingsReportProcessed;
