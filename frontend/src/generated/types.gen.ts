@@ -6,6 +6,8 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type Bcp47Locale = string;
+
 /**
  * EmailNotVerifiedResponseV1
  */
@@ -148,6 +150,8 @@ export type HttpValidationError = {
     detail?: Array<ValidationError>;
 };
 
+export type IanaTimezone = string;
+
 /**
  * IdentityProviderErrorResponseV1
  */
@@ -234,6 +238,8 @@ export type MeResponseV1 = {
      * Username
      */
     username: string;
+    regional_settings: RegionalSettingsV1 | null;
+    regional_settings_change: RegionalSettingsChangeV1 | null;
 };
 
 /**
@@ -244,6 +250,70 @@ export type NotAuthenticatedResponseV1 = {
      * Detail
      */
     detail?: 'Not authenticated.';
+};
+
+/**
+ * RegionalSettingsChangeConflictResponseV1
+ */
+export type RegionalSettingsChangeConflictResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Invalid or outdated regional settings change.';
+};
+
+/**
+ * RegionalSettingsChangeV1
+ */
+export type RegionalSettingsChangeV1 = {
+    /**
+     * Id
+     */
+    id: string;
+    timezone: IanaTimezone | null;
+    locale: Bcp47Locale | null;
+};
+
+export type RegionalSettingsDecision = 'accept' | 'keep';
+
+/**
+ * RegionalSettingsDecisionInputV1
+ */
+export type RegionalSettingsDecisionInputV1 = {
+    timezone?: RegionalSettingsDecision | null;
+    locale?: RegionalSettingsDecision | null;
+};
+
+/**
+ * RegionalSettingsV1
+ */
+export type RegionalSettingsV1 = {
+    timezone: IanaTimezone;
+    locale: Bcp47Locale;
+};
+
+/**
+ * ReportedRegionalSettingsInputV1
+ */
+export type ReportedRegionalSettingsInputV1 = {
+    timezone: IanaTimezone;
+    locale: Bcp47Locale;
+};
+
+/**
+ * UserPreferencesInputV1
+ */
+export type UserPreferencesInputV1 = {
+    timezone: IanaTimezone;
+    locale: Bcp47Locale;
+};
+
+/**
+ * UserPreferencesResponseV1
+ */
+export type UserPreferencesResponseV1 = {
+    timezone: IanaTimezone;
+    locale: Bcp47Locale;
 };
 
 /**
@@ -498,6 +568,102 @@ export type GetImprintV1Responses = {
 };
 
 export type GetImprintV1Response = GetImprintV1Responses[keyof GetImprintV1Responses];
+
+export type UpdateCurrentUserPreferencesV1Data = {
+    body: UserPreferencesInputV1;
+    path?: never;
+    query?: never;
+    url: '/v1/users/me/preferences';
+};
+
+export type UpdateCurrentUserPreferencesV1Errors = {
+    /**
+     * Unauthorized
+     */
+    401: NotAuthenticatedResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type UpdateCurrentUserPreferencesV1Error = UpdateCurrentUserPreferencesV1Errors[keyof UpdateCurrentUserPreferencesV1Errors];
+
+export type UpdateCurrentUserPreferencesV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: UserPreferencesResponseV1;
+};
+
+export type UpdateCurrentUserPreferencesV1Response = UpdateCurrentUserPreferencesV1Responses[keyof UpdateCurrentUserPreferencesV1Responses];
+
+export type ReportRegionalSettingsV1Data = {
+    body: ReportedRegionalSettingsInputV1;
+    path?: never;
+    query?: never;
+    url: '/v1/users/me/reported-regional-settings';
+};
+
+export type ReportRegionalSettingsV1Errors = {
+    /**
+     * Unauthorized
+     */
+    401: NotAuthenticatedResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ReportRegionalSettingsV1Error = ReportRegionalSettingsV1Errors[keyof ReportRegionalSettingsV1Errors];
+
+export type ReportRegionalSettingsV1Responses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type ReportRegionalSettingsV1Response = ReportRegionalSettingsV1Responses[keyof ReportRegionalSettingsV1Responses];
+
+export type DecideRegionalSettingsChangeV1Data = {
+    body: RegionalSettingsDecisionInputV1;
+    path: {
+        /**
+         * Suggestion Id
+         */
+        suggestion_id: string;
+    };
+    query?: never;
+    url: '/v1/users/me/regional-settings-changes/{suggestion_id}/decision';
+};
+
+export type DecideRegionalSettingsChangeV1Errors = {
+    /**
+     * Unauthorized
+     */
+    401: NotAuthenticatedResponseV1;
+    /**
+     * Conflict
+     */
+    409: RegionalSettingsChangeConflictResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DecideRegionalSettingsChangeV1Error = DecideRegionalSettingsChangeV1Errors[keyof DecideRegionalSettingsChangeV1Errors];
+
+export type DecideRegionalSettingsChangeV1Responses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type DecideRegionalSettingsChangeV1Response = DecideRegionalSettingsChangeV1Responses[keyof DecideRegionalSettingsChangeV1Responses];
 
 export type BackendHealthCheckData = {
     body?: never;

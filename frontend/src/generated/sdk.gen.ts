@@ -4,7 +4,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BackendHealthCheckData, BackendHealthCheckResponses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors } from './types.gen';
+import type { BackendHealthCheckData, BackendHealthCheckResponses, DecideRegionalSettingsChangeV1Data, DecideRegionalSettingsChangeV1Errors, DecideRegionalSettingsChangeV1Responses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors, ReportRegionalSettingsV1Data, ReportRegionalSettingsV1Errors, ReportRegionalSettingsV1Responses, UpdateCurrentUserPreferencesV1Data, UpdateCurrentUserPreferencesV1Errors, UpdateCurrentUserPreferencesV1Responses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -68,6 +68,48 @@ export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Opt
  * Retrieve the markdown contents of the imprint page stored in the database.
  */
 export const getImprintV1 = <ThrowOnError extends boolean = false>(options?: Options<GetImprintV1Data, ThrowOnError>): RequestResult<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError> => (options?.client ?? client).get<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError>({ url: '/v1/imprint', ...options });
+
+/**
+ * Update current-user preferences
+ *
+ * Replaces the current user's timezone and locale preferences.
+ */
+export const updateCurrentUserPreferencesV1 = <ThrowOnError extends boolean = false>(options: Options<UpdateCurrentUserPreferencesV1Data, ThrowOnError>): RequestResult<UpdateCurrentUserPreferencesV1Responses, UpdateCurrentUserPreferencesV1Errors, ThrowOnError> => (options.client ?? client).put<UpdateCurrentUserPreferencesV1Responses, UpdateCurrentUserPreferencesV1Errors, ThrowOnError>({
+    url: '/v1/users/me/preferences',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Report the current session's regional settings
+ *
+ * Records the browser-reported timezone and locale for the current application session. Initializes a missing preference, proposes a suggestion when the report differs from an existing preference, or is a no-op when the report is equivalent to what was last reported.
+ */
+export const reportRegionalSettingsV1 = <ThrowOnError extends boolean = false>(options: Options<ReportRegionalSettingsV1Data, ThrowOnError>): RequestResult<ReportRegionalSettingsV1Responses, ReportRegionalSettingsV1Errors, ThrowOnError> => (options.client ?? client).put<ReportRegionalSettingsV1Responses, ReportRegionalSettingsV1Errors, ThrowOnError>({
+    url: '/v1/users/me/reported-regional-settings',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Decide a pending regional settings change
+ *
+ * Accepts or keeps the current session's pending timezone and/or locale suggestion, independently per field. Each decided field must have a pending candidate in the referenced suggestion.
+ */
+export const decideRegionalSettingsChangeV1 = <ThrowOnError extends boolean = false>(options: Options<DecideRegionalSettingsChangeV1Data, ThrowOnError>): RequestResult<DecideRegionalSettingsChangeV1Responses, DecideRegionalSettingsChangeV1Errors, ThrowOnError> => (options.client ?? client).put<DecideRegionalSettingsChangeV1Responses, DecideRegionalSettingsChangeV1Errors, ThrowOnError>({
+    url: '/v1/users/me/regional-settings-changes/{suggestion_id}/decision',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Database Health
