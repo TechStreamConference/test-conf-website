@@ -132,3 +132,17 @@ class MeResponseV1(BaseModel):
     username: str
     regional_settings: Optional[RegionalSettingsV1]
     regional_settings_change: Optional[RegionalSettingsChangeV1]
+
+
+@final
+class UserPreferencesResponseV1(BaseModel):
+    timezone: IanaTimezone
+    locale: Bcp47Locale
+
+
+@final
+class RegionalSettingsChangeConflictResponseV1(BaseModel):
+    # Deliberately generic: an unknown, superseded, cross-session, or
+    # already-decided suggestion ID must not be distinguishable from the
+    # outside.
+    detail: Literal["Invalid or outdated regional settings change."] = "Invalid or outdated regional settings change."
