@@ -11,6 +11,7 @@ from fastapi import Response
 from fastapi import status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from backend.config import SETTINGS
 from backend.database import get_session
@@ -21,7 +22,11 @@ from backend.models.responses import InvalidRedirectUrlResponseV1
 from backend.models.responses import LoginCallbackResponseV1
 from backend.models.responses import MeResponseV1
 from backend.models.responses import NotAuthenticatedResponseV1
+from backend.models.responses import RegionalSettingsChangeV1
+from backend.models.responses import RegionalSettingsV1
 from backend.models.tables import OidcLoginTransaction
+from backend.models.tables import RegionalSettingsSuggestion
+from backend.models.tables import UserPreferences
 from backend.oidc import LOGIN_TRANSACTION_LIFETIME
 from backend.oidc import create_authorization_request
 from backend.oidc import exchange_code
@@ -201,6 +206,42 @@ async def callback(
     },
     operation_id="get current user v1",
 )
-async def me(authenticated: Annotated[AuthenticatedSession, Depends(get_current_user)]) -> MeResponseV1:
+async def me(
+    authenticated: Annotated[AuthenticatedSession, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> MeResponseV1:
     current_account: Final = authenticated.account
-    return MeResponseV1(id=current_account.user_id, email=current_account.email, username=current_account.username)
+
+    # No row means no preference has ever been confirmed yet.
+    regional_settings: Final = (
+        None
+        if (preferences := await session.get(UserPreferences, current_account.user_id)) is None
+        else RegionalSettingsV1(
+            timezone=preferences.timezone,
+            locale=preferences.locale,
+        )
+    )
+
+    pending_suggestion: Final = (
+        await session.execute(
+            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == authenticated.session.id)
+        )
+    ).scalar_one_or_none()
+
+    regional_settings_change: Final = (
+        None
+        if pending_suggestion is None
+        else RegionalSettingsChangeV1(
+            id=pending_suggestion.id,
+            timezone=pending_suggestion.timezone,
+            locale=pending_suggestion.locale,
+        )
+    )
+
+    return MeResponseV1(
+        id=current_account.user_id,
+        email=current_account.email,
+        username=current_account.username,
+        regional_settings=regional_settings,
+        regional_settings_change=regional_settings_change,
+    )
