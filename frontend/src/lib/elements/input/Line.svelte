@@ -7,6 +7,7 @@
     import type { InputType } from '$lib/helper/input';
     import type { InputValue } from '$lib/helper/input';
     import { INPUT_TYPES_WITH_MAX_LENGTH } from '$lib/helper/input';
+    import { clampNumberToInt } from '$lib/helper/numbers';
     import { formatInputValue } from '$lib/helper/input';
     import { isDateInputType } from '$lib/helper/input';
     import { isMaxLengthOrange } from '$lib/helper/input';
@@ -14,7 +15,6 @@
     import { isMaxLengthVisible } from '$lib/helper/input';
     import { parseDateInputValue } from '$lib/helper/input';
     import { parseInputValue } from '$lib/helper/input';
-    import { unsignedIntOr } from '$lib/helper/numbers';
 
     type Props = Pick<
         HTMLInputAttributes,
@@ -39,7 +39,9 @@
         };
     let { id, label, type, maxlength, value = $bindable(), context, ...rest }: Props = $props();
 
-    const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength));
+    const validMaxLength: number | undefined = $derived(
+        maxlength === undefined ? undefined : clampNumberToInt(maxlength)
+    );
 
     /**
      * @brief Reads the value of the native input element and stores it in `value`, parsed according to `type`.

@@ -2,10 +2,10 @@
     import type { AriaAttributes } from 'svelte/elements';
     import type { HTMLTextareaAttributes } from 'svelte/elements';
 
+    import { clampNumberToInt } from '$lib/helper/numbers';
     import { isMaxLengthOrange } from '$lib/helper/input';
     import { isMaxLengthRed } from '$lib/helper/input';
     import { isMaxLengthVisible } from '$lib/helper/input';
-    import { unsignedIntOr } from '$lib/helper/numbers';
 
     interface Props
         extends
@@ -27,7 +27,9 @@
     }
     let { id, label, maxlength, value = $bindable(), ...rest }: Props = $props();
 
-    const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength));
+    const validMaxLength: number | undefined = $derived(
+        maxlength === undefined ? undefined : clampNumberToInt(maxlength)
+    );
 </script>
 
 <div>
