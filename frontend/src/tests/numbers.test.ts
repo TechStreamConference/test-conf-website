@@ -1,11 +1,10 @@
 import { describe } from 'vitest';
 import { expect } from 'vitest';
 import { it } from 'vitest';
-import { vi } from 'vitest';
 
+import { clampNumberToInt } from '$lib/helper/numbers';
 import { isNumber } from '$lib/helper/numbers';
 import { isUnsignedInt } from '$lib/helper/numbers';
-import { unsignedIntOr } from '$lib/helper/numbers';
 
 describe('isNumber', () => {
     it('should be true for integers', () => {
@@ -82,50 +81,114 @@ describe('isUnsignedInt', () => {
     });
 });
 
-describe('unsignedIntOr', () => {
-    it('should return the value unchanged when it is a valid unsigned int', () => {
-        expect(unsignedIntOr(0)).toBe(0);
-        expect(unsignedIntOr(42)).toBe(42);
+describe('clampNumberToInt', () => {
+    it('should return an int when a float was provided', () => {
+        expect(clampNumberToInt(1.3)).toBe(1);
+        expect(clampNumberToInt(1.5)).toBe(2);
+        expect(clampNumberToInt(1.6)).toBe(2);
+        expect(clampNumberToInt(-1.2)).toBe(-1);
+        expect(clampNumberToInt(-1.5)).toBe(-1);
+        expect(clampNumberToInt(-1.8)).toBe(-2);
     });
 
-    it('should return undefined for undefined', () => {
-        expect(unsignedIntOr(undefined)).toBeUndefined();
+    it('should return an int when an int was provided', () => {
+        expect(clampNumberToInt(1)).toBe(1);
+        expect(clampNumberToInt(-1)).toBe(-1);
     });
 
-    it('should return undefined for null', () => {
-        expect(unsignedIntOr(null)).toBeUndefined();
+    it('should return a clamped int', () => {
+        expect(clampNumberToInt(1, 10, 200)).toBe(10);
+        expect(clampNumberToInt(300, 10, 200)).toBe(200);
     });
 
-    it('should return undefined for a negative number', () => {
-        expect(unsignedIntOr(-5)).toBeUndefined();
+    it('should return zero for zero', () => {
+        expect(clampNumberToInt(0)).toBe(0);
     });
 
-    it('should return undefined for a non-integer number', () => {
-        expect(unsignedIntOr(1.5)).toBeUndefined();
+    it('should round halves towards positive infinity', () => {
+        expect(clampNumberToInt(0.5)).toBe(1);
+        expect(clampNumberToInt(1.5)).toBe(2);
+        expect(clampNumberToInt(2.5)).toBe(3);
+        expect(clampNumberToInt(-1.5)).toBe(-1);
+        expect(clampNumberToInt(-2.5)).toBe(-2);
     });
 
-    it('should return undefined for NaN', () => {
-        expect(unsignedIntOr(NaN)).toBeUndefined();
+    it('should round to the nearest int just below and above a half', () => {
+        expect(clampNumberToInt(2.4999)).toBe(2);
+        expect(clampNumberToInt(2.5001)).toBe(3);
+        expect(clampNumberToInt(-2.5001)).toBe(-3);
     });
 
-    it('should return the given default value instead of undefined', () => {
-        expect(unsignedIntOr(undefined, 10)).toBe(10);
-        expect(unsignedIntOr(-5, 10)).toBe(10);
+    it('should return the value unchanged when it lies within the bounds', () => {
+        expect(clampNumberToInt(50, 10, 200)).toBe(50);
+        expect(clampNumberToInt(-50, -100, -10)).toBe(-50);
     });
 
-    it('should log a warning when rejecting an invalid unsigned int', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        unsignedIntOr(-5);
-        expect(logSpy).toHaveBeenCalledOnce();
-        logSpy.mockRestore();
+    it('should return the bound when the value equals it', () => {
+        expect(clampNumberToInt(10, 10, 200)).toBe(10);
+        expect(clampNumberToInt(200, 10, 200)).toBe(200);
     });
 
-    it('should not log anything for undefined, null, or a valid value', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        unsignedIntOr(undefined);
-        unsignedIntOr(null);
-        unsignedIntOr(3);
-        expect(logSpy).not.toHaveBeenCalled();
-        logSpy.mockRestore();
+    it('should clamp to the bounds when they are negative', () => {
+        expect(clampNumberToInt(1, -5, -2)).toBe(-2);
+        expect(clampNumberToInt(-9, -5, -2)).toBe(-5);
+        expect(clampNumberToInt(-3, -5, -2)).toBe(-3);
+    });
+
+    it('should clamp to a range that contains zero', () => {
+        expect(clampNumberToInt(-7, -5, 5)).toBe(-5);
+        expect(clampNumberToInt(0, -5, 5)).toBe(0);
+        expect(clampNumberToInt(7, -5, 5)).toBe(5);
+    });
+
+    it('should return the only possible value when min and max are equal', () => {
+        expect(clampNumberToInt(5, 5, 5)).toBe(5);
+        expect(clampNumberToInt(-100, 5, 5)).toBe(5);
+        expect(clampNumberToInt(100, 5, 5)).toBe(5);
+    });
+
+    it('should round the value before it is clamped', () => {
+        expect(clampNumberToInt(10.4, 0, 20)).toBe(10);
+        expect(clampNumberToInt(19.6, 0, 20)).toBe(20);
+        expect(clampNumberToInt(25.2, 0, 20)).toBe(20);
+        expect(clampNumberToInt(-3.7, 0, 20)).toBe(0);
+    });
+
+    it('should use the default for the missing bound', () => {
+        expect(clampNumberToInt(100, undefined, 50)).toBe(50);
+        expect(clampNumberToInt(-100, undefined, 50)).toBe(-100);
+        expect(clampNumberToInt(5, 10, undefined)).toBe(10);
+        expect(clampNumberToInt(500, 10, undefined)).toBe(500);
+    });
+
+    it('should clamp infinite values to the safe integer range', () => {
+        expect(clampNumberToInt(Infinity)).toBe(Number.MAX_SAFE_INTEGER);
+        expect(clampNumberToInt(-Infinity)).toBe(Number.MIN_SAFE_INTEGER);
+    });
+
+    it('should clamp infinite values to the given bounds', () => {
+        expect(clampNumberToInt(Infinity, 0, 100)).toBe(100);
+        expect(clampNumberToInt(-Infinity, 0, 100)).toBe(0);
+    });
+
+    it('should clamp values outside the safe integer range', () => {
+        expect(clampNumberToInt(1e20)).toBe(Number.MAX_SAFE_INTEGER);
+        expect(clampNumberToInt(-1e20)).toBe(Number.MIN_SAFE_INTEGER);
+        expect(clampNumberToInt(Number.MAX_SAFE_INTEGER + 2)).toBe(Number.MAX_SAFE_INTEGER);
+    });
+
+    it('should keep the safe integer limits themselves', () => {
+        expect(clampNumberToInt(Number.MAX_SAFE_INTEGER)).toBe(Number.MAX_SAFE_INTEGER);
+        expect(clampNumberToInt(Number.MIN_SAFE_INTEGER)).toBe(Number.MIN_SAFE_INTEGER);
+    });
+
+    it('should accept infinite bounds', () => {
+        expect(clampNumberToInt(42, -Infinity, Infinity)).toBe(42);
+    });
+
+    it('should always return an integer for a finite value', () => {
+        for (const value of [0.1, 0.9, 1e-9, 123.456, -123.456, 1e15 + 0.3]) {
+            expect(Number.isInteger(clampNumberToInt(value))).toBe(true);
+        }
     });
 });
