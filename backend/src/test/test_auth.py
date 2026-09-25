@@ -2,21 +2,28 @@ from datetime import timedelta
 from typing import Final
 from unittest.mock import AsyncMock
 from unittest.mock import Mock
+from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
 from fastapi import Response
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import backend.routes.v1.auth as auth_module
+from backend.models.responses import RegionalSettingsChangeV1
 from backend.models.tables import Account
 from backend.models.tables import OidcLoginTransaction
+from backend.models.tables import RegionalSettingsSuggestion
+from backend.models.tables import UserPreferences
+from backend.models.tables import UserSession
 from backend.oidc import AuthorizationRequest
 from backend.oidc import UserClaims
 from backend.routes.v1.auth import _is_valid_redirect_url  # type: ignore[reportPrivateUsage]
 from backend.routes.v1.auth import callback
 from backend.routes.v1.auth import login
 from backend.routes.v1.auth import me
+from backend.session import AuthenticatedSession
 from backend.utils import hash_token
 from backend.utils import utc_now
 
@@ -28,7 +35,26 @@ def _session() -> Mock:
     session.commit = AsyncMock()
     session.delete = AsyncMock()
     session.get = AsyncMock()
+    session.execute = AsyncMock(return_value=Mock(scalar_one_or_none=Mock(return_value=None)))
     return session
+
+
+def _authenticated(*, user_id: int = 42, session_id: int = 1) -> AuthenticatedSession:
+    now: Final = utc_now()
+    account: Final = Account(
+        user_id=user_id,
+        zitadel_user_id="provider-user",
+        email="user@example.com",
+        username="test-user",
+    )
+    user_session: Final = UserSession(
+        id=session_id,
+        user_id=user_id,
+        token_hash="hashed-token",
+        expires_at=now + timedelta(days=1),
+        absolute_expires_at=now + timedelta(days=30),
+    )
+    return AuthenticatedSession(account=account, session=user_session)
 
 
 def _transaction(*, browser_secret: str = _TEST_BROWSER_VALUE, expired: bool = False) -> OidcLoginTransaction:
@@ -50,6 +76,11 @@ def _claims(*, email_verified: bool = True) -> UserClaims:
         preferred_username="test-user",
         sid="provider-session",
     )
+
+
+def test_regional_settings_change_requires_at_least_one_change() -> None:
+    with pytest.raises(ValidationError, match="At least one of `timezone` or `locale` must have changed"):
+        _ = RegionalSettingsChangeV1(id=uuid4(), timezone=None, locale=None)
 
 
 @pytest.mark.parametrize(
@@ -279,17 +310,43 @@ async def test_callback_creates_user_and_session_and_clears_login_cookie(
 
 @pytest.mark.asyncio
 async def test_me_maps_current_account() -> None:
-    account: Final = Account(
-        user_id=42,
-        zitadel_user_id="provider-user",
-        email="user@example.com",
-        username="test-user",
-    )
+    session: Final = _session()
+    session.get.return_value = None
 
-    result: Final = await me(account)
+    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
 
     assert result.model_dump() == {
         "id": 42,
         "email": "user@example.com",
         "username": "test-user",
+        "regional_settings": None,
+        "regional_settings_change": None,
     }
+
+
+@pytest.mark.asyncio
+async def test_me_exposes_stored_preferences() -> None:
+    session: Final = _session()
+    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Istanbul", locale="tr-TR")
+
+    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
+
+    assert result.regional_settings is not None
+    assert result.regional_settings.timezone == "Europe/Istanbul"
+    assert result.regional_settings.locale == "tr-TR"
+    session.get.assert_awaited_once_with(UserPreferences, 42)
+
+
+@pytest.mark.asyncio
+async def test_me_exposes_pending_regional_settings_change() -> None:
+    session: Final = _session()
+    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE")
+    pending: Final = RegionalSettingsSuggestion(session_id=1, timezone="America/New_York", locale=None)
+    session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=pending))
+
+    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
+
+    assert result.regional_settings_change is not None
+    assert result.regional_settings_change.id == pending.id
+    assert result.regional_settings_change.timezone == "America/New_York"
+    assert result.regional_settings_change.locale is None

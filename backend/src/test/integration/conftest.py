@@ -49,7 +49,7 @@ def backend_is_reachable() -> bool:
 
 
 @pytest_asyncio.fixture(scope="package")
-async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerator[None]:
+async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerator[str]:
     if not backend_is_reachable:
         pytest.skip("The remaining integration tests require a reachable backend.")
 
@@ -78,8 +78,7 @@ async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerato
             session_factory_override=factory,
         )
 
-        yield
-
         await engine.dispose()
+        yield _POSTGRES.get_connection_url(driver="asyncpg")
     finally:
         _POSTGRES.stop()

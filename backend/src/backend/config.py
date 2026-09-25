@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     session_idle_timeout_days: int = Field(ge=1)
     session_absolute_lifetime_days: int = Field(ge=1)
 
+    # Defaults are resolved at use time. They are deliberately not database
+    # defaults because NULL records that a user has not chosen a preference.
+    default_timezone: str = Field(default="Europe/Berlin", min_length=1)
+    default_locale: str = Field(default="en", min_length=1)
+
     @cached_property
     def zitadel_redirect_uri(self) -> str:
         # Points at the frontend, which forwards the callback to the backend so that
