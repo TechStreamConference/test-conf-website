@@ -2,15 +2,20 @@ from datetime import timedelta
 from typing import Final
 from unittest.mock import AsyncMock
 from unittest.mock import Mock
+from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
 from fastapi import Response
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import backend.routes.v1.auth as auth_module
+from backend.models.responses import RegionalSettingsChangeV1
 from backend.models.tables import Account
 from backend.models.tables import OidcLoginTransaction
+from backend.models.tables import RegionalSettingsSuggestion
+from backend.models.tables import UserPreferences
 from backend.models.tables import UserSession
 from backend.oidc import AuthorizationRequest
 from backend.oidc import UserClaims
@@ -30,6 +35,7 @@ def _session() -> Mock:
     session.commit = AsyncMock()
     session.delete = AsyncMock()
     session.get = AsyncMock()
+    session.execute = AsyncMock(return_value=Mock(scalar_one_or_none=Mock(return_value=None)))
     return session
 
 
@@ -70,6 +76,11 @@ def _claims(*, email_verified: bool = True) -> UserClaims:
         preferred_username="test-user",
         sid="provider-session",
     )
+
+
+def test_regional_settings_change_requires_at_least_one_change() -> None:
+    with pytest.raises(ValidationError, match="At least one of `timezone` or `locale` must have changed"):
+        _ = RegionalSettingsChangeV1(id=uuid4(), timezone=None, locale=None)
 
 
 @pytest.mark.parametrize(
@@ -299,10 +310,43 @@ async def test_callback_creates_user_and_session_and_clears_login_cookie(
 
 @pytest.mark.asyncio
 async def test_me_maps_current_account() -> None:
-    result: Final = await me(_authenticated())
+    session: Final = _session()
+    session.get.return_value = None
+
+    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
 
     assert result.model_dump() == {
         "id": 42,
         "email": "user@example.com",
         "username": "test-user",
+        "regional_settings": None,
+        "regional_settings_change": None,
     }
+
+
+@pytest.mark.asyncio
+async def test_me_exposes_stored_preferences() -> None:
+    session: Final = _session()
+    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Istanbul", locale="tr-TR")
+
+    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
+
+    assert result.regional_settings is not None
+    assert result.regional_settings.timezone == "Europe/Istanbul"
+    assert result.regional_settings.locale == "tr-TR"
+    session.get.assert_awaited_once_with(UserPreferences, 42)
+
+
+@pytest.mark.asyncio
+async def test_me_exposes_pending_regional_settings_change() -> None:
+    session: Final = _session()
+    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE")
+    pending: Final = RegionalSettingsSuggestion(session_id=1, timezone="America/New_York", locale=None)
+    session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=pending))
+
+    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
+
+    assert result.regional_settings_change is not None
+    assert result.regional_settings_change.id == pending.id
+    assert result.regional_settings_change.timezone == "America/New_York"
+    assert result.regional_settings_change.locale is None
