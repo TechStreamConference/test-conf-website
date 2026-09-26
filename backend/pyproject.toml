@@ -38,7 +38,7 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.16.7",
     "testcontainers[postgres]>=4.15.0",
-    "types-authlib>=1.7.2.20260901",
+    "types-authlib>=1.8.0.20260911",
 ]
 
 [tool.setuptools.package-data]
