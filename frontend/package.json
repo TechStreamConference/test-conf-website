@@ -37,7 +37,7 @@
         "@types/node": "^26",
         "@types/set-cookie-parser": "^2.4.10",
         "@vitest/browser-playwright": "^4.1.10",
-        "eslint": "^10.10.0",
+        "eslint": "^10.11.0",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-svelte": "^3.23.0",
         "globals": "^17.12.0",
