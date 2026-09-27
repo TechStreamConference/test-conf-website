@@ -20,7 +20,7 @@ export const load: PageServerLoad = async (event) => {
     const result = await forwardLoginCallback(event);
 
     if (result.ok) {
-        redirect(302, result.data.redirect_url);
+        redirect(302, result.data.redirectUrl);
     }
 
     return { error: result.error } satisfies LoginCallbackPageData;

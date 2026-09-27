@@ -10,7 +10,7 @@
     }>();
 </script>
 
-<h1>{data.globals.footer_text}</h1>
+<h1>{data.globals.footerText}</h1>
 
 <style>
     h1 {
