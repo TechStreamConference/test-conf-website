@@ -5,6 +5,9 @@
     import { isMaxLengthOrange } from '$lib/helper/input';
     import { isMaxLengthRed } from '$lib/helper/input';
     import { isMaxLengthVisible } from '$lib/helper/input';
+    import { maxLengthAnnouncement } from '$lib/helper/input';
+    import { maxLengthSeverity } from '$lib/helper/input';
+    import { MaxLengthSeverity } from '$lib/helper/input';
     import { unsignedIntOr } from '$lib/helper/numbers';
 
     interface Props
@@ -28,6 +31,21 @@
     let { id, label, maxlength, value = $bindable(), ...rest }: Props = $props();
 
     const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength));
+
+    // Only updated when the severity threshold actually changes, so that assistive
+    // technology announces it once per threshold crossed instead of on every keystroke.
+    let announcedSeverity: MaxLengthSeverity = $state(MaxLengthSeverity.Normal);
+    let announcement: string = $state('');
+
+    $effect(() => {
+        if (validMaxLength === undefined) return;
+
+        const severity = maxLengthSeverity(validMaxLength, value);
+        if (severity === announcedSeverity) return;
+
+        announcedSeverity = severity;
+        announcement = maxLengthAnnouncement(severity, validMaxLength, value);
+    });
 </script>
 
 <div>
@@ -43,6 +61,7 @@
         >
             {value.length.toString()} / {validMaxLength.toString()}
         </p>
+        <span role="status" aria-atomic="true" class:visually-hidden={true}>{announcement}</span>
     {/if}
 </div>
 

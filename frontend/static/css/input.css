@@ -90,3 +90,21 @@ p.visible {
 .red {
     color: var(--error-color);
 }
+
+/*
+ * Kept in the accessibility tree (unlike `visibility: hidden`) but removed from the
+ * visual layout, so assistive technology can still announce it.
+ */
+.visually-hidden {
+    position: absolute;
+
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

@@ -183,3 +183,59 @@ export function isMaxLengthOrange(maxLength: number, value: string): boolean {
 export function isMaxLengthRed(maxLength: number, value: string): boolean {
     return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;
 }
+
+/**
+ * @brief The severity level of the max length warning for a given value.
+ */
+export enum MaxLengthSeverity {
+    Normal = 'normal',
+    Half = 'half',
+    Warning = 'warning',
+    Critical = 'critical',
+    Reached = 'reached'
+}
+
+/**
+ * @brief Determines the highest severity threshold the value has reached.
+ * @param maxLength the max length of the input.
+ * @param value the current value of the input.
+ * @returns the current severity level.
+ */
+export function maxLengthSeverity(maxLength: number, value: string): MaxLengthSeverity {
+    if (value.length >= maxLength) return MaxLengthSeverity.Reached;
+    if (isMaxLengthRed(maxLength, value)) return MaxLengthSeverity.Critical;
+    if (isMaxLengthOrange(maxLength, value)) return MaxLengthSeverity.Warning;
+    if (isMaxLengthVisible(maxLength, value)) return MaxLengthSeverity.Half;
+    return MaxLengthSeverity.Normal;
+}
+
+/**
+ * @brief The message to announce to assistive technology when `severity` is entered.
+ *
+ * Only meant to be read when `severity` actually changed, so that assistive technology
+ * announces it once per threshold crossed instead of on every keystroke.
+ *
+ * @param severity the severity level that was just entered.
+ * @param maxLength the max length of the input.
+ * @param value the current value of the input.
+ * @returns the announcement text, or an empty string once back to normal.
+ */
+export function maxLengthAnnouncement(
+    severity: MaxLengthSeverity,
+    maxLength: number,
+    value: string
+): string {
+    const remaining = maxLength - value.length;
+    switch (severity) {
+        case MaxLengthSeverity.Reached:
+            return 'Character limit reached.';
+        case MaxLengthSeverity.Critical:
+            return `Character limit critical, ${remaining.toString()} characters remaining.`;
+        case MaxLengthSeverity.Warning:
+            return `Character limit warning, ${remaining.toString()} characters remaining.`;
+        case MaxLengthSeverity.Half:
+            return `Half of the character limit used, ${remaining.toString()} characters remaining.`;
+        case MaxLengthSeverity.Normal:
+            return '';
+    }
+}

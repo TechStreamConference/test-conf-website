@@ -12,6 +12,9 @@
     import { isMaxLengthOrange } from '$lib/helper/input';
     import { isMaxLengthRed } from '$lib/helper/input';
     import { isMaxLengthVisible } from '$lib/helper/input';
+    import { maxLengthAnnouncement } from '$lib/helper/input';
+    import { maxLengthSeverity } from '$lib/helper/input';
+    import { MaxLengthSeverity } from '$lib/helper/input';
     import { parseDateInputValue } from '$lib/helper/input';
     import { parseInputValue } from '$lib/helper/input';
     import { unsignedIntOr } from '$lib/helper/numbers';
@@ -40,6 +43,21 @@
     let { id, label, type, maxlength, value = $bindable(), context, ...rest }: Props = $props();
 
     const validMaxLength: number | undefined = $derived(unsignedIntOr(maxlength));
+
+    // Only updated when the severity threshold actually changes, so that assistive
+    // technology announces it once per threshold crossed instead of on every keystroke.
+    let announcedSeverity: MaxLengthSeverity = $state(MaxLengthSeverity.Normal);
+    let announcement: string = $state('');
+
+    $effect(() => {
+        if (validMaxLength === undefined || typeof value !== 'string') return;
+
+        const severity = maxLengthSeverity(validMaxLength, value);
+        if (severity === announcedSeverity) return;
+
+        announcedSeverity = severity;
+        announcement = maxLengthAnnouncement(severity, validMaxLength, value);
+    });
 
     /**
      * @brief Reads the value of the native input element and stores it in `value`, parsed according to `type`.
@@ -75,6 +93,7 @@
         >
             {value.length.toString()} / {validMaxLength.toString()}
         </p>
+        <span role="status" aria-atomic="true" class:visually-hidden={true}>{announcement}</span>
     {/if}
 </div>
 
