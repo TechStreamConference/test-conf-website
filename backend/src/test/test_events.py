@@ -74,7 +74,7 @@ async def test_current_event_returns_spotlighted_event_and_requested_translation
     event: Final = _event(
         2,
         date(2026, 9, 1),
-        frontpage_spotlight_date=datetime(2026, 8, 1, tzinfo=UTC).replace(tzinfo=None),
+        frontpage_spotlight_date=datetime(2026, 8, 1, tzinfo=UTC),
     )
     session: Final = _session_with_rows([
         _row(event, _translation(2, "de")),

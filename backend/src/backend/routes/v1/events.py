@@ -1,5 +1,3 @@
-from datetime import UTC
-from datetime import datetime
 from typing import Annotated
 from typing import Final
 from typing import Literal
@@ -22,6 +20,7 @@ from backend.models.responses import InvalidSequenceNumberResponseV1
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.utils import create_http_exception
+from backend.utils import utc_now
 
 ROUTER = APIRouter()
 
@@ -40,7 +39,7 @@ async def get_current_event(
     session: Annotated[AsyncSession, Depends(get_session)],
     language_tag: str,
 ) -> EventResponseV1:
-    now: Final = datetime.now(UTC).replace(tzinfo=None)
+    now: Final = utc_now()
     current_event_id: Final = (
         select(Event.id)
         .where(

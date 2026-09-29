@@ -1,5 +1,6 @@
 # ruff: noqa: S311  # `random` is used for reproducible fake data, not cryptography.
 import random
+from datetime import UTC
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
@@ -108,6 +109,7 @@ def _date_to_datetime(date: date) -> datetime:
         date.year,
         date.month,
         date.day,
+        tzinfo=UTC,
     )
 
 

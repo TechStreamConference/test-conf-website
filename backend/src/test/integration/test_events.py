@@ -59,7 +59,7 @@ async def test_current_event_route_returns_most_recently_spotlighted_event(
     events_for_current_event_test: tuple[AsyncSession, list[Event]],
 ) -> None:
     session, events = events_for_current_event_test
-    now: Final = datetime.now(UTC).replace(tzinfo=None)
+    now: Final = datetime.now(UTC)
     for event in events:
         event.frontpage_spotlight_date = None
     events[0].frontpage_spotlight_date = now - timedelta(days=2)
@@ -80,7 +80,7 @@ async def test_current_event_route_returns_not_found_when_no_event_is_applicable
     events_for_current_event_test: tuple[AsyncSession, list[Event]],
 ) -> None:
     session, events = events_for_current_event_test
-    future: Final = datetime.now(UTC).replace(tzinfo=None) + timedelta(days=1)
+    future: Final = datetime.now(UTC) + timedelta(days=1)
     for index, event in enumerate(events):
         event.frontpage_spotlight_date = None if index % 2 == 0 else future
     await session.commit()

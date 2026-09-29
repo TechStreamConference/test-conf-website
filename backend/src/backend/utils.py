@@ -12,8 +12,8 @@ _SESSION_TOKEN_BYTES = 32
 
 
 def utc_now() -> datetime:
-    """Current UTC time, made naïve to match the timestamp columns."""
-    return datetime.now(UTC).replace(tzinfo=None)
+    """Current time as a timezone-aware UTC datetime."""
+    return datetime.now(UTC)
 
 
 def generate_browser_secret() -> str:
