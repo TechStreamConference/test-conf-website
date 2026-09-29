@@ -286,6 +286,9 @@ export type RegionalSettingsChangeV1 = {
     locale: Bcp47Locale | null;
 };
 
+/**
+ * RegionalSettingsDecision
+ */
 export type RegionalSettingsDecision = 'accept' | 'keep';
 
 /**
