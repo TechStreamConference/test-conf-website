@@ -19,13 +19,13 @@ dependencies = [
     "httpx2>=2.13.1",
     "authlib>=1.8.0",
     "langcodes>=3.5.1",
-    "psycopg[binary]>=3.3.5",
+    "psycopg[binary]>=3.3.6",
     "pydantic>=2.13.5",
     "pydantic-settings>=2.14.2",
     "sqlalchemy[asyncio, postgresql-psycopg2binary]>=2.0.54",
     "sqlmodel>=0.0.42",
     "typer>=0.27.2",
-    "uvicorn>=0.53.0",
+    "uvicorn>=0.54.0",
 ]
 
 [dependency-groups]
@@ -36,7 +36,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
-    "ruff>=0.16.8",
+    "ruff>=0.16.9",
     "testcontainers[postgres]>=4.15.0",
     "types-authlib>=1.8.0.20260911",
 ]

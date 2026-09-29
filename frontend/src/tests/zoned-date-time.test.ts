@@ -1,7 +1,8 @@
 import { describe } from 'vitest';
 import { expect } from 'vitest';
 import { it } from 'vitest';
-import { vi } from 'vitest';
+
+import { MissmatchZonedDateTimeContextError } from '$bff/errors';
 
 import type { DateTimeContext } from '$lib/helper/zoned-date-time';
 import { DateTimeFormat } from '$lib/helper/zoned-date-time';
@@ -11,6 +12,16 @@ import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 const BERLIN_DE: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'de-DE' };
 const BERLIN_EN: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'en-US' };
 const NEW_YORK_DE: DateTimeContext = { timeZone: 'America/New_York', locale: 'de-DE' };
+const NEW_YORK_EN: DateTimeContext = { timeZone: 'America/New_York', locale: 'en-US' };
+
+function catchError(fn: () => unknown): unknown {
+    try {
+        fn();
+    } catch (error) {
+        return error;
+    }
+    return undefined;
+}
 
 describe('fromHtmlDateTime', () => {
     it('converts a local wall-clock string into the correct UTC instant (summer / DST)', () => {
@@ -172,27 +183,116 @@ describe('formatRange', () => {
         );
     });
 
-    it('logs a warning but still renders when start/end contexts differ', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
-        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
-        const end = ZonedDateTime.fromHtmlDate('2026-06-14', NEW_YORK_DE);
-
+    it('renders a range that spans two months', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-30', BERLIN_DE);
+        const end = ZonedDateTime.fromHtmlDate('2026-07-02', BERLIN_DE);
         const result = ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort);
-
-        expect(logSpy).toHaveBeenCalledOnce();
-        expect(result).toBe('13.–14.06.2026');
-        logSpy.mockRestore();
+        // The kind of space around the dash depends on the ICU version.
+        expect(result.replace(/\s+/g, ' ')).toBe('30.06. – 02.07.2026');
     });
 
-    it('does not log anything when start/end share the same context', () => {
-        const logSpy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    it('does not throw when start and end share the same context', () => {
         const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
         const end = ZonedDateTime.fromHtmlDate('2026-06-14', BERLIN_DE);
+        expect(() =>
+            ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)
+        ).not.toThrow();
+    });
 
-        ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort);
+    it('does not throw when start and end are the same value', () => {
+        const value = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
+        expect(() =>
+            ZonedDateTime.formatRange(value, value, DateTimeFormat.FullDateShort)
+        ).not.toThrow();
+    });
 
-        expect(logSpy).not.toHaveBeenCalled();
-        logSpy.mockRestore();
+    it('throws when the time zones of start and end differ', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', NEW_YORK_DE);
+        expect(() => ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)).toThrow(
+            MissmatchZonedDateTimeContextError
+        );
+    });
+
+    it('throws when the locales of start and end differ', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', BERLIN_EN);
+        expect(() => ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)).toThrow(
+            MissmatchZonedDateTimeContextError
+        );
+    });
+
+    it('throws when both the time zone and the locale differ', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', {
+            timeZone: NEW_YORK_DE.timeZone,
+            locale: BERLIN_EN.locale
+        });
+        expect(() => ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)).toThrow(
+            MissmatchZonedDateTimeContextError
+        );
+    });
+
+    it('throws for every format when the contexts differ', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', NEW_YORK_DE);
+        for (const format of Object.values(DateTimeFormat)) {
+            expect(() => ZonedDateTime.formatRange(start, end, format)).toThrow(
+                MissmatchZonedDateTimeContextError
+            );
+        }
+    });
+
+    it('throws for values of any kind when the contexts differ', () => {
+        const aware = ZonedDateTime.fromUtc(
+            '2026-06-13T07:05:00Z',
+            BERLIN_DE,
+            DateTimeKind.TimeZoneAware
+        );
+        const unaware = ZonedDateTime.fromHtmlDate('2026-06-14', NEW_YORK_DE);
+        expect(() =>
+            ZonedDateTime.formatRange(aware, unaware, DateTimeFormat.FullDateShort)
+        ).toThrow(MissmatchZonedDateTimeContextError);
+    });
+
+    it('is thrown as an Error with a message', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', NEW_YORK_DE);
+        const error = catchError(() =>
+            ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)
+        );
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toBeInstanceOf(MissmatchZonedDateTimeContextError);
+        expect(error).toHaveProperty('name', 'MissmatchZonedDateTimeContextError');
+        expect((error as Error).message).not.toBe('');
+    });
+
+    it('reports the contexts of start and end in the error', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_DE);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', NEW_YORK_EN);
+        const error = catchError(() =>
+            ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)
+        );
+        expect(error).toMatchObject({
+            startLocal: 'de-DE',
+            startTimezone: 'Europe/Berlin',
+            endLocal: 'en-US',
+            endTimezone: 'America/New_York'
+        });
+    });
+
+    it('does not swap start and end in the error', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', NEW_YORK_EN);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', BERLIN_DE);
+        const error = catchError(() =>
+            ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)
+        );
+        expect(error).toMatchObject({
+            startLocal: 'en-US',
+            startTimezone: 'America/New_York',
+            endLocal: 'de-DE',
+            endTimezone: 'Europe/Berlin'
+        });
     });
 });
 

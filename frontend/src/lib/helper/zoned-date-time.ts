@@ -1,5 +1,7 @@
 import { DateTime } from 'luxon';
 
+import { MissmatchZonedDateTimeContextError } from '$bff/errors';
+
 export interface DateTimeContext {
     timeZone: string;
     locale: string;
@@ -295,10 +297,12 @@ export class ZonedDateTime<K extends DateTimeKind = DateTimeKind> {
             start.context.timeZone !== end.context.timeZone ||
             start.context.locale !== end.context.locale
         ) {
-            // TODO: replace with the logging service once it exposes a client-side log function.
-            console.log(
-                "ZONED_DATE_TIME: formatRange called with mismatched contexts - rendering with start's context",
-                { start: start.context, end: end.context }
+            throw new MissmatchZonedDateTimeContextError(
+                'ZONED_DATE_TIME: formatRange called with mismatched contexts',
+                start.context.locale,
+                start.context.timeZone,
+                end.context.locale,
+                end.context.timeZone
             );
         }
 

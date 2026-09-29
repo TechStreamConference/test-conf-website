@@ -6,27 +6,14 @@ export function isUnsignedInt(value: number): boolean {
     return Number.isInteger(value) && value >= 0;
 }
 
-/**
- * @brief Returns the value if it is an unsigned integer, otherwise the default value.
- * A number that is not an unsigned integer is logged.
- * @param value the value to check.
- * @param defaultValue the value returned for anything that is not an unsigned integer.
- * @returns the value or the default value.
- */
-export function unsignedIntOr(
-    value: number | undefined | null,
-    defaultValue?: number
-): number | undefined {
-    if (!isNumber(value)) {
-        return defaultValue;
-    }
+export function clampNumberToInt(
+    value: number,
+    min: number = Number.MIN_SAFE_INTEGER,
+    max: number = Number.MAX_SAFE_INTEGER
+): number {
+    value = Math.round(value);
+    min = Math.round(min);
+    max = Math.round(max);
 
-    if (!isUnsignedInt(value)) {
-        console.log(
-            `VALIDATOR: ${value.toString()} is not an unsigned int - using the default value`
-        );
-        return defaultValue;
-    }
-
-    return value;
+    return Math.min(Math.max(value, min), max);
 }
