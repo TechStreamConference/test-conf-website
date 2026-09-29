@@ -1,5 +1,6 @@
 from datetime import UTC
 from datetime import datetime
+from datetime import timedelta
 from typing import Final
 from typing import final
 from unittest.mock import Mock
@@ -35,12 +36,12 @@ def test_settings_build_oidc_and_database_urls() -> None:
         assert url.endswith(f"/{SETTINGS.database_name}")
 
 
-def test_utc_now_returns_naive_utc_timestamp() -> None:
-    before: Final = datetime.now(UTC).replace(tzinfo=None)
+def test_utc_now_returns_aware_utc_timestamp() -> None:
+    before: Final = datetime.now(UTC)
     result: Final = utc_now()
-    after: Final = datetime.now(UTC).replace(tzinfo=None)
+    after: Final = datetime.now(UTC)
 
-    assert result.tzinfo is None
+    assert result.utcoffset() == timedelta(0)
     assert before <= result <= after
 
 
