@@ -212,9 +212,6 @@ export function maxLengthSeverity(maxLength: number, value: string): MaxLengthSe
 /**
  * @brief The message to announce to assistive technology when `severity` is entered.
  *
- * Only meant to be read when `severity` actually changed, so that assistive technology
- * announces it once per threshold crossed instead of on every keystroke.
- *
  * @param severity the severity level that was just entered.
  * @param maxLength the max length of the input.
  * @param value the current value of the input.
