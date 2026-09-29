@@ -1,18 +1,18 @@
 <script lang="ts">
     import type { HTMLImgAttributes } from 'svelte/elements';
 
-    import { warnIfBothImageDimensionsSet } from '$lib/helper/runtime-checks';
-
     interface Props extends HTMLImgAttributes {
         src: string;
         alt: string;
         height?: string | undefined;
         width?: string | undefined;
     }
-    const { src, alt, height, width, ...rest }: Props = $props();
+    let { src, alt, height, width, ...rest }: Props = $props();
 
     $effect(() => {
-        warnIfBothImageDimensionsSet(height, width, src);
+        if (height !== undefined) {
+            width = undefined;
+        }
     });
 </script>
 

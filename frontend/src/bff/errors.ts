@@ -19,3 +19,28 @@ export class UndefinedDataError extends Error {
         this.name = 'UndefinedDataError';
     }
 }
+
+/**
+ * @brief Thrown when ZonedDates differ in context.
+ */
+export class MissmatchZonedDateTimeContextError extends Error {
+    startLocal: string;
+    startTimezone: string;
+    endLocal: string;
+    endTimezone: string;
+
+    constructor(
+        message: string,
+        startLocal: string,
+        startTimezone: string,
+        endLocal: string,
+        endTimezone: string
+    ) {
+        super(message);
+        this.name = 'MissmatchZonedDateTimeContextError';
+        this.startLocal = startLocal;
+        this.startTimezone = startTimezone;
+        this.endLocal = endLocal;
+        this.endTimezone = endTimezone;
+    }
+}
