@@ -37,15 +37,15 @@ export type EventResponseV1 = {
     /**
      * Available Languages
      */
-    available_languages: Array<string>;
+    availableLanguages: Array<string>;
     /**
      * Language Tag
      */
-    language_tag: string;
+    languageTag: string;
     /**
      * Is Language Fallback
      */
-    is_language_fallback: boolean;
+    isLanguageFallback: boolean;
     /**
      * Title
      */
@@ -57,23 +57,23 @@ export type EventResponseV1 = {
     /**
      * Presskit Url
      */
-    presskit_url: string | null;
+    presskitUrl: string | null;
     /**
      * Trailer Url
      */
-    trailer_url: string | null;
+    trailerUrl: string | null;
     /**
      * Trailer Poster Url
      */
-    trailer_poster_url: string | null;
+    trailerPosterUrl: string | null;
     /**
      * Trailer Subtitles Url
      */
-    trailer_subtitles_url: string | null;
+    trailerSubtitlesUrl: string | null;
     /**
      * Description Headline
      */
-    description_headline: string;
+    descriptionHeadline: string;
     /**
      * Description
      */
@@ -81,51 +81,51 @@ export type EventResponseV1 = {
     /**
      * Start Date
      */
-    start_date: string;
+    startDate: string;
     /**
      * End Date
      */
-    end_date: string;
+    endDate: string;
     /**
      * Discord Url
      */
-    discord_url: string | null;
+    discordUrl: string | null;
     /**
      * Twitch Url
      */
-    twitch_url: string | null;
+    twitchUrl: string | null;
     /**
      * Youtube Channel Url
      */
-    youtube_channel_url: string | null;
+    youtubeChannelUrl: string | null;
     /**
      * Call For Papers Start
      */
-    call_for_papers_start: string | null;
+    callForPapersStart: string | null;
     /**
      * Call For Papers End
      */
-    call_for_papers_end: string | null;
+    callForPapersEnd: string | null;
     /**
      * Speakers Visible From
      */
-    speakers_visible_from: string | null;
+    speakersVisibleFrom: string | null;
     /**
      * Sponsors Visible From
      */
-    sponsors_visible_from: string | null;
+    sponsorsVisibleFrom: string | null;
     /**
      * Media Partners Visible From
      */
-    media_partners_visible_from: string | null;
+    mediaPartnersVisibleFrom: string | null;
     /**
      * Team Members Visible From
      */
-    team_members_visible_from: string | null;
+    teamMembersVisibleFrom: string | null;
     /**
      * Schedule Visible From
      */
-    schedule_visible_from: string | null;
+    scheduleVisibleFrom: string | null;
 };
 
 /**
@@ -135,7 +135,7 @@ export type GlobalsResponseV1 = {
     /**
      * Footer Text
      */
-    footer_text: string;
+    footerText: string;
 };
 
 /**
@@ -215,7 +215,7 @@ export type LoginCallbackResponseV1 = {
     /**
      * Redirect Url
      */
-    redirect_url: string;
+    redirectUrl: string;
 };
 
 /**
