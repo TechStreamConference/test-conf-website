@@ -12,7 +12,7 @@ pytestmark: Final = [
     pytest.mark.usefixtures("migrate_and_seed_database"),
 ]
 
-_IMPRINT_PATH = Path(__file__).resolve().parents[2] / "backend" / "seed" / "data" / "imprint.md"
+_IMPRINT_PATH = Path(__file__).resolve().parents[2] / "backend" / "seed" / "data" / "imprint.de.md"
 
 
 @pytest.mark.asyncio

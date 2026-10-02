@@ -8,6 +8,7 @@ from backend.models.tables import StaticPageKind
 
 async def seed_prod(session: AsyncSession) -> None:
     session.add(Global(key=GlobalKey.FOOTER_TEXT, value="Footer"))
-    session.add(StaticPage(kind=StaticPageKind.IMPRINT, content="Imprint"))
+    session.add(StaticPage(kind=StaticPageKind.IMPRINT, language_tag="de", content="Impressum"))
+    session.add(StaticPage(kind=StaticPageKind.IMPRINT, language_tag="en", content="Imprint"))
 
     await session.commit()
