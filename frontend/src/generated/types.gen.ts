@@ -180,6 +180,18 @@ export type ImprintResponseV1 = {
      * Content
      */
     content: string;
+    /**
+     * Available Languages
+     */
+    availableLanguages: Array<string>;
+    /**
+     * Language Tag
+     */
+    languageTag: string;
+    /**
+     * Is Language Fallback
+     */
+    isLanguageFallback: boolean;
 };
 
 /**
@@ -573,9 +585,14 @@ export type GetGlobalsV1Response = GetGlobalsV1Responses[keyof GetGlobalsV1Respo
 
 export type GetImprintV1Data = {
     body?: never;
-    path?: never;
+    path: {
+        /**
+         * Language Tag
+         */
+        language_tag: string;
+    };
     query?: never;
-    url: '/v1/imprint';
+    url: '/v1/{language_tag}/imprint';
 };
 
 export type GetImprintV1Errors = {
@@ -583,6 +600,10 @@ export type GetImprintV1Errors = {
      * Not Found
      */
     404: ImprintPageContentNotFoundResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
 };
 
 export type GetImprintV1Error = GetImprintV1Errors[keyof GetImprintV1Errors];
