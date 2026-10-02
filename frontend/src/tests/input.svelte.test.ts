@@ -109,7 +109,7 @@ describe('character limit announcement text', () => {
 
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Half of the character limit used, 5 characters remaining.');
+            .toHaveTextContent('Half of the character limit used.');
     });
 
     it('announces the warning message once the warning threshold is crossed (InputLine)', async () => {
@@ -125,7 +125,7 @@ describe('character limit announcement text', () => {
 
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Character limit warning, 2 characters remaining.');
+            .toHaveTextContent('Character limit warning.');
     });
 
     it('announces the critical message once the critical threshold is crossed (InputLine)', async () => {
@@ -141,7 +141,7 @@ describe('character limit announcement text', () => {
 
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Character limit critical, 1 characters remaining.');
+            .toHaveTextContent('Character limit critical.');
     });
 
     it('announces the limit-reached message once the max length is reached (InputLine)', async () => {
@@ -172,7 +172,7 @@ describe('character limit announcement text', () => {
 
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Half of the character limit used, 5 characters remaining.');
+            .toHaveTextContent('Half of the character limit used.');
     });
 
     it('announces the warning message once the warning threshold is crossed (InputArea)', async () => {
@@ -187,7 +187,7 @@ describe('character limit announcement text', () => {
 
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Character limit warning, 2 characters remaining.');
+            .toHaveTextContent('Character limit warning.');
     });
 
     it('announces the critical message once the critical threshold is crossed (InputArea)', async () => {
@@ -202,7 +202,7 @@ describe('character limit announcement text', () => {
 
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Character limit critical, 1 characters remaining.');
+            .toHaveTextContent('Character limit critical.');
     });
 
     it('announces the limit-reached message once the max length is reached (InputArea)', async () => {
@@ -269,7 +269,7 @@ describe.each(COUNTER_KINDS)('character limit announcement frequency (%s)', (kin
         const status = screen.getByRole('status').element() as HTMLElement;
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Half of the character limit used, 5 characters remaining.');
+            .toHaveTextContent('Half of the character limit used.');
         const mutationCount = countMutations(status);
 
         await input.click();
@@ -279,7 +279,7 @@ describe.each(COUNTER_KINDS)('character limit announcement frequency (%s)', (kin
         expect(mutationCount()).toBe(0);
         await expect
             .element(screen.getByRole('status'))
-            .toHaveTextContent('Half of the character limit used, 5 characters remaining.');
+            .toHaveTextContent('Half of the character limit used.');
     });
 
     it('changes the announcement only when a severity threshold is crossed while deleting', async () => {

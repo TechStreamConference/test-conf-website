@@ -46,7 +46,7 @@
         if (severity === announcedSeverity) return;
 
         announcedSeverity = severity;
-        announcement = maxLengthAnnouncement(severity, validMaxLength, value);
+        announcement = maxLengthAnnouncement(severity);
     });
 </script>
 

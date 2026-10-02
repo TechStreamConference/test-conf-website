@@ -212,26 +212,22 @@ export function maxLengthSeverity(maxLength: number, value: string): MaxLengthSe
 /**
  * @brief The message to announce to assistive technology when `severity` is entered.
  *
+ * The message deliberately contains no number of remaining characters: it is only announced when
+ * the severity changes, so such a number would be outdated after the next keystroke.
+ *
  * @param severity the severity level that was just entered.
- * @param maxLength the max length of the input.
- * @param value the current value of the input.
  * @returns the announcement text, or an empty string once back to normal.
  */
-export function maxLengthAnnouncement(
-    severity: MaxLengthSeverity,
-    maxLength: number,
-    value: string
-): string {
-    const remaining = maxLength - value.length;
+export function maxLengthAnnouncement(severity: MaxLengthSeverity): string {
     switch (severity) {
         case MaxLengthSeverity.Reached:
             return 'Character limit reached.';
         case MaxLengthSeverity.Critical:
-            return `Character limit critical, ${remaining.toString()} characters remaining.`;
+            return 'Character limit critical.';
         case MaxLengthSeverity.Warning:
-            return `Character limit warning, ${remaining.toString()} characters remaining.`;
+            return 'Character limit warning.';
         case MaxLengthSeverity.Half:
-            return `Half of the character limit used, ${remaining.toString()} characters remaining.`;
+            return 'Half of the character limit used.';
         case MaxLengthSeverity.Normal:
             return '';
     }
