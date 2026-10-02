@@ -183,3 +183,52 @@ export function isMaxLengthOrange(maxLength: number, value: string): boolean {
 export function isMaxLengthRed(maxLength: number, value: string): boolean {
     return maxLength * MAX_LENGTH_RED_FACTOR <= value.length;
 }
+
+/**
+ * @brief The severity level of the max length warning for a given value.
+ */
+export enum MaxLengthSeverity {
+    Normal = 'normal',
+    Half = 'half',
+    Warning = 'warning',
+    Critical = 'critical',
+    Reached = 'reached'
+}
+
+/**
+ * @brief Determines the highest severity threshold the value has reached.
+ * @param maxLength the max length of the input.
+ * @param value the current value of the input.
+ * @returns the current severity level.
+ */
+export function maxLengthSeverity(maxLength: number, value: string): MaxLengthSeverity {
+    if (value.length >= maxLength) return MaxLengthSeverity.Reached;
+    if (isMaxLengthRed(maxLength, value)) return MaxLengthSeverity.Critical;
+    if (isMaxLengthOrange(maxLength, value)) return MaxLengthSeverity.Warning;
+    if (isMaxLengthVisible(maxLength, value)) return MaxLengthSeverity.Half;
+    return MaxLengthSeverity.Normal;
+}
+
+/**
+ * @brief The message to announce to assistive technology when `severity` is entered.
+ *
+ * The message deliberately contains no number of remaining characters: it is only announced when
+ * the severity changes, so such a number would be outdated after the next keystroke.
+ *
+ * @param severity the severity level that was just entered.
+ * @returns the announcement text, or an empty string once back to normal.
+ */
+export function maxLengthAnnouncement(severity: MaxLengthSeverity): string {
+    switch (severity) {
+        case MaxLengthSeverity.Reached:
+            return 'Character limit reached.';
+        case MaxLengthSeverity.Critical:
+            return 'Character limit critical.';
+        case MaxLengthSeverity.Warning:
+            return 'Character limit warning.';
+        case MaxLengthSeverity.Half:
+            return 'Half of the character limit used.';
+        case MaxLengthSeverity.Normal:
+            return '';
+    }
+}

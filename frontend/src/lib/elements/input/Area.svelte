@@ -6,6 +6,9 @@
     import { isMaxLengthOrange } from '$lib/helper/input';
     import { isMaxLengthRed } from '$lib/helper/input';
     import { isMaxLengthVisible } from '$lib/helper/input';
+    import { maxLengthAnnouncement } from '$lib/helper/input';
+    import { maxLengthSeverity } from '$lib/helper/input';
+    import { MaxLengthSeverity } from '$lib/helper/input';
 
     interface Props
         extends
@@ -30,6 +33,28 @@
     const validMaxLength: number | undefined = $derived(
         maxlength === undefined ? undefined : clampNumberToInt(maxlength)
     );
+
+    /**
+     * @brief The severity of the current value, or `Normal` if there is no max length.
+     * @returns the current severity level.
+     */
+    function currentSeverity(): MaxLengthSeverity {
+        // Returning `Normal` is fine without a max length: the status region is not rendered then.
+        if (validMaxLength === undefined) return MaxLengthSeverity.Normal;
+        return maxLengthSeverity(validMaxLength, value);
+    }
+
+    // Initialized from the start value, so that an already filled input is not announced right after mounting.
+    let announcedSeverity: MaxLengthSeverity = $state(currentSeverity());
+    let announcement: string = $state(maxLengthAnnouncement(currentSeverity()));
+
+    $effect(() => {
+        const severity = currentSeverity();
+        if (severity === announcedSeverity) return;
+
+        announcedSeverity = severity;
+        announcement = maxLengthAnnouncement(severity);
+    });
 </script>
 
 <div>
@@ -45,6 +70,7 @@
         >
             {value.length.toString()} / {validMaxLength.toString()}
         </p>
+        <span role="status" aria-atomic="true" class:visually-hidden={true}>{announcement}</span>
     {/if}
 </div>
 
