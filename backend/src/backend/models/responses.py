@@ -3,10 +3,15 @@ from datetime import datetime
 from typing import Literal
 from typing import Optional
 from typing import final
+from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import model_validator
 from pydantic.alias_generators import to_camel
+
+from backend.models.preference_types import Bcp47Locale
+from backend.models.preference_types import IanaTimezone
 
 # class name should include the api version since the typescript generator uses the same name.
 # This could lead to confusion within the frontend once a second api version gets introduced.
@@ -118,7 +123,44 @@ class NotAuthenticatedResponseV1(ApiResponseModel):
 
 
 @final
+class RegionalSettingsV1(ApiResponseModel):
+    timezone: IanaTimezone
+    locale: Bcp47Locale
+
+
+@final
+class RegionalSettingsChangeV1(ApiResponseModel):
+    # At least one of `timezone`/`locale` is non-null: a null field means
+    # there is no pending decision for that setting.
+    id: UUID
+    timezone: Optional[IanaTimezone]
+    locale: Optional[Bcp47Locale]
+
+    @model_validator(mode="after")
+    def _require_at_least_one_change(self) -> "RegionalSettingsChangeV1":
+        if self.timezone is None and self.locale is None:
+            raise ValueError("At least one of `timezone` or `locale` must have changed.")
+        return self
+
+
+@final
 class MeResponseV1(ApiResponseModel):
     id: int
     email: str
     username: str
+    regional_settings: Optional[RegionalSettingsV1]
+    regional_settings_change: Optional[RegionalSettingsChangeV1]
+
+
+@final
+class UserPreferencesResponseV1(ApiResponseModel):
+    timezone: IanaTimezone
+    locale: Bcp47Locale
+
+
+@final
+class RegionalSettingsChangeConflictResponseV1(ApiResponseModel):
+    # Deliberately generic: an unknown, superseded, cross-session, or
+    # already-decided suggestion ID must not be distinguishable from the
+    # outside.
+    detail: Literal["Invalid or outdated regional settings change."] = "Invalid or outdated regional settings change."

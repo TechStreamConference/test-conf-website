@@ -98,6 +98,8 @@ async def test_find_or_create_user_creates_user_and_account() -> None:
 
     assert result == 42
     assert db.add.call_count == 2
+    user: Final = db.add.call_args_list[0].args[0]
+    assert isinstance(user, User)
     account: Final = db.add.call_args_list[1].args[0]
     assert isinstance(account, Account)
     assert account.user_id == 42
@@ -262,7 +264,8 @@ async def test_get_current_user_returns_account_without_refresh(monkeypatch: pyt
 
     result: Final = await get_current_user(response, db, "session-token")  # type: ignore[arg-type]
 
-    assert result is account
+    assert result.account is account
+    assert result.session is user_session
     db.commit.assert_not_awaited()
     assert "set-cookie" not in response.headers
 
@@ -287,7 +290,8 @@ async def test_get_current_user_refreshes_stale_session(monkeypatch: pytest.Monk
 
     result: Final = await get_current_user(response, db, "session-token")  # type: ignore[arg-type]
 
-    assert result is account
+    assert result.account is account
+    assert result.session is user_session
     assert user_session.last_seen_at == now
     assert user_session.expires_at == now + timedelta(days=session_module.SETTINGS.session_idle_timeout_days)
     db.add.assert_called_once_with(user_session)

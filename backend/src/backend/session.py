@@ -1,7 +1,9 @@
 from datetime import timedelta
 from typing import Annotated
 from typing import Final
+from typing import NamedTuple
 from typing import Optional
+from typing import final
 
 from fastapi import Cookie
 from fastapi import Depends
@@ -115,11 +117,22 @@ async def create_session(
     _set_session_cookie(response, token, max_age=idle_timeout)
 
 
+@final
+class AuthenticatedSession(NamedTuple):
+    """The account and the specific application session it authenticated
+    with. Session-scoped features (regional-settings reports and
+    suggestions) need the session identity; most routes only need `account`.
+    """
+
+    account: Account
+    session: UserSession
+
+
 async def get_current_user(
     response: Response,
     db: Annotated[AsyncSession, Depends(get_session)],
     session_token: Annotated[Optional[str], Cookie(alias=SESSION_COOKIE_NAME)] = None,
-) -> Account:
+) -> AuthenticatedSession:
     if session_token is None:
         raise create_http_exception(status.HTTP_401_UNAUTHORIZED, NotAuthenticatedResponseV1())
 
@@ -153,4 +166,4 @@ async def get_current_user(
         await db.commit()
         _set_session_cookie(response, session_token, max_age=idle_timeout)
 
-    return account
+    return AuthenticatedSession(account=account, session=user_session)
