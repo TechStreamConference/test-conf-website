@@ -158,6 +158,7 @@ class StaticPage(SQLModel, table=True):
     __tablename__ = "static_pages"  # type: ignore[reportAssignmentType]
 
     kind: StaticPageKind = Field(primary_key=True)
+    language_tag: str = Field(primary_key=True)
     content: str
 
 
