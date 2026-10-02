@@ -282,6 +282,29 @@ describe.each(COUNTER_KINDS)('character limit announcement frequency (%s)', (kin
             .toHaveTextContent('Half of the character limit used.');
     });
 
+    it('does not change the announcement after mounting with an already filled value', async () => {
+        // Observes the whole body, because the status region does not exist before rendering.
+        const records: MutationRecord[] = [];
+        const observer = new MutationObserver((mutations) => records.push(...mutations));
+        observer.observe(document.body, { characterData: true, childList: true, subtree: true });
+
+        const screen = await renderCounter(kind, FULL_TEXT);
+        const status = screen.getByRole('status');
+
+        // Already present when the region is inserted, so a screen reader does not announce it.
+        await expect.element(status).toHaveTextContent('Character limit reached.');
+        await tick();
+        records.push(...observer.takeRecords());
+        observer.disconnect();
+
+        const statusElement = status.element();
+        const statusMutations = records.filter(
+            (record) =>
+                record.target === statusElement || record.target.parentNode === statusElement
+        );
+        expect(statusMutations).toHaveLength(0);
+    });
+
     it('changes the announcement only when a severity threshold is crossed while deleting', async () => {
         const screen = await renderCounter(kind, FULL_TEXT);
         const input = screen.getByLabelText(labelOf(kind));

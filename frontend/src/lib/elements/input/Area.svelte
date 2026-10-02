@@ -34,15 +34,22 @@
         maxlength === undefined ? undefined : clampNumberToInt(maxlength)
     );
 
-    // Only updated when the severity threshold actually changes, so that assistive
-    // technology announces it once per threshold crossed instead of on every keystroke.
-    let announcedSeverity: MaxLengthSeverity = $state(MaxLengthSeverity.Normal);
-    let announcement: string = $state('');
+    /**
+     * @brief The severity of the current value, or `Normal` if there is no max length.
+     * @returns the current severity level.
+     */
+    function currentSeverity(): MaxLengthSeverity {
+        // Returning `Normal` is fine without a max length: the status region is not rendered then.
+        if (validMaxLength === undefined) return MaxLengthSeverity.Normal;
+        return maxLengthSeverity(validMaxLength, value);
+    }
+
+    // Initialized from the start value, so that an already filled input is not announced right after mounting.
+    let announcedSeverity: MaxLengthSeverity = $state(currentSeverity());
+    let announcement: string = $state(maxLengthAnnouncement(currentSeverity()));
 
     $effect(() => {
-        if (validMaxLength === undefined) return;
-
-        const severity = maxLengthSeverity(validMaxLength, value);
+        const severity = currentSeverity();
         if (severity === announcedSeverity) return;
 
         announcedSeverity = severity;
