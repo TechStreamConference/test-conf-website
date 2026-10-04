@@ -1,4 +1,6 @@
+import inspect
 import re
+import sys
 import typing
 from pathlib import Path
 from typing import Final
@@ -7,11 +9,16 @@ import pytest
 from fastapi import APIRouter
 from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
+from pydantic import BaseModel
 
 from backend.config import Settings
+from backend.models import responses
+from backend.models.responses import ApiResponseModel
 from backend.routes import v1_api
 
 _ENV_EXAMPLE_FILE = Path(__file__).resolve().parents[3] / ".env.example"
+
+_CAMEL_CASE_PATTERN = re.compile(r"[a-z][a-zA-Z0-9]*")
 
 # Framework response classes carry no generated client model, so the versioning
 # rule cannot apply to them. Matched by identity so that a same-named local class
@@ -29,6 +36,15 @@ def _collect_routes(router: APIRouter) -> list[APIRoute]:
         elif hasattr(item, "include_context"):
             result.extend(_collect_routes(item.include_context.included_router))  # type: ignore[unknownMemberType, unknownArgumentType]
     return result
+
+
+def _response_models() -> list[type]:
+    module: Final = sys.modules[responses.__name__]
+    return [
+        obj
+        for _, obj in inspect.getmembers(module, inspect.isclass)
+        if obj is not ApiResponseModel and obj.__module__ == module.__name__
+    ]
 
 
 @pytest.fixture(scope="module")
@@ -69,6 +85,35 @@ def test_all_response_model_types_are_versioned(api_routes: list[APIRoute]) -> N
         type_name = getattr(model_type, "__name__", None) or str(model_type)
         assert re.search(r"V\d+$", type_name) is not None, (
             f"Response model type '{type_name}' on endpoint '{path}' does not end with 'V<digits>'"
+        )
+
+
+@pytest.mark.parametrize("model", _response_models(), ids=lambda m: m.__name__)
+def test_response_model_names_are_versioned(model: type) -> None:
+    assert re.search(r"V\d+$", model.__name__) is not None, (
+        f"Response model type '{model.__name__}' does not end with 'V<digits>'"
+    )
+
+
+@pytest.mark.parametrize("model", _response_models(), ids=lambda m: m.__name__)
+def test_response_model_inherits_from_api_response_model(model: type) -> None:
+    assert issubclass(model, ApiResponseModel), f"{model.__name__} must inherit from ApiResponseModel"
+
+
+@pytest.mark.parametrize("model", _response_models(), ids=lambda m: m.__name__)
+def test_response_model_field_names_are_camel_case(model: type) -> None:
+    assert issubclass(model, BaseModel), f"{model.__name__} must be a Pydantic model"
+
+    # Test the generator with a sample field name.
+    generator: Final = model.model_config.get("alias_generator")
+    assert callable(generator)
+    assert generator("some_field_name") == "someFieldName"
+
+    # Check the actual field names.
+    schema: Final = model.model_json_schema(mode="serialization")
+    for field_name in schema.get("properties", {}):
+        assert _CAMEL_CASE_PATTERN.fullmatch(field_name) is not None, (
+            f"Field '{field_name}' of {model.__name__} is not camelCase"
         )
 
 
