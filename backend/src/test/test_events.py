@@ -85,9 +85,9 @@ async def test_current_event_returns_spotlighted_event_and_requested_translation
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
-    assert result.available_languages == ["de", "en"]
-    assert result.language_tag == "en"
-    assert result.is_language_fallback is False
+    assert result.language_details.available_languages == ["de", "en"]
+    assert result.language_details.language_tag == "en"
+    assert result.language_details.is_language_fallback is False
     session.execute.assert_awaited_once()
 
 
@@ -116,9 +116,9 @@ async def test_event_returns_requested_numbered_event_and_translation() -> None:
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
-    assert result.available_languages == ["de", "en"]
-    assert result.language_tag == "en"
-    assert result.is_language_fallback is False
+    assert result.language_details.available_languages == ["de", "en"]
+    assert result.language_details.language_tag == "en"
+    assert result.language_details.is_language_fallback is False
 
 
 @pytest.mark.asyncio
@@ -134,6 +134,9 @@ async def test_event_returns_before_processing_later_events() -> None:
 
     assert result.id == 1
     assert result.title == "Title 1 (en)"
+    assert result.language_details.available_languages == ["en"]
+    assert result.language_details.language_tag == "en"
+    assert result.language_details.is_language_fallback is False
 
 
 @pytest.mark.asyncio
@@ -146,8 +149,8 @@ async def test_event_latest_falls_back_to_english() -> None:
 
     result: Final = await get_event_by_year_and_sequence_number(session, "fr", 2024, "latest")
 
-    assert result.language_tag == "en"
-    assert result.is_language_fallback is True
+    assert result.language_details.language_tag == "en"
+    assert result.language_details.is_language_fallback is True
 
 
 @pytest.mark.asyncio
@@ -157,8 +160,8 @@ async def test_event_falls_back_to_first_available_translation() -> None:
 
     result: Final = await get_event_by_year_and_sequence_number(session, "fr", 2024, 1)
 
-    assert result.language_tag == "de"
-    assert result.is_language_fallback is True
+    assert result.language_details.language_tag == "de"
+    assert result.language_details.is_language_fallback is True
 
 
 @pytest.mark.asyncio

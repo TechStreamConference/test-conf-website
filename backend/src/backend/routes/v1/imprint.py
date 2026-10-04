@@ -12,6 +12,7 @@ from sqlmodel import select
 from backend.database import get_session
 from backend.models.responses import ImprintPageContentNotFoundResponseV1
 from backend.models.responses import ImprintResponseV1
+from backend.models.responses import LanguageDetailsV1
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
 from backend.utils import create_http_exception
@@ -55,7 +56,9 @@ async def get_imprint(language_tag: str, session: Annotated[AsyncSession, Depend
 
     return ImprintResponseV1(
         content=imprint_page.content,
-        available_languages=list(pages_by_language_tag),
-        language_tag=imprint_page.language_tag,
-        is_language_fallback=is_language_fallback,
+        language_details=LanguageDetailsV1(
+            available_languages=list(pages_by_language_tag),
+            language_tag=imprint_page.language_tag,
+            is_language_fallback=is_language_fallback,
+        ),
     )
