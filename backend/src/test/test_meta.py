@@ -1,4 +1,6 @@
+import inspect
 import re
+import sys
 import typing
 from pathlib import Path
 from typing import Final
@@ -9,6 +11,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.routing import APIRoute
 
 from backend.config import Settings
+from backend.models import responses
+from backend.models.responses import ApiResponseModel
 from backend.routes import v1_api
 
 _ENV_EXAMPLE_FILE = Path(__file__).resolve().parents[3] / ".env.example"
@@ -29,6 +33,15 @@ def _collect_routes(router: APIRouter) -> list[APIRoute]:
         elif hasattr(item, "include_context"):
             result.extend(_collect_routes(item.include_context.included_router))  # type: ignore[unknownMemberType, unknownArgumentType]
     return result
+
+
+def _response_models() -> list[type]:
+    module: Final = sys.modules[responses.__name__]
+    return [
+        obj
+        for _, obj in inspect.getmembers(module, inspect.isclass)
+        if obj is not ApiResponseModel and obj.__module__ == module.__name__
+    ]
 
 
 @pytest.fixture(scope="module")
@@ -70,6 +83,15 @@ def test_all_response_model_types_are_versioned(api_routes: list[APIRoute]) -> N
         assert re.search(r"V\d+$", type_name) is not None, (
             f"Response model type '{type_name}' on endpoint '{path}' does not end with 'V<digits>'"
         )
+
+
+@pytest.mark.parametrize("model", _response_models(), ids=lambda m: m.__name__)
+def test_response_model_uses_camel_case(model: type) -> None:
+    assert issubclass(model, ApiResponseModel), f"{model.__name__} must inherit from ApiResponseModel"
+
+    generator: Final = model.model_config.get("alias_generator")
+    assert callable(generator)
+    assert generator("some_field_name") == "someFieldName"
 
 
 def test_env_example_satisfies_settings(monkeypatch: pytest.MonkeyPatch) -> None:
