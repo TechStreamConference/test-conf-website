@@ -89,6 +89,13 @@ def test_all_response_model_types_are_versioned(api_routes: list[APIRoute]) -> N
 
 
 @pytest.mark.parametrize("model", _response_models(), ids=lambda m: m.__name__)
+def test_response_model_names_are_versioned(model: type) -> None:
+    assert re.search(r"V\d+$", model.__name__) is not None, (
+        f"Response model type '{model.__name__}' does not end with 'V<digits>'"
+    )
+
+
+@pytest.mark.parametrize("model", _response_models(), ids=lambda m: m.__name__)
 def test_response_model_inherits_from_api_response_model(model: type) -> None:
     assert issubclass(model, ApiResponseModel), f"{model.__name__} must inherit from ApiResponseModel"
 
