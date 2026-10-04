@@ -2,6 +2,7 @@ import inspect
 import re
 import sys
 import typing
+from collections import defaultdict
 from pathlib import Path
 from typing import Final
 
@@ -61,6 +62,20 @@ def test_all_endpoints_have_versioned_operation_id(api_routes: list[APIRoute]) -
         assert re.search(r"v\d+$", route.operation_id) is not None, (
             f"Endpoint '{route.path}' has `operation_id` '{route.operation_id}' which does not end with 'v<digits>'"
         )
+
+
+def test_operation_ids_are_unique(api_routes: list[APIRoute]) -> None:
+    # The operation ID determines the function name in the auto-generated
+    # frontend API client, so duplicates would produce clashing client functions.
+    assert len(api_routes) > 0
+
+    paths_by_operation_id: Final[dict[str, list[str]]] = defaultdict(list)
+    for route in api_routes:
+        assert route.operation_id is not None, f"Endpoint '{route.path}' has no operation_id defined"
+        paths_by_operation_id[route.operation_id].append(route.path)
+
+    duplicates: Final = {operation_id: paths for operation_id, paths in paths_by_operation_id.items() if len(paths) > 1}
+    assert not duplicates, f"Operation IDs are used by multiple endpoints: {duplicates}"
 
 
 def test_all_response_model_types_are_versioned(api_routes: list[APIRoute]) -> None:
