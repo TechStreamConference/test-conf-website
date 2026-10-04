@@ -17,6 +17,7 @@ from backend.database import get_session
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
+from backend.models.responses import LanguageDetailsV1
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.utils import create_http_exception
@@ -162,9 +163,11 @@ def _event_response_v1_from_rows(
 
     return EventResponseV1(
         id=event.id,
-        available_languages=list(translations_by_language_tag),
-        language_tag=translation.language_tag,
-        is_language_fallback=is_language_fallback,
+        language_details=LanguageDetailsV1(
+            available_languages=list(translations_by_language_tag),
+            language_tag=translation.language_tag,
+            is_language_fallback=is_language_fallback,
+        ),
         title=translation.title,
         subtitle=translation.subtitle,
         presskit_url=translation.presskit_url,

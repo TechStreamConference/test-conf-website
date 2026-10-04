@@ -34,6 +34,13 @@ class ApiResponseModel(BaseModel):
 
 
 @final
+class LanguageDetailsV1(ApiResponseModel):
+    available_languages: list[str]
+    language_tag: str
+    is_language_fallback: bool
+
+
+@final
 class GlobalsResponseV1(ApiResponseModel):
     footer_text: str
 
@@ -41,9 +48,7 @@ class GlobalsResponseV1(ApiResponseModel):
 @final
 class ImprintResponseV1(ApiResponseModel):
     content: str
-    available_languages: list[str]
-    language_tag: str
-    is_language_fallback: bool
+    language_details: LanguageDetailsV1
 
 
 @final
@@ -54,9 +59,7 @@ class ImprintPageContentNotFoundResponseV1(ApiResponseModel):
 @final
 class EventResponseV1(ApiResponseModel):
     id: int
-    available_languages: list[str]
-    language_tag: str
-    is_language_fallback: bool
+    language_details: LanguageDetailsV1
     title: str
     subtitle: str
     presskit_url: Optional[str]
