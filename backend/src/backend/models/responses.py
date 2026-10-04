@@ -41,6 +41,9 @@ class GlobalsResponseV1(ApiResponseModel):
 @final
 class ImprintResponseV1(ApiResponseModel):
     content: str
+    available_languages: list[str]
+    language_tag: str
+    is_language_fallback: bool
 
 
 @final

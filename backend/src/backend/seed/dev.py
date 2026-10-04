@@ -91,12 +91,14 @@ def _seed_globals_table(session: AsyncSession) -> None:
 
 
 def _seed_static_pages_table(session: AsyncSession) -> None:
-    for kind, content_file in {
-        StaticPageKind.IMPRINT: _DATA_PATH / "imprint.md",
+    for (kind, language), content_file in {
+        (StaticPageKind.IMPRINT, Language.get("de")): _DATA_PATH / "imprint.de.md",
+        (StaticPageKind.IMPRINT, Language.get("en")): _DATA_PATH / "imprint.en.md",
     }.items():
         session.add(
             StaticPage(
                 kind=kind,
+                language_tag=str(language),
                 content=content_file.read_text(
                     encoding="utf-8",
                 ),
