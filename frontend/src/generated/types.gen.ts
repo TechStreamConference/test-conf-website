@@ -37,17 +37,9 @@ export type EventResponseV1 = {
      */
     id: number;
     /**
-     * Available Languages
+     * Language Details
      */
-    availableLanguages: Array<string>;
-    /**
-     * Language Tag
-     */
-    languageTag: string;
-    /**
-     * Is Language Fallback
-     */
-    isLanguageFallback: boolean;
+    languageDetails: LanguageDetailsV1;
     /**
      * Title
      */
@@ -181,17 +173,9 @@ export type ImprintResponseV1 = {
      */
     content: string;
     /**
-     * Available Languages
+     * Language Details
      */
-    availableLanguages: Array<string>;
-    /**
-     * Language Tag
-     */
-    languageTag: string;
-    /**
-     * Is Language Fallback
-     */
-    isLanguageFallback: boolean;
+    languageDetails: LanguageDetailsV1;
 };
 
 /**
@@ -222,6 +206,24 @@ export type InvalidSequenceNumberResponseV1 = {
      * Detail
      */
     detail?: 'Invalid sequence number.';
+};
+
+/**
+ * LanguageDetailsV1
+ */
+export type LanguageDetailsV1 = {
+    /**
+     * Available Languages
+     */
+    availableLanguages: Array<string>;
+    /**
+     * Language Tag
+     */
+    languageTag: string;
+    /**
+     * Is Language Fallback
+     */
+    isLanguageFallback: boolean;
 };
 
 /**
