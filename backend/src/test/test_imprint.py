@@ -33,9 +33,9 @@ async def test_imprint_returns_requested_language() -> None:
 
     assert isinstance(result, ImprintResponseV1)
     assert result.content == "Imprint (de)"
-    assert result.available_languages == ["de", "en"]
-    assert result.language_tag == "de"
-    assert result.is_language_fallback is False
+    assert result.language_details.available_languages == ["de", "en"]
+    assert result.language_details.language_tag == "de"
+    assert result.language_details.is_language_fallback is False
 
 
 @pytest.mark.asyncio
@@ -45,9 +45,9 @@ async def test_imprint_falls_back_to_english_when_requested_language_is_missing(
     result: Final = await get_imprint("fr", session)
 
     assert result.content == "Imprint (en)"
-    assert result.available_languages == ["de", "en", "es"]
-    assert result.language_tag == "en"
-    assert result.is_language_fallback is True
+    assert result.language_details.available_languages == ["de", "en", "es"]
+    assert result.language_details.language_tag == "en"
+    assert result.language_details.is_language_fallback is True
 
 
 @pytest.mark.asyncio
@@ -57,9 +57,9 @@ async def test_imprint_falls_back_to_first_language_when_english_is_missing() ->
     result: Final = await get_imprint("fr", session)
 
     assert result.content == "Imprint (de)"
-    assert result.available_languages == ["de", "es"]
-    assert result.language_tag == "de"
-    assert result.is_language_fallback is True
+    assert result.language_details.available_languages == ["de", "es"]
+    assert result.language_details.language_tag == "de"
+    assert result.language_details.is_language_fallback is True
 
 
 @pytest.mark.asyncio

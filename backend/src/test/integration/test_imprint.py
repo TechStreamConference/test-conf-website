@@ -23,9 +23,9 @@ async def test_imprint_route_returns_requested_language(language_tag: str) -> No
 
     assert response.status_code == 200
     assert imprint.content == (_DATA_PATH / f"imprint.{language_tag}.md").read_text(encoding="utf-8")
-    assert imprint.available_languages == ["de", "en"]
-    assert imprint.language_tag == language_tag
-    assert imprint.is_language_fallback is False
+    assert imprint.language_details.available_languages == ["de", "en"]
+    assert imprint.language_details.language_tag == language_tag
+    assert imprint.language_details.is_language_fallback is False
 
 
 @pytest.mark.asyncio
@@ -34,6 +34,6 @@ async def test_imprint_route_falls_back_to_english() -> None:
     imprint: Final = ImprintResponseV1.model_validate(response.json())
 
     assert imprint.content == (_DATA_PATH / "imprint.en.md").read_text(encoding="utf-8")
-    assert imprint.available_languages == ["de", "en"]
-    assert imprint.language_tag == "en"
-    assert imprint.is_language_fallback is True
+    assert imprint.language_details.available_languages == ["de", "en"]
+    assert imprint.language_details.language_tag == "en"
+    assert imprint.language_details.is_language_fallback is True
