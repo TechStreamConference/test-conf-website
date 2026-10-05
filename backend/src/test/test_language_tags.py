@@ -8,6 +8,7 @@ from pydantic import TypeAdapter
 from pydantic import ValidationError
 
 from backend.language_tags import Bcp47Language
+from backend.language_tags import Bcp47LanguageTag
 from backend.language_tags import is_valid_bcp_47_tag
 from backend.language_tags import parse_language
 
@@ -85,3 +86,17 @@ def test_bcp_47_language_is_a_string_in_the_json_schema(mode: Literal["validatio
 
 def test_optional_bcp_47_language_accepts_none() -> None:
     assert TypeAdapter[Optional[Bcp47Language]](Optional[Bcp47Language]).validate_python(None) is None
+
+
+_TAG_ADAPTER = TypeAdapter[Bcp47LanguageTag](Bcp47LanguageTag)
+
+
+def test_bcp_47_language_tag_keeps_the_original_spelling() -> None:
+    assert _TAG_ADAPTER.validate_python("en-us") == "en-us"
+    assert _TAG_ADAPTER.validate_python("iw") == "iw"
+
+
+@pytest.mark.parametrize("value", ["en_US", "abc-123", ""])
+def test_bcp_47_language_tag_rejects_invalid_tags(value: str) -> None:
+    with pytest.raises(ValidationError):
+        _ = _TAG_ADAPTER.validate_python(value)

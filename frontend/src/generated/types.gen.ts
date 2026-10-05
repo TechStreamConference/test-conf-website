@@ -8,7 +8,29 @@ export type ClientOptions = {
 
 export type Bcp47Language = string;
 
+export type Bcp47LanguageTag = string;
+
 export type Bcp47Locale = string;
+
+/**
+ * DisplayLanguageResponseV1
+ *
+ * Like `LanguageDetailsV1`, but the tags are spelled exactly as the client passed them as supported languages.
+ */
+export type DisplayLanguageResponseV1 = {
+    /**
+     * Available Languages
+     */
+    availableLanguages: Array<Bcp47LanguageTag>;
+    /**
+     * Language Tag
+     */
+    languageTag: Bcp47LanguageTag;
+    /**
+     * Is Language Fallback
+     */
+    isLanguageFallback: boolean;
+};
 
 /**
  * EmailNotVerifiedResponseV1
@@ -712,7 +734,7 @@ export type GetDisplayLanguageV1Data = {
         /**
          * Supported Language
          */
-        supported_language?: Array<Bcp47Language> | null;
+        supported_language?: Array<Bcp47LanguageTag> | null;
     };
     url: '/v1/display-language';
 };
@@ -738,7 +760,7 @@ export type GetDisplayLanguageV1Responses = {
     /**
      * Successful Response
      */
-    200: LanguageDetailsV1;
+    200: DisplayLanguageResponseV1;
 };
 
 export type GetDisplayLanguageV1Response = GetDisplayLanguageV1Responses[keyof GetDisplayLanguageV1Responses];

@@ -9,6 +9,7 @@ from typing import Annotated
 
 from langcodes import Language
 from langcodes import tag_is_valid
+from pydantic import AfterValidator
 from pydantic import PlainSerializer
 from pydantic import PlainValidator
 
@@ -53,3 +54,13 @@ type Bcp47Language = Annotated[
     PlainValidator(_validate_language, json_schema_input_type=str),
     PlainSerializer(_serialize_language, return_type=str),
 ]
+
+
+def _validate_language_tag(value: str) -> str:
+    if not is_valid_bcp_47_tag(value):
+        raise ValueError("Language must be a valid BCP 47 language tag.")
+    return value
+
+
+# Validated like `Bcp47Language`, but kept in its original spelling for clients that look the tag up in their own list.
+type Bcp47LanguageTag = Annotated[str, AfterValidator(_validate_language_tag)]
