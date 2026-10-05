@@ -1,15 +1,22 @@
+import json
+from collections.abc import AsyncGenerator
 from typing import Final
 from unittest.mock import AsyncMock
 from unittest.mock import Mock
 
 import pytest
+from fastapi import Request
 from fastapi import Response
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import backend.main as main_module
+from backend.database import get_session
 from backend.logging.events_gen import ApplicationStarted
 from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
 from backend.logging.events_gen import HttpRequestReceived
+from backend.main import _handle_unexpected_exception  # type: ignore[reportPrivateUsage]
 from backend.main import _lifespan  # type: ignore[reportPrivateUsage]
 from backend.main import _log_requests  # type: ignore[reportPrivateUsage]
 from backend.main import app
@@ -71,3 +78,26 @@ async def test_request_middleware_logs_received_and_completed(
     assert completed.path == "/health/database"
     assert completed.status_code == 204
     assert completed.duration_ms == 12.34
+
+
+@pytest.mark.asyncio
+async def test_unexpected_exception_handler_returns_internal_server_error() -> None:
+    response: Final = await _handle_unexpected_exception(Mock(spec=Request), RuntimeError("unexpected"))
+
+    assert response.status_code == 500
+    assert json.loads(bytes(response.body)) == {"detail": "Internal server error."}
+
+
+def test_unexpected_exception_is_returned_as_documented_internal_server_error() -> None:
+    async def _failing_session() -> AsyncGenerator[AsyncSession]:
+        raise RuntimeError("unexpected")
+        yield  # pyright: ignore[reportUnreachable]
+
+    app.dependency_overrides[get_session] = _failing_session
+    try:
+        response: Final = TestClient(app, raise_server_exceptions=False).get("/v1/globals")
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Internal server error."}

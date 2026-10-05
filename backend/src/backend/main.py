@@ -8,6 +8,8 @@ from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import Response
+from fastapi import status
+from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import RequestResponseEndpoint
@@ -19,6 +21,7 @@ from backend.logging.events_gen import ApplicationStarted
 from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
 from backend.logging.events_gen import HttpRequestReceived
+from backend.models.responses import InternalServerErrorResponseV1
 from backend.routes import v1_api
 
 
@@ -32,6 +35,18 @@ async def _lifespan(_app: FastAPI) -> AsyncGenerator[None]:
 app: Final = FastAPI(root_path=SETTINGS.backend_root_uri, lifespan=_lifespan)
 
 app.include_router(v1_api.ROUTER)
+
+
+@app.exception_handler(Exception)
+async def _handle_unexpected_exception(
+    _request: Request,
+    _exception: Exception,
+) -> JSONResponse:
+    # Starlette re-raises the exception after sending this response, so the traceback is still logged by the server.
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content=InternalServerErrorResponseV1().model_dump(mode="json", by_alias=True),
+    )
 
 
 @app.middleware("http")
