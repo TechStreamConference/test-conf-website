@@ -275,6 +275,16 @@ export type MeResponseV1 = {
 };
 
 /**
+ * MissingSupportedLanguagesResponseV1
+ */
+export type MissingSupportedLanguagesResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'At least one supported language must be given.';
+};
+
+/**
  * NotAuthenticatedResponseV1
  */
 export type NotAuthenticatedResponseV1 = {
@@ -682,6 +692,54 @@ export type GetImprintV1Responses = {
 };
 
 export type GetImprintV1Response = GetImprintV1Responses[keyof GetImprintV1Responses];
+
+export type GetDisplayLanguageV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: string | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Language
+         */
+        language?: Bcp47Language | null;
+        /**
+         * Supported Language
+         */
+        supported_language?: Array<Bcp47Language> | null;
+    };
+    url: '/v1/display-language';
+};
+
+export type GetDisplayLanguageV1Errors = {
+    /**
+     * Bad Request
+     */
+    400: MissingSupportedLanguagesResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
+};
+
+export type GetDisplayLanguageV1Error = GetDisplayLanguageV1Errors[keyof GetDisplayLanguageV1Errors];
+
+export type GetDisplayLanguageV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: LanguageDetailsV1;
+};
+
+export type GetDisplayLanguageV1Response = GetDisplayLanguageV1Responses[keyof GetDisplayLanguageV1Responses];
 
 export type UpdateCurrentUserPreferencesV1Data = {
     body: UserPreferencesInputV1;

@@ -42,6 +42,11 @@ class LanguageDetailsV1(ApiResponseModel):
 
 
 @final
+class MissingSupportedLanguagesResponseV1(ApiResponseModel):
+    detail: Literal["At least one supported language must be given."] = "At least one supported language must be given."
+
+
+@final
 class GlobalsResponseV1(ApiResponseModel):
     footer_text: str
 
