@@ -1,3 +1,4 @@
+from collections.abc import Sized
 from typing import Final
 from typing import Literal
 from typing import Optional
@@ -7,6 +8,7 @@ from langcodes import Language
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 
+import backend.language_tags
 from backend.language_tags import Bcp47Language
 from backend.language_tags import Bcp47LanguageTag
 from backend.language_tags import is_valid_bcp_47_tag
@@ -23,6 +25,22 @@ def test_registered_tags_are_valid(tag: str) -> None:
 @pytest.mark.parametrize("tag", ["", "en_US", "en--US", "en-", "not a tag", "abc-123", "123", "x", "dé"])
 def test_malformed_or_unregistered_tags_are_invalid(tag: str) -> None:
     assert not is_valid_bcp_47_tag(tag)
+
+
+@pytest.mark.parametrize("cache_name", ["_PARSE_CACHE", "_INSTANCES"])
+def test_langcodes_caches_are_limited(monkeypatch: pytest.MonkeyPatch, cache_name: str) -> None:
+    monkeypatch.setattr(backend.language_tags, "_MAX_LANGCODES_CACHE_SIZE", 10)
+    german: Final = parse_language("de")
+
+    # Clients can send any number of distinct tags, e.g. with private-use subtags.
+    for i in range(100):
+        assert is_valid_bcp_47_tag(f"en-x-tag{i:04}")
+
+    cache: Final[object] = getattr(Language, cache_name, None)
+    assert isinstance(cache, Sized), f"langcodes no longer provides `Language.{cache_name}`"
+    assert len(cache) <= 10
+    # Dropped `Language` objects are still equal to newly parsed ones.
+    assert parse_language("de") == german
 
 
 @pytest.mark.parametrize(

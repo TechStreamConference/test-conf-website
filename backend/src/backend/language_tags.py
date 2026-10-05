@@ -6,12 +6,39 @@ values such as numbers and dates (see `backend.user_preferences`).
 """
 
 from typing import Annotated
+from typing import Final
+from typing import Protocol
+from typing import runtime_checkable
 
 from langcodes import Language
 from langcodes import tag_is_valid
 from pydantic import AfterValidator
 from pydantic import PlainSerializer
 from pydantic import PlainValidator
+
+# langcodes caches every tag it has parsed and every `Language` it has created, without any limit. Tags come from
+# clients (query parameters, `Accept-Language`), so unlimited caches would let any client grow the memory of the process
+# at will. The caches are private, so they are accessed defensively: if langcodes stops providing them, nothing is
+# limited and the corresponding test fails instead of the requests.
+_LANGCODES_CACHE_NAMES = ("_PARSE_CACHE", "_INSTANCES")
+_MAX_LANGCODES_CACHE_SIZE = 10_000
+
+
+@runtime_checkable
+class _Cache(Protocol):
+    def __len__(self) -> int: ...
+
+    def clear(self) -> None: ...
+
+
+def _limit_langcodes_caches() -> None:
+    # `Language` objects are compared and hashed by their tag, so dropping the cached ones only costs parsing again.
+    # Clearing is only safe because langcodes is never used outside the event loop thread: langcodes reads a cache
+    # entry right after checking for it.
+    for name in _LANGCODES_CACHE_NAMES:
+        cache: object = getattr(Language, name, None)
+        if isinstance(cache, _Cache) and len(cache) > _MAX_LANGCODES_CACHE_SIZE:
+            cache.clear()
 
 
 def is_valid_bcp_47_tag(value: str) -> bool:
@@ -23,7 +50,10 @@ def is_valid_bcp_47_tag(value: str) -> bool:
     if "_" in value:
         return False
     # `tag_is_valid()` returns `False` for tags that cannot be parsed instead of raising.
-    return tag_is_valid(value)
+    valid: Final = tag_is_valid(value)
+    # Every client-provided tag is validated here before it is parsed, so this covers all of them.
+    _limit_langcodes_caches()
+    return valid
 
 
 def parse_language(value: str) -> Language:
