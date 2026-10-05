@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import col
-from sqlmodel import delete
 from sqlmodel import select
 
 from backend.config import SETTINGS
@@ -119,10 +118,11 @@ async def events_starting_on_the_same_day() -> AsyncGenerator[list[Event]]:
             try:
                 yield events
             finally:
-                event_ids: Final = [event.id for event in events]
-                # Bulk statements, because the unit of work cannot sort the translations by their `Language` keys.
-                _ = await session.execute(delete(EventTranslation).where(col(EventTranslation.event_id).in_(event_ids)))
-                _ = await session.execute(delete(Event).where(col(Event.id).in_(event_ids)))
+                for translation in translations:
+                    await session.delete(translation)
+                await session.flush()
+                for event in events:
+                    await session.delete(event)
                 await session.commit()
     finally:
         await engine.dispose()

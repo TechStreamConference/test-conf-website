@@ -1,4 +1,5 @@
 from collections.abc import AsyncGenerator
+from datetime import date
 from typing import Final
 
 import pytest
@@ -105,3 +106,58 @@ async def test_event_translation_languages_must_not_have_further_subtags(session
 
     with pytest.raises(IntegrityError, match="ck_event_translations_language_without_subtags"):
         await session.flush()
+
+
+def _event_translation(event_id: int, tag: str) -> EventTranslation:
+    return EventTranslation(
+        event_id=event_id,
+        language=Language.get(tag),
+        title=tag,
+        subtitle="",
+        presskit_url=None,
+        trailer_url=None,
+        trailer_poster_url=None,
+        trailer_subtitles_url=None,
+        description_headline="",
+        description="",
+    )
+
+
+# The unit of work sorts rows by their primary key when flushing several updates or deletes at once, which requires
+# the `Language` part of the key to be orderable.
+@pytest.mark.asyncio
+async def test_several_translations_can_be_updated_and_deleted_at_once(session: AsyncSession) -> None:
+    event: Final = Event(
+        start_date=date(2099, 1, 1),
+        end_date=date(2099, 1, 1),
+        discord_url=None,
+        twitch_url=None,
+        youtube_channel_url=None,
+        publish_date=None,
+        call_for_papers_start=None,
+        call_for_papers_end=None,
+        frontpage_spotlight_date=None,
+        speakers_visible_from=None,
+        sponsors_visible_from=None,
+        media_partners_visible_from=None,
+        team_members_visible_from=None,
+        schedule_visible_from=None,
+    )
+    session.add(event)
+    await session.flush()
+    assert event.id is not None
+    translations: Final = [_event_translation(event.id, tag) for tag in ["en", "de", "es"]]
+    session.add_all(translations)
+    await session.flush()
+
+    for translation in translations:
+        translation.title = "Changed"
+    await session.flush()
+    for translation in translations:
+        await session.delete(translation)
+    await session.flush()
+
+    remaining: Final = (
+        await session.execute(select(EventTranslation).where(col(EventTranslation.event_id) == event.id))
+    ).all()
+    assert remaining == []

@@ -24,6 +24,16 @@ def test_plain_strings_are_rejected_when_storing() -> None:
         _ = _TYPE.process_bind_param("en-US", _DIALECT)
 
 
+def test_languages_are_sorted_by_their_normalized_tag() -> None:
+    languages: Final = [Language.get("en"), Language.get("de-DE"), Language.get("de")]
+
+    assert sorted(languages, key=_TYPE.sort_key_function) == [
+        Language.get("de"),
+        Language.get("de-DE"),
+        Language.get("en"),
+    ]
+
+
 def test_stored_tags_are_loaded_as_languages() -> None:
     assert _TYPE.process_result_value("de-DE", _DIALECT) == Language.get("de-DE")
 

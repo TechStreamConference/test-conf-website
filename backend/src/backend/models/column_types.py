@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Final
 from typing import final
 from typing import override
@@ -8,6 +9,10 @@ from sqlalchemy.types import TypeDecorator
 from sqlmodel.sql.sqltypes import AutoString
 
 from backend.language_tags import parse_language
+
+
+def _language_sort_key(language: Language) -> str:
+    return language.to_tag()
 
 
 @final
@@ -24,6 +29,13 @@ class LanguageTagType(TypeDecorator[Language]):
 
     impl = AutoString
     cache_ok = True
+
+    @property
+    @override
+    def sort_key_function(self) -> Callable[[Language], str]:
+        # The unit of work sorts rows by their primary key before flushing several updates or deletes at once, but
+        # `Language` objects are not orderable.
+        return _language_sort_key
 
     @override
     def process_bind_param(self, value: object, dialect: Dialect) -> str | None:
