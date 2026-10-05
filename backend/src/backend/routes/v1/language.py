@@ -1,5 +1,4 @@
 from typing import Annotated
-from typing import Final
 from typing import Optional
 
 from fastapi import APIRouter
@@ -9,7 +8,7 @@ from fastapi import Response
 from fastapi import status
 
 from backend.language_selection import LANGUAGE_SELECTION_DESCRIPTION
-from backend.language_selection import select_translation
+from backend.language_selection import select_language
 from backend.language_tags import Bcp47Language
 from backend.models.responses import LanguageDetailsV1
 from backend.models.responses import MissingSupportedLanguagesResponseV1
@@ -48,11 +47,10 @@ async def get_display_language(
             status.HTTP_400_BAD_REQUEST,
             MissingSupportedLanguagesResponseV1(),
         )
-    supported_languages_by_language: Final = {supported: supported for supported in supported_language}
-    selected: Final = select_translation(
-        supported_languages_by_language,
+    return select_language(
+        # Languages given more than once are only listed once.
+        list(dict.fromkeys(supported_language)),
         language=language,
         accept_language=accept_language,
         response=response,
     )
-    return selected.language_details

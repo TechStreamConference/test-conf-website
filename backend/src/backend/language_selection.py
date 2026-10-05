@@ -168,6 +168,33 @@ def _determine_language_to_be_delivered(
     )
 
 
+def select_language(
+    available_languages: Sequence[Language],
+    *,
+    language: Optional[Language],
+    accept_language: Optional[str],
+    response: Response,
+) -> LanguageDetailsV1:
+    """Select the language to be delivered and describe the selection.
+
+    Adds `Vary: Accept-Language` to the response if the selection depends on
+    that header. Raises `ValueError` if no language is available at all.
+    """
+    language_to_be_delivered: Final = _determine_language_to_be_delivered(
+        language=language,
+        accept_language_header=accept_language,
+        available_languages=available_languages,
+    )
+    if language_to_be_delivered.varies_with_accept_language:
+        # Caches must not serve this response to clients with a different `Accept-Language` header.
+        response.headers.add_vary_header("Accept-Language")
+    return LanguageDetailsV1(
+        available_languages=list(available_languages),
+        language_tag=language_to_be_delivered.language,
+        is_language_fallback=language_to_be_delivered.is_language_fallback,
+    )
+
+
 def select_translation[T](
     translations_by_language: Mapping[Language, T],
     *,
@@ -177,29 +204,18 @@ def select_translation[T](
 ) -> SelectedTranslation[T]:
     """Select the translation to be delivered and describe the selection.
 
-    Adds `Vary: Accept-Language` to the response if the selection depends on
-    that header. Raises `ValueError` if there are no translations at all, so
-    callers have to handle missing content before selecting a translation.
+    See `select_language()`. Raises `ValueError` if there are no translations
+    at all, so callers have to handle missing content before selecting a
+    translation.
     """
-    available_languages: Final = list(translations_by_language)
-    language_to_be_delivered: Final = _determine_language_to_be_delivered(
+    language_details: Final = select_language(
+        list(translations_by_language),
         language=language,
-        accept_language_header=accept_language,
-        available_languages=available_languages,
+        accept_language=accept_language,
+        response=response,
     )
-    translation: Final = translations_by_language.get(language_to_be_delivered.language)
+    translation: Final = translations_by_language.get(language_details.language_tag)
     if translation is None:
         # This should never happen because the language to be delivered is always one of the available ones.
         raise RuntimeError("Selected language is not among the available translations.")
-
-    if language_to_be_delivered.varies_with_accept_language:
-        # Caches must not serve this response to clients with a different `Accept-Language` header.
-        response.headers.add_vary_header("Accept-Language")
-    return SelectedTranslation(
-        translation=translation,
-        language_details=LanguageDetailsV1(
-            available_languages=available_languages,
-            language_tag=language_to_be_delivered.language,
-            is_language_fallback=language_to_be_delivered.is_language_fallback,
-        ),
-    )
+    return SelectedTranslation(translation=translation, language_details=language_details)

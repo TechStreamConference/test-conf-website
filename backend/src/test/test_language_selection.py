@@ -6,10 +6,27 @@ from fastapi import Response
 from langcodes import Language
 
 import backend.language_selection
+from backend.language_selection import select_language
 from backend.language_selection import select_translation
 
 _DE = Language.get("de")
 _EN = Language.get("en")
+
+
+def test_select_language_describes_the_selection() -> None:
+    response: Final = Response()
+
+    result: Final = select_language([_DE, _EN], language=None, accept_language="de", response=response)
+
+    assert result.available_languages == [_DE, _EN]
+    assert result.language_tag == _DE
+    assert result.is_language_fallback is False
+    assert response.headers["vary"] == "Accept-Language"
+
+
+def test_select_language_rejects_missing_languages() -> None:
+    with pytest.raises(ValueError, match="At least one language must be available"):
+        _ = select_language([], language=_DE, accept_language=None, response=Response())
 
 
 def test_select_translation_rejects_missing_translations() -> None:

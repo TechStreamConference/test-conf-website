@@ -27,6 +27,16 @@ async def test_display_language_selects_supported_language() -> None:
 
 
 @pytest.mark.asyncio
+async def test_display_language_lists_repeated_supported_languages_once() -> None:
+    result: Final = await get_display_language(
+        Response(),
+        supported_language=[Language.get("de"), Language.get("en"), Language.get("de")],
+    )
+
+    assert result.available_languages == [Language.get("de"), Language.get("en")]
+
+
+@pytest.mark.asyncio
 async def test_display_language_without_any_preference_returns_english_without_fallback() -> None:
     response: Final = Response()
 
