@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 from datetime import UTC
+from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from typing import Final
@@ -12,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import col
+from sqlmodel import delete
 from sqlmodel import select
 
 from backend.config import SETTINGS
@@ -19,6 +21,7 @@ from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
 from backend.models.tables import Event
+from backend.models.tables import EventTranslation
 
 pytestmark: Final = [
     pytest.mark.integration,
@@ -50,6 +53,76 @@ async def events_for_current_event_test() -> AsyncGenerator[tuple[AsyncSession, 
             finally:
                 for event, original_spotlight_date in zip(events, original_spotlight_dates, strict=True):
                     event.frontpage_spotlight_date = original_spotlight_date
+                await session.commit()
+    finally:
+        await engine.dispose()
+
+
+_SAME_DAY_EVENTS_YEAR = 2099
+
+
+@pytest_asyncio.fixture
+async def events_starting_on_the_same_day() -> AsyncGenerator[list[Event]]:
+    engine: Final = create_async_engine(
+        SETTINGS.async_database_url,
+        pool_pre_ping=True,
+    )
+    session_factory: Final = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
+    try:
+        async with session_factory() as session:
+            start_date: Final = date(_SAME_DAY_EVENTS_YEAR, 5, 1)
+            events: Final = [
+                Event(
+                    start_date=start_date,
+                    end_date=start_date,
+                    discord_url=None,
+                    twitch_url=None,
+                    youtube_channel_url=None,
+                    publish_date=None,
+                    call_for_papers_start=None,
+                    call_for_papers_end=None,
+                    frontpage_spotlight_date=None,
+                    speakers_visible_from=None,
+                    sponsors_visible_from=None,
+                    media_partners_visible_from=None,
+                    team_members_visible_from=None,
+                    schedule_visible_from=None,
+                )
+                for _ in range(2)
+            ]
+            session.add_all(events)
+            await session.flush()
+            translations: Final = [
+                EventTranslation(
+                    event_id=event.id,
+                    language=Language.get(tag),
+                    title=f"Event {event.id}",
+                    subtitle="",
+                    presskit_url=None,
+                    trailer_url=None,
+                    trailer_poster_url=None,
+                    trailer_subtitles_url=None,
+                    description_headline="",
+                    description="",
+                )
+                for event in events
+                if event.id is not None
+                for tag in ["de", "en"]
+            ]
+            session.add_all(translations)
+            await session.commit()
+
+            try:
+                yield events
+            finally:
+                event_ids: Final = [event.id for event in events]
+                # Bulk statements, because the unit of work cannot sort the translations by their `Language` keys.
+                _ = await session.execute(delete(EventTranslation).where(col(EventTranslation.event_id).in_(event_ids)))
+                _ = await session.execute(delete(Event).where(col(Event.id).in_(event_ids)))
                 await session.commit()
     finally:
         await engine.dispose()
@@ -118,6 +191,24 @@ async def test_event_route_returns_numbered_and_latest_events() -> None:
     assert second.language_details.language_tag == Language.get("es")
     assert second.language_details.is_language_fallback is False
     assert latest == second
+
+
+@pytest.mark.asyncio
+async def test_event_route_keeps_events_starting_on_the_same_day_apart(
+    events_starting_on_the_same_day: list[Event],
+) -> None:
+    responses: Final = [
+        httpx.get(f"{SETTINGS.backend_root_uri}/v1/event/{_SAME_DAY_EVENTS_YEAR}/{sequence_number}")
+        for sequence_number in [1, 2, 3]
+    ]
+
+    numbered_events: Final = [
+        EventResponseV1.model_validate(response.raise_for_status().json()) for response in responses[:2]
+    ]
+    assert [event.id for event in numbered_events] == [event.id for event in events_starting_on_the_same_day]
+    for event in numbered_events:
+        assert event.language_details.available_languages == [Language.get("de"), Language.get("en")]
+    assert responses[2].status_code == 404
 
 
 @pytest.mark.asyncio

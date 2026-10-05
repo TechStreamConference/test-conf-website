@@ -117,6 +117,8 @@ async def get_event_by_year_and_sequence_number(
         .where(extract("year", col(Event.start_date)) == year)
         .order_by(
             col(Event.start_date),
+            # The rows of an event must be adjacent, even if another event starts on the same day.
+            col(Event.id),
             col(EventTranslation.language),
         )
     )
