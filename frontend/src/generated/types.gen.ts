@@ -357,6 +357,8 @@ export type ReportedRegionalSettingsInputV1 = {
     locale: Bcp47Locale;
 };
 
+export type RequestedLanguageTag = string;
+
 /**
  * UserPreferencesInputV1
  */
@@ -536,7 +538,7 @@ export type GetCurrentEventV1Data = {
         /**
          * Language
          */
-        language?: Bcp47Language | null;
+        language?: RequestedLanguageTag | null;
     };
     url: '/v1/event';
 };
@@ -589,7 +591,7 @@ export type GetEventByYearAndSequenceNumberV1Data = {
         /**
          * Language
          */
-        language?: Bcp47Language | null;
+        language?: RequestedLanguageTag | null;
     };
     url: '/v1/event/{year}/{sequence_number}';
 };
@@ -662,7 +664,7 @@ export type GetImprintV1Data = {
         /**
          * Language
          */
-        language?: Bcp47Language | null;
+        language?: RequestedLanguageTag | null;
     };
     url: '/v1/imprint';
 };
@@ -706,7 +708,7 @@ export type GetDisplayLanguageV1Data = {
         /**
          * Language
          */
-        language?: Bcp47Language | null;
+        language?: RequestedLanguageTag | null;
         /**
          * Supported Language
          */

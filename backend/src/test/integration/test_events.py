@@ -272,7 +272,13 @@ async def test_event_route_without_language_uses_accept_language_header() -> Non
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("language", ["en_US", "not a tag", "abc-123"])
-async def test_event_route_rejects_invalid_language(language: str) -> None:
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/event/2023/1", params={"language": language})
+async def test_event_route_handles_invalid_language_like_an_unavailable_one(language: str) -> None:
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2023/1",
+        params={"language": language},
+        headers={"Accept-Language": "de"},
+    ).raise_for_status()
+    event: Final = EventResponseV1.model_validate(response.json())
 
-    assert response.status_code == 422
+    assert event.language_details.language_tag == Language.get("de")
+    assert event.language_details.is_language_fallback is True

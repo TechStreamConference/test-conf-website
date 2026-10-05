@@ -83,7 +83,10 @@ async def test_imprint_route_ignores_invalid_accept_language_header() -> None:
 
 
 @pytest.mark.asyncio
-async def test_imprint_route_rejects_invalid_language() -> None:
-    response: Final = httpx.get(_IMPRINT_URL, params={"language": "en_US"})
+async def test_imprint_route_handles_invalid_language_like_an_unavailable_one() -> None:
+    response: Final = httpx.get(_IMPRINT_URL, params={"language": "en_US"}).raise_for_status()
+    imprint: Final = ImprintResponseV1.model_validate(response.json())
 
-    assert response.status_code == 422
+    assert imprint.content == _imprint_content("en")
+    assert imprint.language_details.language_tag == Language.get("en")
+    assert imprint.language_details.is_language_fallback is True

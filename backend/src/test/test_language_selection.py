@@ -26,7 +26,7 @@ def test_select_language_describes_the_selection() -> None:
 
 def test_select_language_rejects_missing_languages() -> None:
     with pytest.raises(ValueError, match="At least one language must be available"):
-        _ = select_language([], language=_DE, accept_language=None, response=Response())
+        _ = select_language([], language="de", accept_language=None, response=Response())
 
 
 def test_select_translation_rejects_missing_translations() -> None:
@@ -34,7 +34,7 @@ def test_select_translation_rejects_missing_translations() -> None:
     translations_by_language: Final[dict[Language, str]] = {}
 
     with pytest.raises(ValueError, match="At least one language must be available"):
-        _ = select_translation(translations_by_language, language=_DE, accept_language="de", response=response)
+        _ = select_translation(translations_by_language, language="de", accept_language="de", response=response)
 
     assert "vary" not in response.headers
 
@@ -42,7 +42,7 @@ def test_select_translation_rejects_missing_translations() -> None:
 def test_select_translation_returns_translation_and_language_details() -> None:
     result: Final = select_translation(
         {_DE: "Hallo", _EN: "Hello"},
-        language=_DE,
+        language="de",
         accept_language=None,
         response=Response(),
     )
@@ -69,7 +69,7 @@ def test_select_translation_matches_canonical_form_of_more_specific_region() -> 
 def test_select_translation_returns_the_available_language_for_a_broader_match() -> None:
     result: Final = select_translation(
         {_DE: "Hallo", _EN: "Hello"},
-        language=Language.get("de-AT-1996"),
+        language="de-AT-1996",
         accept_language=None,
         response=Response(),
     )
@@ -95,7 +95,7 @@ def test_select_translation_follows_rfc_4647_lookup(
 ) -> None:
     result: Final = select_translation(
         {Language.get(tag): tag for tag in available_tags},
-        language=Language.get(language_tag),
+        language=language_tag,
         accept_language=None,
         response=Response(),
     )
@@ -109,12 +109,32 @@ def test_select_translation_falls_back_to_header_when_route_language_is_unavaila
 
     result: Final = select_translation(
         {_DE: "Hallo", _EN: "Hello"},
-        language=Language.get("fr"),
+        language="fr",
         accept_language="de",
         response=response,
     )
 
     assert result.translation == "Hallo"
+    assert result.language_details.is_language_fallback is True
+    assert response.headers["vary"] == "Accept-Language"
+
+
+# An invalid requested language must not fail the request, but it still expresses a preference that is not met.
+@pytest.mark.parametrize("language", ["en_US", "jp", "not a tag", ""])
+@pytest.mark.parametrize(("accept_language", "expected_translation"), [("de", "Hallo"), (None, "Hello")])
+def test_select_translation_handles_invalid_route_language_like_an_unavailable_one(
+    language: str, accept_language: Optional[str], expected_translation: str
+) -> None:
+    response: Final = Response()
+
+    result: Final = select_translation(
+        {_DE: "Hallo", _EN: "Hello"},
+        language=language,
+        accept_language=accept_language,
+        response=response,
+    )
+
+    assert result.translation == expected_translation
     assert result.language_details.is_language_fallback is True
     assert response.headers["vary"] == "Accept-Language"
 

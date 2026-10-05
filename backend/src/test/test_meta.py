@@ -17,7 +17,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from backend.config import Settings
-from backend.language_tags import Bcp47Language
+from backend.language_selection import RequestedLanguageTag
 from backend.main import app
 from backend.models import responses
 from backend.models.responses import ApiResponseModel
@@ -153,7 +153,7 @@ def test_response_model_field_names_are_camel_case(model: type) -> None:
         )
 
 
-def test_language_parameters_use_optional_bcp47_language() -> None:
+def test_language_parameters_use_optional_requested_language_tag() -> None:
     routes: Final = _collect_routes(app.router)
     assert routes
 
@@ -162,11 +162,11 @@ def test_language_parameters_use_optional_bcp47_language() -> None:
         if _LANGUAGE_PARAMETER not in inspect.signature(route.endpoint).parameters:
             continue
         hint = typing.get_type_hints(route.endpoint, include_extras=True).get(_LANGUAGE_PARAMETER)
-        # FastAPI parameter metadata such as `Annotated[Optional[Bcp47Language], Query()]`
+        # FastAPI parameter metadata such as `Annotated[Optional[RequestedLanguageTag], Query()]`
         # does not change the semantic type.
         if typing.get_origin(hint) is typing.Annotated:
             hint = typing.get_args(hint)[0]
-        if hint != Optional[Bcp47Language]:
+        if hint != Optional[RequestedLanguageTag]:
             offenders.append(
                 f"{route.endpoint.__module__}.{route.endpoint.__qualname__} "
                 + f"({_parameter_location(route.endpoint, _LANGUAGE_PARAMETER)}) "
@@ -174,7 +174,7 @@ def test_language_parameters_use_optional_bcp47_language() -> None:
             )
 
     assert not offenders, (
-        f"`{_LANGUAGE_PARAMETER}` parameters must use `Optional[Bcp47Language]`:\n{'\n'.join(offenders)}"
+        f"`{_LANGUAGE_PARAMETER}` parameters must use `Optional[RequestedLanguageTag]`:\n{'\n'.join(offenders)}"
     )
 
 

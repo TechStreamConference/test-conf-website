@@ -2,7 +2,8 @@
 
 The language is resolved in the following order:
 
-1. the requested language (the `language` query parameter, if given),
+1. the requested language (the `language` query parameter, if given and a
+   valid BCP 47 tag),
 2. the best available language from the `Accept-Language` header (respecting
    quality values),
 3. English,
@@ -13,9 +14,11 @@ general tags as in RFC 4647 lookup (e.g. `de-DE` matches `de`).
 
 The delivered language is marked as a fallback if the client's first choice
 (the requested language or, if not given, the most preferred valid header
-entry) is not available. If the client did not express any preference at
-all, there is no first choice that could be missing, so English or the
-first available language is not marked as a fallback.
+entry) is not available. A requested language that is not a valid BCP 47 tag
+is handled like an unavailable one rather than failing the request, so a
+stale or malformed tag still delivers content. If the client did not express
+any preference at all, there is no first choice that could be missing, so
+English or the first available language is not marked as a fallback.
 """
 
 from collections.abc import Iterator
@@ -35,7 +38,8 @@ from backend.language_tags import parse_language
 from backend.models.responses import LanguageDetailsV1
 
 LANGUAGE_SELECTION_DESCRIPTION = (
-    "The language is selected in the following order: the requested language (`language`, if given), "
+    "The language is selected in the following order: the requested language (`language`, if given and a "
+    + "valid BCP 47 tag; an invalid tag is handled like an unavailable language), "
     + "the best available language from the `Accept-Language` header (respecting quality values), "
     + "English, and finally the first available language. Language tags are matched by their "
     + "canonical form and fall back to more general tags (e.g. `de-DE` matches `de`). Wildcards and "
@@ -46,6 +50,10 @@ LANGUAGE_SELECTION_DESCRIPTION = (
 )
 
 _ENGLISH = Language.get("en")
+
+# Deliberately not validated as `Bcp47Language`: an invalid tag must not fail the request but is handled like an
+# unavailable language, so a stale or malformed tag still delivers content.
+type RequestedLanguageTag = str
 
 
 @final
@@ -100,6 +108,13 @@ def _find_available_language(language: Language, available_languages: Sequence[L
     )
 
 
+def _parse_valid_language(tag: str) -> Optional[Language]:
+    try:
+        return parse_language(tag)
+    except ValueError:
+        return None
+
+
 def _parse_accept_language_header(header: str) -> list[Language]:
     """Return the languages of an `Accept-Language` header, most preferred first.
 
@@ -120,24 +135,25 @@ def _parse_accept_language_header(header: str) -> list[Language]:
     ):
         if quality <= 0.0 or tag == "*":
             continue
-        try:
-            languages.append(parse_language(tag))
-        except ValueError:
-            continue
+        language = _parse_valid_language(tag)
+        if language is not None:
+            languages.append(language)
     return languages
 
 
 def _determine_language_to_be_delivered(
     *,
-    language: Optional[Language],
+    language: Optional[RequestedLanguageTag],
     accept_language_header: Optional[str],
     available_languages: Sequence[Language],
 ) -> _LanguageToBeDelivered:
     if not available_languages:
         raise ValueError("At least one language must be available.")
 
-    if language is not None:
-        available_route_language: Final = _find_available_language(language, available_languages)
+    # An invalid tag still expresses a preference, so it is handled like an unavailable language.
+    requested_language: Final = None if language is None else _parse_valid_language(language)
+    if requested_language is not None:
+        available_route_language: Final = _find_available_language(requested_language, available_languages)
         if available_route_language is not None:
             return _LanguageToBeDelivered(
                 language=available_route_language,
@@ -173,7 +189,7 @@ def _determine_language_to_be_delivered(
 def select_language(
     available_languages: Sequence[Language],
     *,
-    language: Optional[Language],
+    language: Optional[RequestedLanguageTag],
     accept_language: Optional[str],
     response: Response,
 ) -> LanguageDetailsV1:
@@ -200,7 +216,7 @@ def select_language(
 def select_translation[T](
     translations_by_language: Mapping[Language, T],
     *,
-    language: Optional[Language],
+    language: Optional[RequestedLanguageTag],
     accept_language: Optional[str],
     response: Response,
 ) -> SelectedTranslation[T]:

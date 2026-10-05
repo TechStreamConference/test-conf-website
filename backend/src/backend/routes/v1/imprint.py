@@ -13,8 +13,8 @@ from sqlmodel import select
 
 from backend.database import get_session
 from backend.language_selection import LANGUAGE_SELECTION_DESCRIPTION
+from backend.language_selection import RequestedLanguageTag
 from backend.language_selection import select_translation
-from backend.language_tags import Bcp47Language
 from backend.models.responses import ImprintPageContentNotFoundResponseV1
 from backend.models.responses import ImprintResponseV1
 from backend.models.tables import StaticPage
@@ -39,7 +39,7 @@ ROUTER = APIRouter()
 async def get_imprint(
     session: Annotated[AsyncSession, Depends(get_session)],
     response: Response,
-    language: Optional[Bcp47Language] = None,
+    language: Optional[RequestedLanguageTag] = None,
     accept_language: Annotated[Optional[str], Header()] = None,
 ) -> ImprintResponseV1:
     pages_by_language: Final = {

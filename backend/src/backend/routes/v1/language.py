@@ -8,6 +8,7 @@ from fastapi import Response
 from fastapi import status
 
 from backend.language_selection import LANGUAGE_SELECTION_DESCRIPTION
+from backend.language_selection import RequestedLanguageTag
 from backend.language_selection import select_language
 from backend.language_tags import Bcp47Language
 from backend.models.responses import LanguageDetailsV1
@@ -37,7 +38,7 @@ ROUTER = APIRouter()
 )
 async def get_display_language(
     response: Response,
-    language: Optional[Bcp47Language] = None,
+    language: Optional[RequestedLanguageTag] = None,
     # Without `Query()`, FastAPI would expect a list parameter in the request body.
     supported_language: Annotated[Optional[list[Bcp47Language]], Query()] = None,
     accept_language: Annotated[Optional[str], Header()] = None,

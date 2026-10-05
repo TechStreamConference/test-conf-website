@@ -8,7 +8,6 @@ from fastapi import Depends
 from fastapi import Header
 from fastapi import Response
 from fastapi import status
-from langcodes import Language
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
@@ -17,8 +16,8 @@ from sqlmodel import select
 
 from backend.database import get_session
 from backend.language_selection import LANGUAGE_SELECTION_DESCRIPTION
+from backend.language_selection import RequestedLanguageTag
 from backend.language_selection import select_translation
-from backend.language_tags import Bcp47Language
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
@@ -43,7 +42,7 @@ ROUTER = APIRouter()
 async def get_current_event(
     session: Annotated[AsyncSession, Depends(get_session)],
     response: Response,
-    language: Optional[Bcp47Language] = None,
+    language: Optional[RequestedLanguageTag] = None,
     accept_language: Annotated[Optional[str], Header()] = None,
 ) -> EventResponseV1:
     now: Final = utc_now()
@@ -99,7 +98,7 @@ async def get_event_by_year_and_sequence_number(
     response: Response,
     year: int,
     sequence_number: int | Literal["latest"],
-    language: Optional[Bcp47Language] = None,
+    language: Optional[RequestedLanguageTag] = None,
     accept_language: Annotated[Optional[str], Header()] = None,
 ) -> EventResponseV1:
     if isinstance(sequence_number, int) and sequence_number <= 0:
@@ -159,7 +158,7 @@ async def get_event_by_year_and_sequence_number(
 def _event_response_v1_from_rows(
     rows: list[Row[tuple[tuple[Event, EventTranslation]]]],
     *,
-    language: Optional[Language],
+    language: Optional[RequestedLanguageTag],
     accept_language: Optional[str],
     response: Response,
 ) -> EventResponseV1:

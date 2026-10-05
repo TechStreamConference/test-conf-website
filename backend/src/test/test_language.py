@@ -15,7 +15,7 @@ async def test_display_language_selects_supported_language() -> None:
 
     result: Final = await get_display_language(
         response,
-        language=Language.get("de-AT"),
+        language="de-AT",
         supported_language=[Language.get("de"), Language.get("en")],
         accept_language="en",
     )

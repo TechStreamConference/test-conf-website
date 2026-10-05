@@ -83,7 +83,7 @@ async def test_current_event_returns_spotlighted_event_and_requested_translation
         _row(event, _translation(2, "en")),
     ])
 
-    result: Final = await get_current_event(session, Response(), language=Language.get("en"))
+    result: Final = await get_current_event(session, Response(), language="en")
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
@@ -98,7 +98,7 @@ async def test_current_event_returns_not_found_when_no_event_is_applicable() -> 
     session: Final = _session_with_rows([])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_current_event(session, Response(), language=Language.get("de"))
+        _ = await get_current_event(session, Response(), language="de")
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Event not found in the database."
@@ -114,9 +114,7 @@ async def test_event_returns_requested_numbered_event_and_translation() -> None:
         _row(second_event, _translation(2, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(
-        session, Response(), 2024, 2, language=Language.get("en")
-    )
+    result: Final = await get_event_by_year_and_sequence_number(session, Response(), 2024, 2, language="en")
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
@@ -134,9 +132,7 @@ async def test_event_returns_before_processing_later_events() -> None:
         _row(second_event, _translation(2, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(
-        session, Response(), 2024, 1, language=Language.get("en")
-    )
+    result: Final = await get_event_by_year_and_sequence_number(session, Response(), 2024, 1, language="en")
 
     assert result.id == 1
     assert result.title == "Title 1 (en)"
@@ -153,9 +149,7 @@ async def test_event_latest_falls_back_to_english() -> None:
         _row(event, _translation(1, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(
-        session, Response(), 2024, "latest", language=Language.get("fr")
-    )
+    result: Final = await get_event_by_year_and_sequence_number(session, Response(), 2024, "latest", language="fr")
 
     assert result.language_details.language_tag == Language.get("en")
     assert result.language_details.is_language_fallback is True
@@ -166,9 +160,7 @@ async def test_event_falls_back_to_first_available_translation() -> None:
     event: Final = _event(1, date(2024, 5, 1))
     session: Final = _session_with_rows([_row(event, _translation(1, "de"))])
 
-    result: Final = await get_event_by_year_and_sequence_number(
-        session, Response(), 2024, 1, language=Language.get("fr")
-    )
+    result: Final = await get_event_by_year_and_sequence_number(session, Response(), 2024, 1, language="fr")
 
     assert result.language_details.language_tag == Language.get("de")
     assert result.language_details.is_language_fallback is True
@@ -179,7 +171,7 @@ async def test_event_rejects_invalid_sequence_number() -> None:
     session: Final = AsyncMock()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_event_by_year_and_sequence_number(session, Response(), 2024, 0, language=Language.get("de"))
+        _ = await get_event_by_year_and_sequence_number(session, Response(), 2024, 0, language="de")
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid sequence number."
@@ -192,9 +184,7 @@ async def test_event_returns_not_found_when_no_event_exists(sequence_number: int
     session: Final = _session_with_rows([])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_event_by_year_and_sequence_number(
-            session, Response(), 2025, sequence_number, language=Language.get("de")
-        )
+        _ = await get_event_by_year_and_sequence_number(session, Response(), 2025, sequence_number, language="de")
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Event not found in the database."
@@ -257,7 +247,7 @@ async def test_event_route_language_beats_accept_language_header() -> None:
         response,
         2024,
         1,
-        language=Language.get("en"),
+        language="en",
         accept_language="de",
     )
 
