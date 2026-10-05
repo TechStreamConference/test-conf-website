@@ -69,11 +69,8 @@ def normalize_tag(tag: str) -> str:
     Deliberately duplicates `backend.language_tags.parse_language()` instead of importing it, so this migration keeps
     its behavior when the application code changes.
     """
-    try:
-        valid = "_" not in tag and tag_is_valid(tag)
-    except ValueError:
-        valid = False
-    if not valid:
+    # `tag_is_valid()` returns `False` for tags that cannot be parsed instead of raising.
+    if "_" in tag or not tag_is_valid(tag):
         raise ValueError(tag)
     return Language.get(tag).to_tag()
 
