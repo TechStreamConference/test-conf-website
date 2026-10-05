@@ -182,6 +182,34 @@ function getMaxLength(): number {
 }
 ```
 
+## Translation Keys
+
+The keys of the translation files (`messages/*.json`) become function names (`m.global_save()`), so they have to be valid identifiers: no dots, no hyphens.
+
+A key consists of exactly one scope and one name, separated by an underscore: `scope_name`.
+
+| part        | convention | example                       |
+| ----------- | ---------- | ----------------------------- |
+| scope       | camelCase  | global, login, themeSelect    |
+| separator   | `_`        | `global_save`                 |
+| name        | camelCase  | saveChanges, errorInvalidCode |
+| placeholder | camelCase  | `{userName}`                  |
+
+The scope `global` is for texts that are used in the same way in several places. For everything else, the scope is the name of the page or component that uses the text.
+
+The key of the base language is the source of truth. Every language uses exactly the same keys and the same placeholders.
+
+### Example
+
+```json
+{
+    "global_save": "Save",
+    "global_saveChanges": "Save changes",
+    "login_errorInvalidCode": "The code {code} is not valid.",
+    "footer_copyright": "© {year} TestConf"
+}
+```
+
 ## HTML
 
 ### Casing
