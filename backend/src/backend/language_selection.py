@@ -10,7 +10,10 @@ The language is resolved in the following order:
 4. the first available language.
 
 Language tags are matched by their canonical form and fall back to more
-general tags as in RFC 4647 lookup (e.g. `de-DE` matches `de`).
+general tags as in RFC 4647 lookup (e.g. `de-DE` matches `de`). Only the
+requested tags are truncated, never the available ones, so translated content
+is stored under plain language subtags (enforced by check constraints in
+`backend.models.tables`).
 
 The delivered language is marked as a fallback if the client's first choice
 (the requested language or, if not given, the most preferred valid header
