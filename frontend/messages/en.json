@@ -1,0 +1,7 @@
+{
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+    "extra_key": "extra_key",
+    "test_plain": "Valid test text",
+    "test_plain2": "second valid test text",
+    "test_withPlaceholder": "Valid test text with placeholder: '{placeholder2}' : '{placeholder1}'"
+}
