@@ -131,6 +131,20 @@ def test_select_translation_skips_wildcard_invalid_and_excluded_header_entries(a
     assert result.translation == "Hallo"
 
 
+# Header entries are validated like the requested language, so invalid entries do not count as the first choice.
+@pytest.mark.parametrize("accept_language", ["zz, de", "en_US, de", "jp;q=0.9, de;q=0.8"])
+def test_select_translation_does_not_count_invalid_header_entries_as_first_choice(accept_language: str) -> None:
+    result: Final = select_translation(
+        {_DE: "Hallo", _EN: "Hello"},
+        language=None,
+        accept_language=accept_language,
+        response=Response(),
+    )
+
+    assert result.translation == "Hallo"
+    assert result.language_details.is_language_fallback is False
+
+
 @pytest.mark.parametrize(
     ("accept_language", "expected_translation"),
     [

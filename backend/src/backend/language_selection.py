@@ -12,7 +12,7 @@ Language tags are matched by their canonical form and fall back to more
 general tags as in RFC 4647 lookup (e.g. `de-DE` matches `de`).
 
 The delivered language is marked as a fallback if the client's first choice
-(the requested language or, if not given, the most preferred usable header
+(the requested language or, if not given, the most preferred valid header
 entry) is not available. If the client did not express any preference at
 all, there is no first choice that could be missing, so English or the
 first available language is not marked as a fallback.
@@ -28,10 +28,10 @@ from typing import final
 
 from fastapi import Response
 from langcodes import Language
-from langcodes.tag_parser import LanguageTagError
 from werkzeug.datastructures import LanguageAccept
 from werkzeug.http import parse_accept_header
 
+from backend.language_tags import parse_language
 from backend.models.responses import LanguageDetailsV1
 
 LANGUAGE_SELECTION_DESCRIPTION = (
@@ -103,12 +103,14 @@ def _find_available_language(language: Language, available_languages: Sequence[L
 def _parse_accept_language_header(header: str) -> list[Language]:
     """Return the languages of an `Accept-Language` header, most preferred first.
 
-    Wildcards, excluded languages (`q=0`), and unparsable entries are skipped:
-    the header is controlled by the client and a malformed entry must not make
-    the whole request fail. Excluded languages are ignored rather than avoided,
-    so the English or first available language may still be an excluded one:
-    the content is always delivered instead of responding with
-    406 Not Acceptable.
+    Wildcards, excluded languages (`q=0`), and entries that are not valid BCP 47
+    tags are skipped: the header is controlled by the client and an invalid
+    entry must not make the whole request fail. Entries are validated like the
+    requested language, so an invalid entry is never the client's first choice.
+
+    Excluded languages are ignored rather than avoided, so the English or first
+    available language may still be an excluded one: the content is always
+    delivered instead of responding with 406 Not Acceptable.
     """
     languages: Final[list[Language]] = []
     for tag, quality in sorted(
@@ -119,8 +121,8 @@ def _parse_accept_language_header(header: str) -> list[Language]:
         if quality <= 0.0 or tag == "*":
             continue
         try:
-            languages.append(Language.get(tag))
-        except LanguageTagError:
+            languages.append(parse_language(tag))
+        except ValueError:
             continue
     return languages
 
@@ -159,7 +161,7 @@ def _determine_language_to_be_delivered(
                 varies_with_accept_language=True,
             )
 
-    # Without a requested language or a usable header entry, there is no first choice that could be missing.
+    # Without a requested language or a valid header entry, there is no first choice that could be missing.
     client_expressed_preference: Final = language is not None or len(header_languages) > 0
     return _LanguageToBeDelivered(
         language=_ENGLISH if _ENGLISH in available_languages else available_languages[0],
