@@ -17,6 +17,7 @@ const CONFIG: Config = {
             $bff: 'src/bff',
             $lib: 'src/lib',
             $logging: 'src/logging',
+            $paraglide: 'src/paraglide',
             $src: 'src'
         }
     }
