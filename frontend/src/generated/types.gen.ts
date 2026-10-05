@@ -6,6 +6,8 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type Bcp47Language = string;
+
 export type Bcp47Locale = string;
 
 /**
@@ -225,11 +227,11 @@ export type LanguageDetailsV1 = {
     /**
      * Available Languages
      */
-    availableLanguages: Array<string>;
+    availableLanguages: Array<Bcp47Language>;
     /**
      * Language Tag
      */
-    languageTag: string;
+    languageTag: Bcp47Language;
     /**
      * Is Language Fallback
      */
@@ -513,14 +515,20 @@ export type GetCurrentUserV1Response = GetCurrentUserV1Responses[keyof GetCurren
 
 export type GetCurrentEventV1Data = {
     body?: never;
-    path: {
+    headers?: {
         /**
-         * Language Tag
+         * Accept-Language
          */
-        language_tag: string;
+        'accept-language'?: string | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/event';
+    path?: never;
+    query?: {
+        /**
+         * Language
+         */
+        language?: Bcp47Language | null;
+    };
+    url: '/v1/event';
 };
 
 export type GetCurrentEventV1Errors = {
@@ -551,11 +559,13 @@ export type GetCurrentEventV1Response = GetCurrentEventV1Responses[keyof GetCurr
 
 export type GetEventByYearAndSequenceNumberV1Data = {
     body?: never;
-    path: {
+    headers?: {
         /**
-         * Language Tag
+         * Accept-Language
          */
-        language_tag: string;
+        'accept-language'?: string | null;
+    };
+    path: {
         /**
          * Year
          */
@@ -565,8 +575,13 @@ export type GetEventByYearAndSequenceNumberV1Data = {
          */
         sequence_number: number | 'latest';
     };
-    query?: never;
-    url: '/v1/{language_tag}/event/{year}/{sequence_number}';
+    query?: {
+        /**
+         * Language
+         */
+        language?: Bcp47Language | null;
+    };
+    url: '/v1/event/{year}/{sequence_number}';
 };
 
 export type GetEventByYearAndSequenceNumberV1Errors = {
@@ -626,14 +641,20 @@ export type GetGlobalsV1Response = GetGlobalsV1Responses[keyof GetGlobalsV1Respo
 
 export type GetImprintV1Data = {
     body?: never;
-    path: {
+    headers?: {
         /**
-         * Language Tag
+         * Accept-Language
          */
-        language_tag: string;
+        'accept-language'?: string | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/imprint';
+    path?: never;
+    query?: {
+        /**
+         * Language
+         */
+        language?: Bcp47Language | null;
+    };
+    url: '/v1/imprint';
 };
 
 export type GetImprintV1Errors = {

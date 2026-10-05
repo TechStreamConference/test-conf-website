@@ -10,6 +10,7 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic.alias_generators import to_camel
 
+from backend.language_tags import Bcp47Language
 from backend.models.preference_types import Bcp47Locale
 from backend.models.preference_types import IanaTimezone
 
@@ -35,8 +36,8 @@ class ApiResponseModel(BaseModel):
 
 @final
 class LanguageDetailsV1(ApiResponseModel):
-    available_languages: list[str]
-    language_tag: str
+    available_languages: list[Bcp47Language]
+    language_tag: Bcp47Language
     is_language_fallback: bool
 
 

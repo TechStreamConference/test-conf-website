@@ -1,10 +1,14 @@
+import ast
 import inspect
 import re
 import sys
+import textwrap
 import typing
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
 from typing import Final
+from typing import Optional
 
 import pytest
 from fastapi import APIRouter
@@ -13,6 +17,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from backend.config import Settings
+from backend.language_tags import Bcp47Language
 from backend.main import app
 from backend.models import responses
 from backend.models.responses import ApiResponseModel
@@ -21,6 +26,8 @@ from backend.routes import v1_api
 _ENV_EXAMPLE_FILE = Path(__file__).resolve().parents[3] / ".env.example"
 
 _CAMEL_CASE_PATTERN = re.compile(r"[a-z][a-zA-Z0-9]*")
+
+_LANGUAGE_PARAMETER = "language"
 
 # Framework response classes carry no generated client model, so the versioning
 # rule cannot apply to them. Matched by identity so that a same-named local class
@@ -38,6 +45,19 @@ def _collect_routes(router: APIRouter) -> list[APIRoute]:
         elif hasattr(item, "include_context"):
             result.extend(_collect_routes(item.include_context.included_router))  # type: ignore[unknownMemberType, unknownArgumentType]
     return result
+
+
+def _parameter_location(function: Callable[..., object], parameter_name: str) -> str:
+    """Return `<file>:<line>` of the given parameter, falling back to the function's first line."""
+    source_file: Final = inspect.getsourcefile(function)
+    source_lines, first_line = inspect.getsourcelines(function)
+    function_node: Final = ast.parse(textwrap.dedent("".join(source_lines))).body[0]
+    assert isinstance(function_node, ast.FunctionDef | ast.AsyncFunctionDef)
+    arguments: Final = function_node.args
+    for argument in [*arguments.posonlyargs, *arguments.args, *arguments.kwonlyargs]:
+        if argument.arg == parameter_name:
+            return f"{source_file}:{first_line + argument.lineno - 1}"
+    return f"{source_file}:{first_line}"
 
 
 def _response_models() -> list[type]:
@@ -131,6 +151,31 @@ def test_response_model_field_names_are_camel_case(model: type) -> None:
         assert _CAMEL_CASE_PATTERN.fullmatch(field_name) is not None, (
             f"Field '{field_name}' of {model.__name__} is not camelCase"
         )
+
+
+def test_language_parameters_use_optional_bcp47_language() -> None:
+    routes: Final = _collect_routes(app.router)
+    assert routes
+
+    offenders: Final[list[str]] = []
+    for route in routes:
+        if _LANGUAGE_PARAMETER not in inspect.signature(route.endpoint).parameters:
+            continue
+        hint = typing.get_type_hints(route.endpoint, include_extras=True).get(_LANGUAGE_PARAMETER)
+        # FastAPI parameter metadata such as `Annotated[Optional[Bcp47Language], Query()]`
+        # does not change the semantic type.
+        if typing.get_origin(hint) is typing.Annotated:
+            hint = typing.get_args(hint)[0]
+        if hint != Optional[Bcp47Language]:
+            offenders.append(
+                f"{route.endpoint.__module__}.{route.endpoint.__qualname__} "
+                + f"({_parameter_location(route.endpoint, _LANGUAGE_PARAMETER)}) "
+                + f"for endpoint '{route.path}' annotates `{_LANGUAGE_PARAMETER}` as {hint!r}"
+            )
+
+    assert not offenders, (
+        f"`{_LANGUAGE_PARAMETER}` parameters must use `Optional[Bcp47Language]`:\n{'\n'.join(offenders)}"
+    )
 
 
 def test_env_example_satisfies_settings(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -44,16 +44,16 @@ export const getCurrentUserV1 = <ThrowOnError extends boolean = false>(options?:
 /**
  * Get the current event
  *
- * Retrieve the event that is currently featured on the front page.
+ * Retrieve the event that is currently featured on the front page. The language is selected in the following order: the requested language (`language`, if given), the best available language from the `Accept-Language` header (respecting quality values), English, and finally the first available language. Language tags are matched by their canonical form and fall back to more general tags (e.g. `de-DE` matches `de`). Wildcards and languages excluded with `q=0` are ignored, so an excluded language may still be delivered as the English or first available language. `isLanguageFallback` is `true` if the client's first choice (`language` or, if not given, the most preferred valid `Accept-Language` entry) is not available, and `false` if the client did not express any preference.
  */
-export const getCurrentEventV1 = <ThrowOnError extends boolean = false>(options: Options<GetCurrentEventV1Data, ThrowOnError>): RequestResult<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError> => (options.client ?? client).get<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/event', ...options });
+export const getCurrentEventV1 = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentEventV1Data, ThrowOnError>): RequestResult<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError> => (options?.client ?? client).get<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError>({ url: '/v1/event', ...options });
 
 /**
  * Get event by year and sequence number
  *
- * Retrieve a specific event based on the provided year and sequence number.
+ * Retrieve a specific event based on the provided year and sequence number. The language is selected in the following order: the requested language (`language`, if given), the best available language from the `Accept-Language` header (respecting quality values), English, and finally the first available language. Language tags are matched by their canonical form and fall back to more general tags (e.g. `de-DE` matches `de`). Wildcards and languages excluded with `q=0` are ignored, so an excluded language may still be delivered as the English or first available language. `isLanguageFallback` is `true` if the client's first choice (`language` or, if not given, the most preferred valid `Accept-Language` entry) is not available, and `false` if the client did not express any preference.
  */
-export const getEventByYearAndSequenceNumberV1 = <ThrowOnError extends boolean = false>(options: Options<GetEventByYearAndSequenceNumberV1Data, ThrowOnError>): RequestResult<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError> => (options.client ?? client).get<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/event/{year}/{sequence_number}', ...options });
+export const getEventByYearAndSequenceNumberV1 = <ThrowOnError extends boolean = false>(options: Options<GetEventByYearAndSequenceNumberV1Data, ThrowOnError>): RequestResult<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError> => (options.client ?? client).get<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError>({ url: '/v1/event/{year}/{sequence_number}', ...options });
 
 /**
  * Get global configuration values
@@ -65,9 +65,9 @@ export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Opt
 /**
  * Get the markdown contents of the imprint page
  *
- * Retrieve the markdown contents of the imprint page stored in the database. If the requested language is not available, English is returned instead, or, if that is not available either, the first available language.
+ * Retrieve the markdown contents of the imprint page stored in the database. The language is selected in the following order: the requested language (`language`, if given), the best available language from the `Accept-Language` header (respecting quality values), English, and finally the first available language. Language tags are matched by their canonical form and fall back to more general tags (e.g. `de-DE` matches `de`). Wildcards and languages excluded with `q=0` are ignored, so an excluded language may still be delivered as the English or first available language. `isLanguageFallback` is `true` if the client's first choice (`language` or, if not given, the most preferred valid `Accept-Language` entry) is not available, and `false` if the client did not express any preference.
  */
-export const getImprintV1 = <ThrowOnError extends boolean = false>(options: Options<GetImprintV1Data, ThrowOnError>): RequestResult<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError> => (options.client ?? client).get<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/imprint', ...options });
+export const getImprintV1 = <ThrowOnError extends boolean = false>(options?: Options<GetImprintV1Data, ThrowOnError>): RequestResult<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError> => (options?.client ?? client).get<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError>({ url: '/v1/imprint', ...options });
 
 /**
  * Update current-user preferences
