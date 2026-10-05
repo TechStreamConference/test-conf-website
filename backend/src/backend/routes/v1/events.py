@@ -68,7 +68,7 @@ async def get_current_event(
             col(EventTranslation.event_id) == col(Event.id),
         )
         .where(col(Event.id) == current_event_id)
-        .order_by(col(EventTranslation.language_tag))
+        .order_by(col(EventTranslation.language))
     )
     rows: Final = list((await session.execute(statement)).all())
 
@@ -117,7 +117,7 @@ async def get_event_by_year_and_sequence_number(
         .where(extract("year", col(Event.start_date)) == year)
         .order_by(
             col(Event.start_date),
-            col(EventTranslation.language_tag),
+            col(EventTranslation.language),
         )
     )
     rows: Final = list((await session.execute(statement)).all())
@@ -171,9 +171,7 @@ def _event_response_v1_from_rows(
     # for things that have to be translated). Thus, we can just take the first
     # row and take all the basic data from that record.
     event: Final = rows[0].Event
-    translations_by_language: Final = {
-        Language.get(row.EventTranslation.language_tag): row.EventTranslation for row in rows
-    }
+    translations_by_language: Final = {row.EventTranslation.language: row.EventTranslation for row in rows}
 
     selected: Final = select_translation(
         translations_by_language,

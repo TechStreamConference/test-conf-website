@@ -16,7 +16,7 @@ from backend.routes.v1.imprint import get_imprint
 def _page(language_tag: str) -> StaticPage:
     return StaticPage(
         kind=StaticPageKind.IMPRINT,
-        language_tag=language_tag,
+        language=Language.get(language_tag),
         content=f"Imprint ({language_tag})",
     )
 

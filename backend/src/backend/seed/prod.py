@@ -1,3 +1,4 @@
+from langcodes import Language
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.models.tables import Global
@@ -8,7 +9,7 @@ from backend.models.tables import StaticPageKind
 
 async def seed_prod(session: AsyncSession) -> None:
     session.add(Global(key=GlobalKey.FOOTER_TEXT, value="Footer"))
-    session.add(StaticPage(kind=StaticPageKind.IMPRINT, language_tag="de", content="Impressum"))
-    session.add(StaticPage(kind=StaticPageKind.IMPRINT, language_tag="en", content="Imprint"))
+    session.add(StaticPage(kind=StaticPageKind.IMPRINT, language=Language.get("de"), content="Impressum"))
+    session.add(StaticPage(kind=StaticPageKind.IMPRINT, language=Language.get("en"), content="Imprint"))
 
     await session.commit()

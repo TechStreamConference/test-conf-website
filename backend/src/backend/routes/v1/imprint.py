@@ -7,7 +7,6 @@ from fastapi import Depends
 from fastapi import Header
 from fastapi import Response
 from fastapi import status
-from langcodes import Language
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import select
@@ -44,12 +43,12 @@ async def get_imprint(
     accept_language: Annotated[Optional[str], Header()] = None,
 ) -> ImprintResponseV1:
     pages_by_language: Final = {
-        Language.get(page.language_tag): page
+        page.language: page
         for page in (
             await session.execute(
                 select(StaticPage)
                 .where(col(StaticPage.kind) == StaticPageKind.IMPRINT)
-                .order_by(col(StaticPage.language_tag))
+                .order_by(col(StaticPage.language))
             )
         ).scalars()
     }

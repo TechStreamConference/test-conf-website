@@ -98,7 +98,7 @@ def _seed_static_pages_table(session: AsyncSession) -> None:
         session.add(
             StaticPage(
                 kind=kind,
-                language_tag=str(language),
+                language=language,
                 content=content_file.read_text(
                     encoding="utf-8",
                 ),
@@ -252,7 +252,7 @@ async def _seed_events_data(
             session.add(
                 EventTranslation(
                     event_id=event.id,
-                    language_tag=str(language),
+                    language=language,
                     title=f"{_CONFERENCE_NAME} {year}",
                     subtitle=faker.sentence(nb_words=6).rstrip("."),
                     description_headline=faker.sentence(nb_words=4).rstrip("."),

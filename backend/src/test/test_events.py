@@ -46,7 +46,7 @@ def _event(
 def _translation(event_id: int, language_tag: str) -> EventTranslation:
     return EventTranslation(
         event_id=event_id,
-        language_tag=language_tag,
+        language=Language.get(language_tag),
         title=f"Title {event_id} ({language_tag})",
         subtitle="Subtitle",
         presskit_url=None,
