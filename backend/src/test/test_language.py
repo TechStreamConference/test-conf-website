@@ -4,8 +4,10 @@ from typing import Optional
 import pytest
 from fastapi import HTTPException
 from fastapi import Response
+from fastapi.testclient import TestClient
 
 from backend.language_selection import LanguageRequest
+from backend.main import app
 from backend.routes.v1.language import get_display_language
 
 
@@ -84,3 +86,18 @@ async def test_display_language_returns_bad_request_without_supported_languages(
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "At least one supported language must be given."
+
+
+@pytest.mark.parametrize(
+    "tag",
+    [
+        # Normalized to `sr-Latn-x-…`, which exceeds the length limit although the tag itself does not.
+        pytest.param("sh-x-" + "-".join(["abcdefgh"] * 6) + "-abcde", id="overlong"),
+        # Normalized to `yue-419-Hant`, which langcodes rejects although it accepts the tag itself.
+        pytest.param("zh-yue-419-Hant", id="invalid"),
+    ],
+)
+def test_display_language_rejects_supported_languages_whose_normalized_form_is_invalid(tag: str) -> None:
+    response: Final = TestClient(app).get("/v1/display-language", params={"supported_language": [tag, "en"]})
+
+    assert response.status_code == 422
