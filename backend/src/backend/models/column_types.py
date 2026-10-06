@@ -23,7 +23,8 @@ class LanguageTagType(TypeDecorator[Language]):
     schema change. Languages are written in their normalized spelling
     (`Language.to_tag()`), so stored tags must be normalized as well for SQL
     comparisons to match (migration `33bb3322c275` normalized the existing
-    ones). Stored tags are parsed when loaded; an invalid tag fails loudly
+    ones, so a langcodes upgrade that changes the normalization requires
+    another such migration). Stored tags are parsed when loaded; an invalid tag fails loudly
     instead of being passed on.
     """
 

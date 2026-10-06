@@ -72,8 +72,12 @@ def is_valid_tag(tag: str) -> bool:
 def normalize_tag(tag: str) -> str:
     """Normalize a stored tag, rejecting it under the same rules the application applies when loading it.
 
-    Deliberately duplicates `backend.language_tags.parse_language()` instead of importing it, so this migration keeps
-    its behavior when the application code changes.
+    Duplicates the validation rules of `backend.language_tags.parse_language()` instead of importing it, so this
+    migration keeps its rules when the application code changes. The normalization itself deliberately uses the
+    installed langcodes: stored tags must be spelled exactly as the installed langcodes writes and queries them
+    (`LanguageTagType`), so normalizing them with the langcodes of the time this migration was written would be wrong
+    for a database migrated later. Conversely, upgrading langcodes to a version that normalizes differently requires a
+    new migration for databases that were already migrated.
     """
     if not is_valid_tag(tag):
         raise ValueError(tag)
