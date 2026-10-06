@@ -61,8 +61,6 @@ LANGUAGE_SELECTION_DESCRIPTION = (
     + "`false` if the client did not express any preference."
 )
 
-_ENGLISH = parse_language("en")
-
 # Browsers send a handful of entries. Considering only the most preferred ones bounds the work a client can cause.
 _MAX_ACCEPT_LANGUAGE_ENTRIES = 16
 
@@ -91,27 +89,42 @@ class SelectedTranslation[T](NamedTuple):
 
 
 @final
-class _AvailableLanguage(NamedTuple):
+class _MatchableLanguage(NamedTuple):
     language: Language
     written_language: WrittenLanguage
     subtags: list[str]
 
 
-def _index_available_languages(available_languages: Sequence[Language]) -> list[_AvailableLanguage]:
+def _matchable_language(language: Language) -> Optional[_MatchableLanguage]:
+    """Precompute what is needed for matching `language`.
+
+    Returns `None` for tags without a language (`und`), which do not match
+    any language.
+    """
+    language_written_language: Final = written_language(language)
+    if language_written_language is None:
+        return None
+    return _MatchableLanguage(
+        language=language,
+        written_language=language_written_language,
+        subtags=language.to_tag().split("-"),
+    )
+
+
+def _matchable_english() -> _MatchableLanguage:
+    english: Final = _matchable_language(parse_language("en"))
+    if english is None:
+        raise RuntimeError("English must have a written language.")
+    return english
+
+
+# Precomputed once, since English is matched whenever neither the requested language nor the header is available.
+_ENGLISH = _matchable_english()
+
+
+def _index_available_languages(available_languages: Sequence[Language]) -> list[_MatchableLanguage]:
     """Precompute what is needed for matching, once per selection rather than once per requested language."""
-    index: Final[list[_AvailableLanguage]] = []
-    for available in available_languages:
-        available_written_language = written_language(available)
-        # Tags without a language (`und`) do not match any requested language.
-        if available_written_language is not None:
-            index.append(
-                _AvailableLanguage(
-                    language=available,
-                    written_language=available_written_language,
-                    subtags=available.to_tag().split("-"),
-                )
-            )
-    return index
+    return [matchable for available in available_languages if (matchable := _matchable_language(available)) is not None]
 
 
 def _common_prefix_length(a: Sequence[str], b: Sequence[str]) -> int:
@@ -131,7 +144,7 @@ def _common_prefix_length(a: Sequence[str], b: Sequence[str]) -> int:
 # - It compares spellings instead of canonical forms (`iw` does not find `he`) and lets wildcards match any language.
 # - It only returns the matched value, so it cannot tell whether the client's first choice was available.
 def _find_available_language(
-    language: Language, available_languages: Sequence[_AvailableLanguage]
+    language: Language, available_languages: Sequence[_MatchableLanguage]
 ) -> Optional[Language]:
     """Return the available language that best matches `language`, or `None`
     if none is the same written language.
@@ -139,12 +152,18 @@ def _find_available_language(
     Matching is symmetric (`de-DE` finds `de`, and `de` finds `de-DE`), see
     the module documentation for the preference among several matches.
     """
-    requested_written_language: Final = written_language(language)
-    if requested_written_language is None:
+    requested: Final = _matchable_language(language)
+    if requested is None:
         return None
-    requested_subtags: Final = language.to_tag().split("-")
+    return _find_available_matchable_language(requested, available_languages)
+
+
+def _find_available_matchable_language(
+    requested: _MatchableLanguage, available_languages: Sequence[_MatchableLanguage]
+) -> Optional[Language]:
+    """Like `_find_available_language()`, but for a precomputed requested language."""
     candidates: Final = [
-        available for available in available_languages if available.written_language == requested_written_language
+        available for available in available_languages if available.written_language == requested.written_language
     ]
     if not candidates:
         return None
@@ -153,7 +172,7 @@ def _find_available_language(
     return min(
         candidates,
         key=lambda available: (
-            -_common_prefix_length(available.subtags, requested_subtags),
+            -_common_prefix_length(available.subtags, requested.subtags),
             len(available.subtags),
         ),
     ).language
@@ -234,7 +253,7 @@ def _determine_language_to_be_delivered(
 
     # Without a requested language or a valid header entry, there is no first choice that could be missing.
     client_expressed_preference: Final = requested_tag is not None or header_expressed_preference
-    english: Final = _find_available_language(_ENGLISH, indexed_languages)
+    english: Final = _find_available_matchable_language(_ENGLISH, indexed_languages)
     return _LanguageToBeDelivered(
         language=available_languages[0] if english is None else english,
         is_language_fallback=client_expressed_preference,
