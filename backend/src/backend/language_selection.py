@@ -9,22 +9,25 @@ The language is resolved in the following order:
 3. English,
 4. the first available language.
 
-Language tags are matched by their canonical form and fall back to more
-general tags as in RFC 4647 lookup (e.g. `de-DE` matches `de`). Only the
-requested tags are truncated, never the available ones, so translated content
-is stored under plain language subtags (enforced by check constraints in
-`backend.models.tables`).
+Languages match if they are the same written language, i.e. the same
+language in the same (likely) script, regardless of region or variants: `de`,
+`de-AT`, and `de-DE` all match each other, while `zh-TW` (Traditional) and
+`zh-Hans` (Simplified) do not. Of several matching available languages, the
+one sharing the longest prefix of subtags with the requested tag wins (so
+`de-AT-1996` prefers `de-AT` over `de`), then the least specific one (so
+`de-AT` prefers `de` over `de-DE`), then the first one. English is any
+available language matching `en`.
 
 The delivered language is marked as a fallback if the client's first choice
 (the requested language or, if not given, the most preferred valid header
-entry) is not available. A requested language that is not a valid BCP 47 tag
-is handled like an unavailable one rather than failing the request, so a
-stale or malformed tag still delivers content. If the client did not express
+entry) is not available, i.e. no available language matches it. A requested
+language that is not a valid BCP 47 tag is handled like an unavailable one
+rather than failing the request, so a stale or malformed tag still delivers
+content. If the client did not express
 any preference at all, there is no first choice that could be missing, so
 English or the first available language is not marked as a fallback.
 """
 
-from collections.abc import Iterator
 from collections.abc import Mapping
 from collections.abc import Sequence
 from typing import Final
@@ -37,15 +40,18 @@ from langcodes import Language
 from werkzeug.datastructures import LanguageAccept
 from werkzeug.http import parse_accept_header
 
+from backend.language_tags import WrittenLanguage
 from backend.language_tags import parse_language
+from backend.language_tags import written_language
 from backend.models.responses import LanguageDetailsV1
 
 LANGUAGE_SELECTION_DESCRIPTION = (
     "The language is selected in the following order: the requested language (`language`, if given and a "
     + "valid BCP 47 tag; an invalid tag is handled like an unavailable language), "
     + "the best available language from the `Accept-Language` header (respecting quality values), "
-    + "English, and finally the first available language. Language tags are matched by their "
-    + "canonical form and fall back to more general tags (e.g. `de-DE` matches `de`). Wildcards and "
+    + "English, and finally the first available language. Languages match if they are the same language "
+    + "in the same (likely) script, regardless of region or variants (e.g. `de-AT` matches `de` and `de-DE`, "
+    + "but `zh-TW` does not match `zh-Hans`); the closest available tag is preferred. Wildcards and "
     + "languages excluded with `q=0` are ignored, so an excluded language may still be delivered as the "
     + "English or first available language. `isLanguageFallback` is `true` if the client's first choice "
     + "(`language` or, if not given, the most preferred valid `Accept-Language` entry) is not available, and "
@@ -78,37 +84,66 @@ class SelectedTranslation[T](NamedTuple):
     language_details: LanguageDetailsV1
 
 
-def _lookup_tags(tag: str) -> Iterator[str]:
-    """Yield `tag` and its progressively truncated forms, most specific first,
-    as used by RFC 4647 lookup (e.g. `sr-Latn-RS` -> `sr-Latn` -> `sr`).
+@final
+class _AvailableLanguage(NamedTuple):
+    language: Language
+    written_language: WrittenLanguage
+    subtags: list[str]
 
-    Subtags are removed from the end; a singleton that would end up last is
-    removed along with the subtag following it (e.g. `en-US-x-private` ->
-    `en-US`).
 
-    See: https://www.rfc-editor.org/rfc/rfc4647#section-3.4
+def _index_available_languages(available_languages: Sequence[Language]) -> list[_AvailableLanguage]:
+    """Precompute what is needed for matching, once per selection rather than once per requested language."""
+    index: Final[list[_AvailableLanguage]] = []
+    for available in available_languages:
+        available_written_language = written_language(available)
+        # Tags without a language (`und`) do not match any requested language.
+        if available_written_language is not None:
+            index.append(
+                _AvailableLanguage(
+                    language=available,
+                    written_language=available_written_language,
+                    subtags=available.to_tag().split("-"),
+                )
+            )
+    return index
+
+
+def _common_prefix_length(a: Sequence[str], b: Sequence[str]) -> int:
+    length = 0
+    for subtag_a, subtag_b in zip(a, b, strict=False):
+        if subtag_a != subtag_b:
+            break
+        length += 1
+    return length
+
+
+def _find_available_language(
+    language: Language, available_languages: Sequence[_AvailableLanguage]
+) -> Optional[Language]:
+    """Return the available language that best matches `language`, or `None`
+    if none is the same written language.
+
+    Matching is symmetric (`de-DE` finds `de`, and `de` finds `de-DE`), see
+    the module documentation for the preference among several matches.
     """
-    subtags: Final = tag.split("-")
-    while subtags:
-        yield "-".join(subtags)
-        del subtags[-1]
-        if subtags and len(subtags[-1]) == 1:
-            del subtags[-1]
-
-
-def _find_available_language(language: Language, available_languages: Sequence[Language]) -> Optional[Language]:
-    """Return the available language that matches the canonical form of
-    `language` itself or, failing that, the most specific of its truncated
-    forms (RFC 4647 lookup, e.g. `de-DE` -> `de`).
-    """
-    # `Language` equality is defined by the tag string, so matching on canonical tags is exact. Returning the
-    # available object itself (instead of re-parsing the tag) guarantees that the result is usable as a key into the
-    # translations.
-    available_by_tag: Final = {available.to_tag(): available for available in available_languages}
-    return next(
-        (available_by_tag[tag] for tag in _lookup_tags(language.to_tag()) if tag in available_by_tag),
-        None,
-    )
+    requested_written_language: Final = written_language(language)
+    if requested_written_language is None:
+        return None
+    requested_subtags: Final = language.to_tag().split("-")
+    candidates: Final = [
+        available for available in available_languages if available.written_language == requested_written_language
+    ]
+    if not candidates:
+        return None
+    # `min()` returns the first of several equally good candidates. The available object itself is returned (instead of
+    # re-parsing the tag), so the result is usable as a key into the translations.
+    return min(
+        candidates,
+        key=lambda available: (
+            -_common_prefix_length(available.subtags, requested_subtags),
+            len(available.subtags),
+        ),
+    ).language
 
 
 def _parse_valid_language(tag: str) -> Optional[Language]:
@@ -152,11 +187,12 @@ def _determine_language_to_be_delivered(
 ) -> _LanguageToBeDelivered:
     if not available_languages:
         raise ValueError("At least one language must be available.")
+    indexed_languages: Final = _index_available_languages(available_languages)
 
     # An invalid tag still expresses a preference, so it is handled like an unavailable language.
     requested_language: Final = None if language is None else _parse_valid_language(language)
     if requested_language is not None:
-        available_route_language: Final = _find_available_language(requested_language, available_languages)
+        available_route_language: Final = _find_available_language(requested_language, indexed_languages)
         if available_route_language is not None:
             return _LanguageToBeDelivered(
                 language=available_route_language,
@@ -172,7 +208,7 @@ def _determine_language_to_be_delivered(
         [] if accept_language_header is None else _parse_accept_language_header(accept_language_header)
     )
     for i, header_language in enumerate(header_languages):
-        available_header_language = _find_available_language(header_language, available_languages)
+        available_header_language = _find_available_language(header_language, indexed_languages)
         if available_header_language is not None:
             return _LanguageToBeDelivered(
                 language=available_header_language,
@@ -182,8 +218,9 @@ def _determine_language_to_be_delivered(
 
     # Without a requested language or a valid header entry, there is no first choice that could be missing.
     client_expressed_preference: Final = language is not None or len(header_languages) > 0
+    english: Final = _find_available_language(_ENGLISH, indexed_languages)
     return _LanguageToBeDelivered(
-        language=_ENGLISH if _ENGLISH in available_languages else available_languages[0],
+        language=available_languages[0] if english is None else english,
         is_language_fallback=client_expressed_preference,
         varies_with_accept_language=True,
     )

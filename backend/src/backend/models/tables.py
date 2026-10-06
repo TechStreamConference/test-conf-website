@@ -148,15 +148,6 @@ class Global(SQLModel, table=True):
     value: str
 
 
-def _content_language_constraint(table_name: str) -> sa.CheckConstraint:
-    """Restrict translated content to plain (normalized) language subtags such as `de` or `en`.
-
-    The language selection only truncates the requested tag (`de-DE` finds `de`), never the stored ones, so content
-    stored as `de-DE` would not be found for `de`, and content stored as `en-GB` would not count as English.
-    """
-    return sa.CheckConstraint("language ~ '^[a-z]{2,3}$'", name=f"ck_{table_name}_language_without_subtags")
-
-
 # WARNING: Changing the `StaticPageKind` enum requires also creating a database
 #          migration to update the SQLAlchemy Enum type in the database.
 @final
@@ -167,7 +158,6 @@ class StaticPageKind(StrEnum):
 @final
 class StaticPage(SQLModel, table=True):
     __tablename__ = "static_pages"  # type: ignore[reportAssignmentType]
-    __table_args__ = (_content_language_constraint("static_pages"),)
 
     kind: StaticPageKind = Field(primary_key=True)
     language: Bcp47Language = Field(primary_key=True, sa_type=LanguageTagType)
@@ -198,7 +188,6 @@ class Event(_AuditMixin, table=True):
 @final
 class EventTranslation(_AuditMixin, table=True):
     __tablename__ = "event_translations"  # type: ignore[reportAssignmentType]
-    __table_args__ = (_content_language_constraint("event_translations"),)
 
     event_id: int = Field(foreign_key="events.id", primary_key=True)
     language: Bcp47Language = Field(primary_key=True, sa_type=LanguageTagType)

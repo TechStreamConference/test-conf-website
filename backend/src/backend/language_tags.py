@@ -7,7 +7,10 @@ values such as numbers and dates (see `backend.user_preferences`).
 
 from typing import Annotated
 from typing import Final
+from typing import NamedTuple
+from typing import Optional
 from typing import Protocol
+from typing import final
 from typing import runtime_checkable
 
 from langcodes import Language
@@ -63,6 +66,30 @@ def parse_language(value: str) -> Language:
     if not is_valid_bcp_47_tag(value):
         raise ValueError("Language must be a valid BCP 47 language tag.")
     return Language.get(value)
+
+
+@final
+class WrittenLanguage(NamedTuple):
+    """A language together with the script it is written in, e.g. `zh` in `Hant` for `zh-TW`."""
+
+    language: str
+    script: Optional[str]
+
+
+def written_language(language: Language) -> Optional[WrittenLanguage]:
+    """Determine the language and the (likely) script of `language`, so that
+    tags of the same written language can be matched regardless of their
+    region or variants (`de-AT` and `de-DE`), while tags in different scripts
+    are kept apart (`zh-TW` and `zh-Hans`).
+
+    Returns `None` for tags without a language, such as `und`.
+    """
+    if language.language is None:
+        return None
+    # Likely subtags are taken from the CLDR, e.g. `zh-TW` -> `zh-Hant-TW`.
+    maximized: Final = language.maximize()
+    _limit_langcodes_caches()
+    return WrittenLanguage(language=language.language, script=maximized.script)
 
 
 def _validate_language(value: object) -> Language:

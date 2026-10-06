@@ -50,6 +50,30 @@ async def test_display_language_returns_tags_in_the_spelling_of_the_supported_la
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("accept_language", "expected_tag", "is_language_fallback"),
+    [
+        (None, "en-US", False),
+        ("de", "de-DE", False),
+        ("de-AT, de;q=0.9", "de-DE", False),
+        ("en", "en-US", False),
+        ("fr", "en-US", True),
+    ],
+)
+async def test_display_language_matches_regional_supported_languages(
+    accept_language: Optional[str], expected_tag: str, is_language_fallback: bool
+) -> None:
+    result: Final = await get_display_language(
+        Response(),
+        supported_language=["de-DE", "en-US"],
+        accept_language=accept_language,
+    )
+
+    assert result.language_tag == expected_tag
+    assert result.is_language_fallback is is_language_fallback
+
+
+@pytest.mark.asyncio
 async def test_display_language_without_any_preference_returns_english_without_fallback() -> None:
     response: Final = Response()
 

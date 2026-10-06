@@ -104,6 +104,110 @@ def test_select_translation_follows_rfc_4647_lookup(
     assert result.language_details.is_language_fallback is False
 
 
+@pytest.mark.parametrize(
+    ("language_tag", "available_tags", "expected_tag"),
+    [
+        # Available languages may be more specific than the requested one.
+        ("de", ["en", "de-DE"], "de-DE"),
+        # Other regions of the same language match as well.
+        ("de-AT", ["en", "de-DE"], "de-DE"),
+        # A broader tag is preferred over a sibling region.
+        ("de-AT", ["de-DE", "de"], "de"),
+        # Of equally good matches, the first one is used.
+        ("de", ["de-DE", "de-CH"], "de-DE"),
+        ("de-AT", ["de-CH", "de-DE"], "de-CH"),
+        # The likely script is part of the language: `zh-TW` is written in Traditional characters.
+        ("zh-TW", ["zh-Hans", "zh-Hant"], "zh-Hant"),
+        ("zh-Hant-HK", ["zh", "zh-TW"], "zh-TW"),
+    ],
+)
+def test_select_translation_matches_the_same_written_language(
+    language_tag: str, available_tags: list[str], expected_tag: str
+) -> None:
+    result: Final = select_translation(
+        {Language.get(tag): tag for tag in available_tags},
+        language=language_tag,
+        accept_language=None,
+        response=Response(),
+    )
+
+    assert result.translation == expected_tag
+    assert result.language_details.is_language_fallback is False
+
+
+@pytest.mark.parametrize(
+    ("language_tag", "available_tags"),
+    [
+        # Different scripts are different written languages.
+        ("zh-TW", ["en", "zh-Hans"]),
+        ("sr-Latn", ["en", "sr-Cyrl"]),
+        # A tag without a language does not match anything.
+        ("und", ["en", "de"]),
+    ],
+)
+def test_select_translation_does_not_match_other_written_languages(
+    language_tag: str, available_tags: list[str]
+) -> None:
+    result: Final = select_translation(
+        {Language.get(tag): tag for tag in available_tags},
+        language=language_tag,
+        accept_language=None,
+        response=Response(),
+    )
+
+    assert result.translation == "en"
+    assert result.language_details.is_language_fallback is True
+
+
+# `und` maximizes to `en-Latn-US`, but must not count as English.
+def test_select_translation_ignores_available_languages_without_a_language() -> None:
+    result: Final = select_translation(
+        {Language.get("und"): "Undetermined", _DE: "Hallo"},
+        language="en",
+        accept_language=None,
+        response=Response(),
+    )
+
+    assert result.translation == "Undetermined"
+    assert result.language_details.is_language_fallback is True
+
+
+@pytest.mark.parametrize(
+    ("accept_language", "expected_translation", "is_language_fallback"),
+    [
+        (None, "Howdy", False),
+        ("de", "Hallo", False),
+        ("de-AT, de;q=0.9", "Hallo", False),
+        ("fr", "Howdy", True),
+    ],
+)
+def test_select_translation_finds_regional_content(
+    accept_language: Optional[str], expected_translation: str, is_language_fallback: bool
+) -> None:
+    result: Final = select_translation(
+        {Language.get("de-DE"): "Hallo", Language.get("en-US"): "Howdy"},
+        language=None,
+        accept_language=accept_language,
+        response=Response(),
+    )
+
+    assert result.translation == expected_translation
+    assert result.language_details.is_language_fallback is is_language_fallback
+
+
+@pytest.mark.parametrize("available_tags", [["de", "en-GB"], ["de", "en-GB", "en"]])
+def test_select_translation_falls_back_to_any_english(available_tags: list[str]) -> None:
+    result: Final = select_translation(
+        {Language.get(tag): tag for tag in available_tags},
+        language=None,
+        accept_language=None,
+        response=Response(),
+    )
+
+    # Plain `en` is preferred if available.
+    assert result.translation == available_tags[-1]
+
+
 def test_select_translation_falls_back_to_header_when_route_language_is_unavailable() -> None:
     response: Final = Response()
 
