@@ -43,6 +43,16 @@ class HttpRequestCompleted(LogEventBase):
 
 
 @final
+class HttpRequestFailed(LogEventBase):
+    LOG_EVENT_NAME: ClassVar[str] = "http.request.failed"
+    LOG_BODY: ClassVar[str] = "HTTP request failed with an unexpected exception"
+    method: str
+    path: str
+    exception_type: str
+    request_id: str | None = None
+
+
+@final
 class HttpRequestReceived(LogEventBase):
     LOG_EVENT_NAME: ClassVar[str] = "http.request.received"
     LOG_BODY: ClassVar[str] = "HTTP request received"
@@ -66,6 +76,7 @@ type LogEvent = (
     | ApplicationStopping
     | BackendCallCompleted
     | HttpRequestCompleted
+    | HttpRequestFailed
     | HttpRequestReceived
     | RegionalSettingsReportProcessed
 )

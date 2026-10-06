@@ -20,6 +20,7 @@ from backend.database import get_session
 from backend.logging.events_gen import ApplicationStarted
 from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
+from backend.logging.events_gen import HttpRequestFailed
 from backend.logging.events_gen import HttpRequestReceived
 from backend.models.responses import InternalServerErrorResponseV1
 from backend.routes import v1_api
@@ -58,9 +59,18 @@ async def _log_requests(
     start: Final = time.monotonic()
     try:
         response: Final = await call_next(request)
-    except Exception:
+    except Exception as exception:
         # Unexpected exceptions pass this middleware and are only turned into a response by the outermost
         # `_handle_unexpected_exception()`, so the request is logged as completed with that response's status here.
+        # The message is not logged, since it may contain personal data (e.g. the values violating a constraint).
+        exception_type: Final = type(exception)
+        logging.error(
+            HttpRequestFailed(
+                method=request.method,
+                path=request.url.path,
+                exception_type=f"{exception_type.__module__}.{exception_type.__qualname__}",
+            )
+        )
         _log_request_completed(request, status.HTTP_500_INTERNAL_SERVER_ERROR, start)
         raise
     _log_request_completed(request, response.status_code, start)

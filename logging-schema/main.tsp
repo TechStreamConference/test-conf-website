@@ -68,6 +68,27 @@ namespace LogEvents {
     request_id?: string;
   }
 
+  /**
+   * Emitted when handling an HTTP request fails with an unexpected exception,
+   * before the request is logged as completed with status 500. Never includes
+   * the exception message, which may contain personal data.
+   */
+  @extension("x-event-name", "http.request.failed")
+  @extension("x-event-body", "HTTP request failed with an unexpected exception")
+  model HttpRequestFailed {
+    /** HTTP method (GET, POST, …). */
+    method: string;
+
+    /** Request path including query string. */
+    path: string;
+
+    /** Fully qualified name of the exception type, e.g. `sqlalchemy.exc.IntegrityError`. */
+    exception_type: string;
+
+    /** Opaque request correlation identifier, if available. */
+    request_id?: string;
+  }
+
   // ─── BFF (SvelteKit server-side) ──────────────────────────────────────────
 
   /** Emitted by the BFF after each call to the backend REST API completes. */

@@ -15,6 +15,7 @@ from backend.database import get_session
 from backend.logging.events_gen import ApplicationStarted
 from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
+from backend.logging.events_gen import HttpRequestFailed
 from backend.logging.events_gen import HttpRequestReceived
 from backend.main import _handle_unexpected_exception  # type: ignore[reportPrivateUsage]
 from backend.main import _lifespan  # type: ignore[reportPrivateUsage]
@@ -89,7 +90,9 @@ async def test_request_middleware_logs_unexpected_exceptions_as_internal_server_
     request.url.path = "/v1/imprint"
     error: Final = RuntimeError("unexpected")
     log_info: Final = Mock()
+    log_error: Final = Mock()
     monkeypatch.setattr(main_module.logging, "info", log_info)
+    monkeypatch.setattr(main_module.logging, "error", log_error)
     monkeypatch.setattr(main_module, "time", Mock(monotonic=Mock(side_effect=[10.0, 10.5])))
 
     with pytest.raises(RuntimeError) as exc_info:
@@ -97,6 +100,9 @@ async def test_request_middleware_logs_unexpected_exceptions_as_internal_server_
 
     # Re-raised for `_handle_unexpected_exception()` and the server's traceback logging.
     assert exc_info.value is error
+    log_error.assert_called_once_with(
+        HttpRequestFailed(method="GET", path="/v1/imprint", exception_type="builtins.RuntimeError")
+    )
     assert log_info.call_count == 2
     completed: Final = log_info.call_args_list[1].args[0]
     assert isinstance(completed, HttpRequestCompleted)

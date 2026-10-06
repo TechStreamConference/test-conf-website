@@ -109,6 +109,34 @@ export function httpRequestCompleted(payload: HttpRequestCompletedPayload): Http
     };
 }
 
+// ─── HttpRequestFailed ──────────────────────────────────────────────────
+
+export const HttpRequestFailedSchema = z.object({
+    method: z.string(),
+    path: z.string(),
+    exception_type: z.string(),
+    request_id: z.string().optional()
+});
+
+export type HttpRequestFailedPayload = z.infer<typeof HttpRequestFailedSchema>;
+
+const _HTTP_REQUEST_FAILED_META = {
+    eventName: 'http.request.failed',
+    body: 'HTTP request failed with an unexpected exception'
+} as const;
+
+export type HttpRequestFailed = {
+    readonly $meta: typeof _HTTP_REQUEST_FAILED_META;
+    readonly $payload: HttpRequestFailedPayload;
+};
+
+export function httpRequestFailed(payload: HttpRequestFailedPayload): HttpRequestFailed {
+    return {
+        $meta: _HTTP_REQUEST_FAILED_META,
+        $payload: payload
+    };
+}
+
 // ─── HttpRequestReceived ──────────────────────────────────────────────────
 
 export const HttpRequestReceivedSchema = z.object({
@@ -173,5 +201,6 @@ export type LogEvent =
     | ApplicationStopping
     | BackendCallCompleted
     | HttpRequestCompleted
+    | HttpRequestFailed
     | HttpRequestReceived
     | RegionalSettingsReportProcessed;
