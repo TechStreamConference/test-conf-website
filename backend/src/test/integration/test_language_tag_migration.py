@@ -1,42 +1,20 @@
-from collections.abc import Generator
 from datetime import UTC
 from datetime import date
 from datetime import datetime
-from pathlib import Path
 from typing import Final
 
 import pytest
 import sqlalchemy as sa
 from alembic.config import Config
 from alembic.runtime.migration import MigrationContext
-from testcontainers.community.postgres import PostgresContainer
 
 from alembic import command
 
 pytestmark: Final = pytest.mark.integration
 
-_MIGRATIONS_PATH = Path(__file__).resolve().parents[3] / "alembic"
 _PREVIOUS_REVISION = "0f7cecbb7aa0"
 _REVISION = "33bb3322c275"
 _RENAME_REVISION = "a9b90a5b14e5"
-
-
-@pytest.fixture(scope="module")
-def migration_database() -> Generator[tuple[Config, sa.Engine]]:
-    # A separate database, so that the shared, seeded one stays untouched.
-    container: Final = PostgresContainer("postgres:16-alpine")
-    _ = container.start()
-    try:
-        config: Final = Config()
-        config.set_main_option("script_location", str(_MIGRATIONS_PATH))
-        config.set_main_option("sqlalchemy.url", container.get_connection_url())
-        engine: Final = sa.create_engine(container.get_connection_url())
-        try:
-            yield config, engine
-        finally:
-            engine.dispose()
-    finally:
-        container.stop()
 
 
 @pytest.fixture
@@ -162,6 +140,24 @@ def test_upgrade_normalizes_tags_and_downgrade_keeps_them(
             [(1, "en_US")],
             r"event_translations: invalid language tag 'en_US' for 1",
             id="invalid tag",
+        ),
+        pytest.param(
+            ["de"],
+            [(1, "de-x-" + "-".join(["abcdefgh"] * 7))],
+            r"event_translations: invalid language tag 'de-x-abcdefgh-.*' for 1",
+            id="tag too long",
+        ),
+        pytest.param(
+            ["de"],
+            [(1, "sh-x-" + "-".join(["abcdefgh"] * 6) + "-abcde")],
+            r"event_translations: invalid language tag 'sh-x-abcdefgh-.*' for 1",
+            id="normalized tag too long",
+        ),
+        pytest.param(
+            ["de"],
+            [(1, "zh-yue-419-Hant")],
+            r"event_translations: invalid language tag 'zh-yue-419-Hant' for 1",
+            id="normalized tag invalid",
         ),
     ],
 )

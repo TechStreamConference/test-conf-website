@@ -1,11 +1,13 @@
 import time
 from collections.abc import AsyncGenerator
+from collections.abc import Generator
 from pathlib import Path
 from typing import Final
 
 import httpx
 import pytest
 import pytest_asyncio
+import sqlalchemy as sa
 from alembic.config import Config
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
@@ -82,3 +84,23 @@ async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerato
         yield _POSTGRES.get_connection_url(driver="asyncpg")
     finally:
         _POSTGRES.stop()
+
+
+@pytest.fixture(scope="module")
+def migration_database() -> Generator[tuple[Config, sa.Engine]]:
+    """Provide a separate, unmigrated database per module for testing individual migrations, so that the shared,
+    seeded one stays untouched.
+    """
+    container: Final = PostgresContainer("postgres:16-alpine")
+    _ = container.start()
+    try:
+        config: Final = Config()
+        config.set_main_option("script_location", str(_MIGRATIONS_PATH))
+        config.set_main_option("sqlalchemy.url", container.get_connection_url())
+        engine: Final = sa.create_engine(container.get_connection_url())
+        try:
+            yield config, engine
+        finally:
+            engine.dispose()
+    finally:
+        container.stop()

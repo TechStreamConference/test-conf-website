@@ -60,7 +60,7 @@ LANGUAGE_SELECTION_DESCRIPTION = (
     + "`false` if the client did not express any preference."
 )
 
-_ENGLISH = Language.get("en")
+_ENGLISH = parse_language("en")
 
 # Browsers send a handful of entries. Considering only the most preferred ones bounds the work a client can cause.
 _MAX_ACCEPT_LANGUAGE_ENTRIES = 16

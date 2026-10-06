@@ -10,10 +10,9 @@ from zoneinfo import ZoneInfo
 from zoneinfo import ZoneInfoNotFoundError
 from zoneinfo import available_timezones
 
-from langcodes import standardize_tag
-
 from backend.config import SETTINGS
 from backend.language_tags import is_valid_bcp_47_tag
+from backend.language_tags import standardize_language_tag
 from backend.models.tables import UserPreferences
 
 _IANA_TIMEZONES = available_timezones()
@@ -58,7 +57,7 @@ def canonical_locale(value: str) -> str:
     """Resolve a BCP 47 language tag to its canonical form (casing, redundant
     script/region subtags, deprecated subtag replacements).
     """
-    return standardize_tag(value)
+    return standardize_language_tag(value)
 
 
 def locales_equivalent(a: str, b: str) -> bool:

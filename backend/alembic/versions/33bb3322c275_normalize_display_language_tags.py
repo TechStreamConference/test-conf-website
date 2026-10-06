@@ -54,6 +54,7 @@ EVENT_TRANSLATIONS = sa.table(
 )
 # Each table maps to the column that identifies a row together with `language_tag`.
 TABLES = {STATIC_PAGES: STATIC_PAGES.c.kind, EVENT_TRANSLATIONS: EVENT_TRANSLATIONS.c.event_id}
+MAX_TAG_LENGTH = 64
 
 
 @final
@@ -63,16 +64,25 @@ class TagUpdate(NamedTuple):
     new_tag: str
 
 
+def is_valid_tag(tag: str) -> bool:
+    # `tag_is_valid()` returns `False` for tags that cannot be parsed instead of raising.
+    return len(tag) <= MAX_TAG_LENGTH and "_" not in tag and tag_is_valid(tag)
+
+
 def normalize_tag(tag: str) -> str:
     """Normalize a stored tag, rejecting it under the same rules the application applies when loading it.
 
     Deliberately duplicates `backend.language_tags.parse_language()` instead of importing it, so this migration keeps
     its behavior when the application code changes.
     """
-    # `tag_is_valid()` returns `False` for tags that cannot be parsed instead of raising.
-    if "_" in tag or not tag_is_valid(tag):
+    if not is_valid_tag(tag):
         raise ValueError(tag)
-    return Language.get(tag).to_tag()
+    normalized: Final = Language.get(tag).to_tag()
+    # The normalized tag is validated whenever it is loaded. Normalizing may lengthen a tag (`sh` -> `sr-Latn`) or turn
+    # a tag that langcodes accepts into one it rejects (`zh-yue-419-Hant` -> `yue-419-Hant`).
+    if not is_valid_tag(normalized):
+        raise ValueError(tag)
+    return normalized
 
 
 def plan_tag_updates(table: str, rows: Sequence[tuple[object, str]]) -> list[TagUpdate]:
