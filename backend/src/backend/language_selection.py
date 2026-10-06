@@ -2,8 +2,8 @@
 
 The language is resolved in the following order:
 
-1. the requested language (the `language` query parameter, if given and a
-   valid BCP 47 tag),
+1. the requested language (the `language` query parameter, if given, i.e.
+   not missing or empty, and a valid BCP 47 tag),
 2. the best available language from the `Accept-Language` header (respecting
    quality values),
 3. English,
@@ -49,7 +49,8 @@ from backend.models.responses import LanguageDetailsV1
 
 LANGUAGE_SELECTION_DESCRIPTION = (
     "The language is selected in the following order: the requested language (`language`, if given and a "
-    + "valid BCP 47 tag; an invalid tag is handled like an unavailable language), "
+    + "valid BCP 47 tag; an empty `language` counts as not given, an invalid tag is handled like an unavailable "
+    + "language), "
     + "the best available language from the `Accept-Language` header (respecting quality values), "
     + "English, and finally the first available language. Languages match if they are the same language "
     + "in the same (likely) script, regardless of region or variants (e.g. `de-AT` matches `de` and `de-DE`, "
@@ -201,8 +202,10 @@ def _determine_language_to_be_delivered(
         raise ValueError("At least one language must be available.")
     indexed_languages: Final = _index_available_languages(available_languages)
 
+    # An empty tag (`?language=`) does not express a preference, e.g. if a client always passes the parameter.
+    requested_tag: Final = language or None
     # An invalid tag still expresses a preference, so it is handled like an unavailable language.
-    requested_language: Final = None if language is None else _parse_valid_language(language)
+    requested_language: Final = None if requested_tag is None else _parse_valid_language(requested_tag)
     if requested_language is not None:
         available_route_language: Final = _find_available_language(requested_language, indexed_languages)
         if available_route_language is not None:
@@ -224,13 +227,13 @@ def _determine_language_to_be_delivered(
             if available_header_language is not None:
                 return _LanguageToBeDelivered(
                     language=available_header_language,
-                    is_language_fallback=language is not None or header_expressed_preference,
+                    is_language_fallback=requested_tag is not None or header_expressed_preference,
                     varies_with_accept_language=True,
                 )
             header_expressed_preference = True
 
     # Without a requested language or a valid header entry, there is no first choice that could be missing.
-    client_expressed_preference: Final = language is not None or header_expressed_preference
+    client_expressed_preference: Final = requested_tag is not None or header_expressed_preference
     english: Final = _find_available_language(_ENGLISH, indexed_languages)
     return _LanguageToBeDelivered(
         language=available_languages[0] if english is None else english,

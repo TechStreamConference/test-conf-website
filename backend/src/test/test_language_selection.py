@@ -224,7 +224,7 @@ def test_select_translation_falls_back_to_header_when_route_language_is_unavaila
 
 
 # An invalid requested language must not fail the request, but it still expresses a preference that is not met.
-@pytest.mark.parametrize("language", ["en_US", "jp", "not a tag", ""])
+@pytest.mark.parametrize("language", ["en_US", "jp", "not a tag", " "])
 @pytest.mark.parametrize(("accept_language", "expected_translation"), [("de", "Hallo"), (None, "Hello")])
 def test_select_translation_handles_invalid_route_language_like_an_unavailable_one(
     language: str, accept_language: Optional[str], expected_translation: str
@@ -339,13 +339,16 @@ def test_select_translation_prefers_header_entries_by_quality() -> None:
 
 
 # Without any usable preference, English (or the first available language) is not a fallback: there is no first
-# choice that could have been unavailable. Wildcards and excluded languages (`q=0`) are ignored.
+# choice that could have been unavailable. Wildcards, excluded languages (`q=0`), and an empty requested language
+# (`?language=`) are ignored.
+@pytest.mark.parametrize("language", [None, ""])
 @pytest.mark.parametrize("accept_language", [None, "", "*", "!!!", "en;q=0"])
 @pytest.mark.parametrize(
     ("translations_by_language", "expected_language"),
     [({_DE: "Hallo", _EN: "Hello"}, _EN), ({_DE: "Hallo", Language.get("es"): "Hola"}, _DE)],
 )
 def test_select_translation_without_preference_is_no_fallback(
+    language: Optional[str],
     accept_language: Optional[str],
     translations_by_language: dict[Language, str],
     expected_language: Language,
@@ -354,7 +357,7 @@ def test_select_translation_without_preference_is_no_fallback(
 
     result: Final = select_translation(
         translations_by_language,
-        language=None,
+        language=language,
         accept_language=accept_language,
         response=response,
     )
@@ -364,6 +367,18 @@ def test_select_translation_without_preference_is_no_fallback(
     assert result.language_details.is_language_fallback is False
     # A usable header would have changed the selection.
     assert response.headers["vary"] == "Accept-Language"
+
+
+def test_select_translation_with_empty_requested_language_uses_header_without_fallback() -> None:
+    result: Final = select_translation(
+        {_DE: "Hallo", _EN: "Hello"},
+        language="",
+        accept_language="de",
+        response=Response(),
+    )
+
+    assert result.translation == "Hallo"
+    assert result.language_details.is_language_fallback is False
 
 
 def test_select_translation_appends_to_existing_vary_header() -> None:
