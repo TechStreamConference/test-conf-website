@@ -15,8 +15,10 @@ language in the same (likely) script, regardless of region or variants: `de`,
 `zh-Hans` (Simplified) do not. Of several matching available languages, the
 one sharing the longest prefix of subtags with the requested tag wins (so
 `de-AT-1996` prefers `de-AT` over `de`), then the least specific one (so
-`de-AT` prefers `de` over `de-DE`), then the first one. English is any
-available language matching `en`.
+`de-AT` prefers `de` over `de-DE`), then the first one. Script subtags are
+ignored for this, since matching languages share their script anyway (so
+`zh-TW` prefers `zh-Hant-TW` over `zh-Hant-HK`). English is any available
+language matching `en`.
 
 The delivered language is marked as a fallback if the client's first choice
 (the requested language or, if not given, the most preferred valid header
@@ -117,6 +119,9 @@ class _MatchableLanguage(NamedTuple):
     language: Language
     written_language: WrittenLanguage
     subtags: list[str]
+    """The subtags without the script, since matching languages share their (likely) script anyway: whether it is
+    spelled out must not affect which language is the closest.
+    """
 
 
 def _matchable_language(language: Language) -> Optional[_MatchableLanguage]:
@@ -128,11 +133,10 @@ def _matchable_language(language: Language) -> Optional[_MatchableLanguage]:
     language_written_language: Final = written_language(language)
     if language_written_language is None:
         return None
-    return _MatchableLanguage(
-        language=language,
-        written_language=language_written_language,
-        subtags=language.to_tag().split("-"),
-    )
+    subtags: Final = language.to_tag().split("-")
+    if language.script is not None:
+        subtags.remove(language.script)
+    return _MatchableLanguage(language=language, written_language=language_written_language, subtags=subtags)
 
 
 def _matchable_english() -> _MatchableLanguage:

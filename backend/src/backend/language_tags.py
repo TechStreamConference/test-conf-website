@@ -7,7 +7,7 @@ values such as numbers and dates (see `backend.user_preferences`).
 All langcodes functionality that parses tags or creates `Language` objects
 must be used through this module, which bounds the memory langcodes uses for
 client-provided tags. Elsewhere, `Language` objects returned by this module
-are only compared, hashed, and converted with `to_tag()`.
+are only compared, hashed, converted with `to_tag()`, and their subtags read.
 """
 
 import threading

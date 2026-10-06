@@ -114,6 +114,11 @@ def test_select_translation_follows_rfc_4647_lookup(
         # The likely script is part of the language: `zh-TW` is written in Traditional characters.
         ("zh-TW", ["zh-Hans", "zh-Hant"], "zh-Hant"),
         ("zh-Hant-HK", ["zh", "zh-TW"], "zh-TW"),
+        # Matching languages share their script, so spelling it out does not affect which one is the closest.
+        ("zh-TW", ["zh-Hant-HK", "zh-Hant-TW"], "zh-Hant-TW"),
+        ("zh-Hant-TW", ["zh-HK", "zh-TW"], "zh-TW"),
+        ("de-Latn-AT", ["de", "de-AT"], "de-AT"),
+        ("de", ["de-AT", "de-Latn"], "de-Latn"),
     ],
 )
 def test_select_translation_matches_the_same_written_language(
