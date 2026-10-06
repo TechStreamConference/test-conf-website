@@ -140,3 +140,24 @@ def test_unexpected_exception_is_returned_as_documented_internal_server_error(
         call.args[0] for call in log_info.call_args_list if isinstance(call.args[0], HttpRequestCompleted)
     ]
     assert [event.status_code for event in completed] == [500]
+
+
+def test_request_middleware_logs_the_path_without_the_query_string(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def _failing_session() -> AsyncGenerator[AsyncSession]:
+        raise RuntimeError("unexpected")
+        yield  # pyright: ignore[reportUnreachable]
+
+    log_info: Final = Mock()
+    log_error: Final = Mock()
+    monkeypatch.setattr(main_module.logging, "info", log_info)
+    monkeypatch.setattr(main_module.logging, "error", log_error)
+    app.dependency_overrides[get_session] = _failing_session
+    try:
+        # Query strings may contain personal data.
+        _ = TestClient(app, raise_server_exceptions=False).get("/v1/globals", params={"language": "de"})
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+
+    logged: Final = [call.args[0] for call in log_info.call_args_list + log_error.call_args_list]
+    assert [type(event) for event in logged] == [HttpRequestReceived, HttpRequestCompleted, HttpRequestFailed]
+    assert all(event.path == "/v1/globals" for event in logged)

@@ -41,7 +41,7 @@ namespace LogEvents {
     /** HTTP method (GET, POST, …). */
     method: string;
 
-    /** Request path including query string. */
+    /** Request path without the query string, which may contain personal data. */
     path: string;
 
     /** Opaque request correlation identifier, if available. */
@@ -55,7 +55,7 @@ namespace LogEvents {
     /** HTTP method (GET, POST, …). */
     method: string;
 
-    /** Request path including query string. */
+    /** Request path without the query string, which may contain personal data. */
     path: string;
 
     /** HTTP response status code. */
@@ -79,7 +79,7 @@ namespace LogEvents {
     /** HTTP method (GET, POST, …). */
     method: string;
 
-    /** Request path including query string. */
+    /** Request path without the query string, which may contain personal data. */
     path: string;
 
     /** Fully qualified name of the exception type, e.g. `sqlalchemy.exc.IntegrityError`. */
