@@ -50,6 +50,14 @@ def test_settings_reject_invalid_default_locales(monkeypatch: pytest.MonkeyPatch
         _ = Settings()  # type: ignore[reportCallIssue]
 
 
+@pytest.mark.parametrize("timezone", ["", "+02:00", "localtime", "Europe/Does_Not_Exist"])
+def test_settings_reject_invalid_default_timezones(monkeypatch: pytest.MonkeyPatch, timezone: str) -> None:
+    monkeypatch.setenv("DEFAULT_TIMEZONE", timezone)
+
+    with pytest.raises(ValidationError, match="default_timezone"):
+        _ = Settings()  # type: ignore[reportCallIssue]
+
+
 def test_utc_now_returns_aware_utc_timestamp() -> None:
     before: Final = datetime.now(UTC)
     result: Final = utc_now()

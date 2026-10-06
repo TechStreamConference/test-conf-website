@@ -6,15 +6,10 @@ from typing import Final
 from typing import NamedTuple
 from typing import Optional
 from typing import final
-from zoneinfo import ZoneInfo
-from zoneinfo import ZoneInfoNotFoundError
-from zoneinfo import available_timezones
 
 from backend.config import SETTINGS
 from backend.language_tags import standardize_language_tag
 from backend.models.tables import UserPreferences
-
-_IANA_TIMEZONES = available_timezones()
 
 
 def _load_timezone_aliases() -> dict[str, str]:
@@ -62,19 +57,6 @@ def canonical_locale(value: str) -> str:
 def locales_equivalent(a: str, b: str) -> bool:
     """Compare two BCP 47 language tags by canonical form, not raw spelling."""
     return canonical_locale(a) == canonical_locale(b)
-
-
-def validate_timezone(value: str) -> str:
-    """Validate an IANA timezone identifier while preserving its spelling."""
-    # Some system zoneinfo installations expose host-specific convenience files
-    # that are not timezone identifiers from the IANA database.
-    if value in {"localtime", "posixrules"} or value.startswith(("posix/", "right/")) or value not in _IANA_TIMEZONES:
-        raise ValueError("Timezone must be a valid IANA timezone identifier.")
-    try:
-        _ = ZoneInfo(value)
-    except (ValueError, ZoneInfoNotFoundError) as error:
-        raise ValueError("Timezone must be a valid IANA timezone identifier.") from error
-    return value
 
 
 @final

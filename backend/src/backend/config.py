@@ -1,15 +1,14 @@
 from functools import cached_property
 from pathlib import Path
-from typing import Annotated
 from typing import final
 
-from pydantic import AfterValidator
 from pydantic import Field
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
-from backend.language_tags import validate_locale
+from backend.models.preference_types import Bcp47Locale
+from backend.models.preference_types import IanaTimezone
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 _ROOT_ENV_FILE = _REPO_ROOT / ".env"
@@ -45,9 +44,9 @@ class Settings(BaseSettings):
 
     # Defaults are resolved at use time. They are deliberately not database
     # defaults because NULL records that a user has not chosen a preference.
-    default_timezone: str = Field(default="Europe/Berlin", min_length=1)
-    # Validated like the locales of users, since it is returned in their place.
-    default_locale: Annotated[str, AfterValidator(validate_locale)] = "en"
+    # They are validated like the preferences of users, which they stand in for.
+    default_timezone: IanaTimezone = "Europe/Berlin"
+    default_locale: Bcp47Locale = "en"
 
     @cached_property
     def zitadel_redirect_uri(self) -> str:

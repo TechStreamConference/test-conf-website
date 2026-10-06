@@ -7,6 +7,7 @@ from backend.config import SETTINGS
 from backend.language_tags import validate_locale
 from backend.models.requests import UserPreferencesInputV1
 from backend.models.tables import UserPreferences
+from backend.timezones import validate_timezone
 from backend.user_preferences import RegionalSettingsReportOutcome
 from backend.user_preferences import canonical_locale
 from backend.user_preferences import canonical_timezone
@@ -15,7 +16,6 @@ from backend.user_preferences import locales_equivalent
 from backend.user_preferences import process_regional_settings_report
 from backend.user_preferences import resolve_effective_user_preferences
 from backend.user_preferences import timezones_equivalent
-from backend.user_preferences import validate_timezone
 
 
 @pytest.mark.parametrize("timezone", ["Europe/Berlin", "Europe/Istanbul", "America/New_York"])
