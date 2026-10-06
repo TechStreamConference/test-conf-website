@@ -70,6 +70,16 @@ async def test_display_language_route_rejects_invalid_supported_languages() -> N
 
 
 @pytest.mark.asyncio
+async def test_display_language_route_rejects_too_many_supported_languages() -> None:
+    # 33 distinct, valid tags.
+    tags: Final = [f"de-x-{index}" for index in range(33)]
+
+    response: Final = httpx.get(_DISPLAY_LANGUAGE_URL, params=[("supported_language", tag) for tag in tags])
+
+    assert response.status_code == 422
+
+
+@pytest.mark.asyncio
 async def test_display_language_route_returns_bad_request_without_supported_languages() -> None:
     response: Final = httpx.get(_DISPLAY_LANGUAGE_URL)
 
