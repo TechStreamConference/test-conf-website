@@ -295,6 +295,37 @@ def test_select_translation_orders_header_entries_by_quality_then_position(
     assert result.language_details.is_language_fallback is False
 
 
+def test_select_translation_only_considers_the_most_preferred_header_entries(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(backend.language_selection, "_MAX_ACCEPT_LANGUAGE_ENTRIES", 2)
+
+    result: Final = select_translation(
+        {_DE: "Hallo", _EN: "Hello"},
+        language=None,
+        # The less preferred `de` comes first in the header, but is not among the two most preferred entries.
+        accept_language="de;q=0.1, fr, es;q=0.5",
+        response=Response(),
+    )
+
+    assert result.translation == "Hello"
+    assert result.language_details.is_language_fallback is True
+
+
+def test_select_translation_stops_parsing_at_the_first_available_header_entry(monkeypatch: pytest.MonkeyPatch) -> None:
+    parsed_tags: Final[list[str]] = []
+
+    def _parse_valid_language(tag: str) -> Optional[Language]:
+        parsed_tags.append(tag)
+        return Language.get(tag)
+
+    monkeypatch.setattr(backend.language_selection, "_parse_valid_language", _parse_valid_language)
+
+    _ = select_translation(
+        {_DE: "Hallo", _EN: "Hello"}, language=None, accept_language="fr, de, es", response=Response()
+    )
+
+    assert parsed_tags == ["fr", "de"]
+
+
 def test_select_translation_prefers_header_entries_by_quality() -> None:
     result: Final = select_translation(
         {_DE: "Hallo", _EN: "Hello"},

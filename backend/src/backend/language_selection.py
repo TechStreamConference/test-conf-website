@@ -28,8 +28,10 @@ any preference at all, there is no first choice that could be missing, so
 English or the first available language is not marked as a fallback.
 """
 
+from collections.abc import Iterator
 from collections.abc import Mapping
 from collections.abc import Sequence
+from itertools import islice
 from typing import Final
 from typing import NamedTuple
 from typing import Optional
@@ -59,6 +61,9 @@ LANGUAGE_SELECTION_DESCRIPTION = (
 )
 
 _ENGLISH = Language.get("en")
+
+# Browsers send a handful of entries. Considering only the most preferred ones bounds the work a client can cause.
+_MAX_ACCEPT_LANGUAGE_ENTRIES = 16
 
 # Deliberately not validated as `Bcp47Language`: an invalid tag must not fail the request but is handled like an
 # unavailable language, so a stale or malformed tag still delivers content.
@@ -153,8 +158,12 @@ def _parse_valid_language(tag: str) -> Optional[Language]:
         return None
 
 
-def _parse_accept_language_header(header: str) -> list[Language]:
-    """Return the languages of an `Accept-Language` header, most preferred first.
+def _parse_accept_language_header(header: str) -> Iterator[Language]:
+    """Yield the languages of an `Accept-Language` header, most preferred first.
+
+    Entries are parsed lazily, so the selection stops parsing at the first
+    available language. Only the `_MAX_ACCEPT_LANGUAGE_ENTRIES` most preferred
+    entries are considered.
 
     Wildcards, excluded languages (`q=0`), and entries that are not valid BCP 47
     tags are skipped: the header is controlled by the client and an invalid
@@ -165,18 +174,14 @@ def _parse_accept_language_header(header: str) -> list[Language]:
     available language may still be an excluded one: the content is always
     delivered instead of responding with 406 Not Acceptable.
     """
-    languages: Final[list[Language]] = []
-    for tag, quality in sorted(
-        parse_accept_header(header, LanguageAccept),
-        key=lambda entry: entry[1],
-        reverse=True,
-    ):
+    # `LanguageAccept` is already sorted by quality (stable, so entries of equal quality keep their order), with
+    # wildcards last.
+    for tag, quality in islice(parse_accept_header(header, LanguageAccept), _MAX_ACCEPT_LANGUAGE_ENTRIES):
         if quality <= 0.0 or tag == "*":
             continue
         language = _parse_valid_language(tag)
         if language is not None:
-            languages.append(language)
-    return languages
+            yield language
 
 
 def _determine_language_to_be_delivered(
@@ -204,20 +209,21 @@ def _determine_language_to_be_delivered(
     #       `https://github.com/TechStreamConference/test-conf-website/issues/387` to
     #       be resolved first.
 
-    header_languages: Final = (
-        [] if accept_language_header is None else _parse_accept_language_header(accept_language_header)
-    )
-    for i, header_language in enumerate(header_languages):
-        available_header_language = _find_available_language(header_language, indexed_languages)
-        if available_header_language is not None:
-            return _LanguageToBeDelivered(
-                language=available_header_language,
-                is_language_fallback=language is not None or i != 0,
-                varies_with_accept_language=True,
-            )
+    # Whether a more preferred valid header entry has been unavailable.
+    header_expressed_preference = False
+    if accept_language_header is not None:
+        for header_language in _parse_accept_language_header(accept_language_header):
+            available_header_language = _find_available_language(header_language, indexed_languages)
+            if available_header_language is not None:
+                return _LanguageToBeDelivered(
+                    language=available_header_language,
+                    is_language_fallback=language is not None or header_expressed_preference,
+                    varies_with_accept_language=True,
+                )
+            header_expressed_preference = True
 
     # Without a requested language or a valid header entry, there is no first choice that could be missing.
-    client_expressed_preference: Final = language is not None or len(header_languages) > 0
+    client_expressed_preference: Final = language is not None or header_expressed_preference
     english: Final = _find_available_language(_ENGLISH, indexed_languages)
     return _LanguageToBeDelivered(
         language=available_languages[0] if english is None else english,
