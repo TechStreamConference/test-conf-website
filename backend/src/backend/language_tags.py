@@ -108,6 +108,13 @@ def parse_language(value: str) -> Language:
     return language
 
 
+def validate_locale(value: str) -> str:
+    """Validate a locale, i.e. a browser-style BCP 47 language tag, without canonicalizing it."""
+    if not is_valid_bcp_47_tag(value):
+        raise ValueError("Locale must be a valid BCP 47 language tag.")
+    return value
+
+
 def standardize_language_tag(value: str) -> str:
     """Return the canonical form of a valid BCP 47 language tag (casing,
     redundant script subtags, deprecated subtag replacements).

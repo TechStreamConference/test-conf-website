@@ -4,6 +4,7 @@ from typing import Optional
 import pytest
 
 from backend.config import SETTINGS
+from backend.language_tags import validate_locale
 from backend.models.requests import UserPreferencesInputV1
 from backend.models.tables import UserPreferences
 from backend.user_preferences import RegionalSettingsReportOutcome
@@ -14,7 +15,6 @@ from backend.user_preferences import locales_equivalent
 from backend.user_preferences import process_regional_settings_report
 from backend.user_preferences import resolve_effective_user_preferences
 from backend.user_preferences import timezones_equivalent
-from backend.user_preferences import validate_locale
 from backend.user_preferences import validate_timezone
 
 

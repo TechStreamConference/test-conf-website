@@ -39,7 +39,7 @@ class LocaleUpdate(NamedTuple):
 
 
 def is_valid_locale(locale: str) -> bool:
-    """Duplicates the validation rules of `backend.user_preferences.validate_locale()` instead of importing it, so this
+    """Duplicates the validation rules of `backend.language_tags.validate_locale()` instead of importing it, so this
     migration keeps its rules when the application code changes.
     """
     # `tag_is_valid()` returns `False` for tags that cannot be parsed instead of raising.

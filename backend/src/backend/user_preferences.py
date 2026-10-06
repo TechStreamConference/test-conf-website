@@ -11,7 +11,6 @@ from zoneinfo import ZoneInfoNotFoundError
 from zoneinfo import available_timezones
 
 from backend.config import SETTINGS
-from backend.language_tags import is_valid_bcp_47_tag
 from backend.language_tags import standardize_language_tag
 from backend.models.tables import UserPreferences
 
@@ -75,13 +74,6 @@ def validate_timezone(value: str) -> str:
         _ = ZoneInfo(value)
     except (ValueError, ZoneInfoNotFoundError) as error:
         raise ValueError("Timezone must be a valid IANA timezone identifier.") from error
-    return value
-
-
-def validate_locale(value: str) -> str:
-    """Validate a browser-style BCP 47 language tag without canonicalizing it."""
-    if not is_valid_bcp_47_tag(value):
-        raise ValueError("Locale must be a valid BCP 47 language tag.")
     return value
 
 
