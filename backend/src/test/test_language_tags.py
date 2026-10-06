@@ -145,10 +145,22 @@ def test_bcp_47_language_parses_strings_into_languages() -> None:
     assert validated == Language.get("de-DE")
 
 
-def test_bcp_47_language_accepts_languages_unchanged() -> None:
-    language: Final = Language.get("en-US")
+def test_bcp_47_language_accepts_valid_languages() -> None:
+    assert _ADAPTER.validate_python(Language.get("en-US")) == Language.get("en-US")
 
-    assert _ADAPTER.validate_python(language) is language
+
+def test_bcp_47_language_normalizes_unnormalized_languages() -> None:
+    assert _ADAPTER.validate_python(Language.make(language="iw")) == Language.get("he")
+
+
+@pytest.mark.parametrize(
+    "language",
+    [Language.make(language="xx"), Language.make(language="de", private="x-" + "-".join(["abcdefgh"] * 7))],
+    ids=["unregistered", "overlong"],
+)
+def test_bcp_47_language_rejects_invalid_languages(language: Language) -> None:
+    with pytest.raises(ValidationError, match="BCP 47"):
+        _ = _ADAPTER.validate_python(language)
 
 
 @pytest.mark.parametrize("value", ["en_US", "abc-123", "", 42, None])

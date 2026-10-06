@@ -141,8 +141,10 @@ def written_language(language: Language) -> Optional[WrittenLanguage]:
 
 
 def _validate_language(value: object) -> Language:
+    # A `Language` may have been created without validation or normalization (e.g. by `Language.make()`), so its tag is
+    # validated like any other.
     if isinstance(value, Language):
-        return value
+        return parse_language(value.to_tag())
     if isinstance(value, str):
         return parse_language(value)
     raise ValueError("Language must be a valid BCP 47 language tag.")

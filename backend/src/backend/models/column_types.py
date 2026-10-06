@@ -46,7 +46,9 @@ class LanguageTagType(TypeDecorator[Language]):
         if not isinstance(value, Language):
             message: Final = f"Expected a `Language`, got `{type(value).__name__}`."
             raise TypeError(message)
-        return value.to_tag()
+        # Table models are not validated, so the `Language` may have been created without validation or normalization
+        # (e.g. by `Language.make()`). Storing a tag that cannot be loaded again must fail right away.
+        return parse_language(value.to_tag()).to_tag()
 
     @override
     def process_result_value(self, value: str | None, dialect: Dialect) -> Language | None:

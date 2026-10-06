@@ -19,6 +19,20 @@ def test_language_is_stored_as_its_normalized_tag() -> None:
     assert _TYPE.process_bind_param(Language.get("en-us"), _DIALECT) == "en-US"
 
 
+def test_unnormalized_language_is_stored_as_its_normalized_tag() -> None:
+    assert _TYPE.process_bind_param(Language.make(language="iw"), _DIALECT) == "he"
+
+
+@pytest.mark.parametrize(
+    "language",
+    [Language.make(language="xx"), Language.make(language="de", private="x-" + "-".join(["abcdefgh"] * 7))],
+    ids=["unregistered", "overlong"],
+)
+def test_invalid_languages_are_rejected_when_storing(language: Language) -> None:
+    with pytest.raises(ValueError, match="BCP 47"):
+        _ = _TYPE.process_bind_param(language, _DIALECT)
+
+
 def test_plain_strings_are_rejected_when_storing() -> None:
     with pytest.raises(TypeError, match="Expected a `Language`, got `str`"):
         _ = _TYPE.process_bind_param("en-US", _DIALECT)
