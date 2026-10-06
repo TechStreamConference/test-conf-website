@@ -728,13 +728,13 @@ export type GetDisplayLanguageV1Data = {
     path?: never;
     query?: {
         /**
-         * Language
-         */
-        language?: RequestedLanguageTag | null;
-        /**
          * Supported Language
          */
         supported_language?: Array<Bcp47LanguageTag> | null;
+        /**
+         * Language
+         */
+        language?: RequestedLanguageTag | null;
     };
     url: '/v1/display-language';
 };
