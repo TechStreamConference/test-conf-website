@@ -122,6 +122,13 @@ def _common_prefix_length(a: Sequence[str], b: Sequence[str]) -> int:
     return length
 
 
+# werkzeug's `LanguageAccept.best_match()` is deliberately not used for matching, only for parsing the header:
+# - It tries exact matches across all header entries before primary-subtag matches, so a less preferred exact match wins
+#   (`de-AT, en;q=0.5` with `de-DE` and `en` available selects `en`).
+# - It never matches sibling regions (`de-AT` does not find `de-DE`) and ignores likely scripts (`zh-TW`, i.e.
+#   Traditional, finds `zh`, i.e. Simplified).
+# - It compares spellings instead of canonical forms (`iw` does not find `he`) and lets wildcards match any language.
+# - It only returns the matched value, so it cannot tell whether the client's first choice was available.
 def _find_available_language(
     language: Language, available_languages: Sequence[_AvailableLanguage]
 ) -> Optional[Language]:
