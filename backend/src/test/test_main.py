@@ -81,6 +81,31 @@ async def test_request_middleware_logs_received_and_completed(
 
 
 @pytest.mark.asyncio
+async def test_request_middleware_logs_unexpected_exceptions_as_internal_server_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request: Final = Mock()
+    request.method = "GET"
+    request.url.path = "/v1/imprint"
+    error: Final = RuntimeError("unexpected")
+    log_info: Final = Mock()
+    monkeypatch.setattr(main_module.logging, "info", log_info)
+    monkeypatch.setattr(main_module, "time", Mock(monotonic=Mock(side_effect=[10.0, 10.5])))
+
+    with pytest.raises(RuntimeError) as exc_info:
+        _ = await _log_requests(request, AsyncMock(side_effect=error))
+
+    # Re-raised for `_handle_unexpected_exception()` and the server's traceback logging.
+    assert exc_info.value is error
+    assert log_info.call_count == 2
+    completed: Final = log_info.call_args_list[1].args[0]
+    assert isinstance(completed, HttpRequestCompleted)
+    assert completed.path == "/v1/imprint"
+    assert completed.status_code == 500
+    assert completed.duration_ms == 500.0
+
+
+@pytest.mark.asyncio
 async def test_unexpected_exception_handler_returns_internal_server_error() -> None:
     response: Final = await _handle_unexpected_exception(Mock(spec=Request), RuntimeError("unexpected"))
 
@@ -88,11 +113,15 @@ async def test_unexpected_exception_handler_returns_internal_server_error() -> N
     assert json.loads(bytes(response.body)) == {"detail": "Internal server error."}
 
 
-def test_unexpected_exception_is_returned_as_documented_internal_server_error() -> None:
+def test_unexpected_exception_is_returned_as_documented_internal_server_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     async def _failing_session() -> AsyncGenerator[AsyncSession]:
         raise RuntimeError("unexpected")
         yield  # pyright: ignore[reportUnreachable]
 
+    log_info: Final = Mock()
+    monkeypatch.setattr(main_module.logging, "info", log_info)
     app.dependency_overrides[get_session] = _failing_session
     try:
         response: Final = TestClient(app, raise_server_exceptions=False).get("/v1/globals")
@@ -101,3 +130,7 @@ def test_unexpected_exception_is_returned_as_documented_internal_server_error() 
 
     assert response.status_code == 500
     assert response.json() == {"detail": "Internal server error."}
+    completed: Final = [
+        call.args[0] for call in log_info.call_args_list if isinstance(call.args[0], HttpRequestCompleted)
+    ]
+    assert [event.status_code for event in completed] == [500]

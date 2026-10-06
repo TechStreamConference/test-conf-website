@@ -56,16 +56,26 @@ async def _log_requests(
 ) -> Response:
     logging.info(HttpRequestReceived(method=request.method, path=request.url.path))
     start: Final = time.monotonic()
-    response: Final = await call_next(request)
+    try:
+        response: Final = await call_next(request)
+    except Exception:
+        # Unexpected exceptions pass this middleware and are only turned into a response by the outermost
+        # `_handle_unexpected_exception()`, so the request is logged as completed with that response's status here.
+        _log_request_completed(request, status.HTTP_500_INTERNAL_SERVER_ERROR, start)
+        raise
+    _log_request_completed(request, response.status_code, start)
+    return response
+
+
+def _log_request_completed(request: Request, status_code: int, start: float) -> None:
     logging.info(
         HttpRequestCompleted(
             method=request.method,
             path=request.url.path,
-            status_code=response.status_code,
+            status_code=status_code,
             duration_ms=round((time.monotonic() - start) * 1000.0, 2),
         )
     )
-    return response
 
 
 @app.get(
