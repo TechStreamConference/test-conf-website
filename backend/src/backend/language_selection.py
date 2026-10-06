@@ -25,9 +25,11 @@ The delivered language is marked as a fallback if the client's first choice
 entry) is not available, i.e. no available language matches it. A requested
 language that is not a valid BCP 47 tag is handled like an unavailable one
 rather than failing the request, so a stale or malformed tag still delivers
-content. If the client did not express
-any preference at all, there is no first choice that could be missing, so
-English or the first available language is not marked as a fallback.
+content. A valid tag without a language (`und`) cannot match any language,
+so it does not express a preference, neither as the requested language nor
+as a header entry. If the client did not express any preference at all,
+there is no first choice that could be missing, so English or the first
+available language is not marked as a fallback.
 """
 
 from collections.abc import Iterator
@@ -53,14 +55,14 @@ from backend.models.responses import LanguageDetailsV1
 
 LANGUAGE_SELECTION_DESCRIPTION = (
     "The language is selected in the following order: the requested language (`language`, if given and a "
-    + "valid BCP 47 tag; an empty `language` counts as not given, an invalid tag is handled like an unavailable "
-    + "language), "
+    + "valid BCP 47 tag; an empty `language` or a tag without a language such as `und` counts as not given, an "
+    + "invalid tag is handled like an unavailable language), "
     + "the best available language from the `Accept-Language` header (respecting quality values), "
     + "English, and finally the first available language. Languages match if they are the same language "
     + "in the same (likely) script, regardless of region or variants (e.g. `de-AT` matches `de` and `de-DE`, "
-    + "but `zh-TW` does not match `zh-Hans`); the closest available tag is preferred. Wildcards and "
-    + "languages excluded with `q=0` are ignored, so an excluded language may still be delivered as the "
-    + "English or first available language. `isLanguageFallback` is `true` if the client's first choice "
+    + "but `zh-TW` does not match `zh-Hans`); the closest available tag is preferred. Wildcards, tags without "
+    + "a language, and languages excluded with `q=0` are ignored, so an excluded language may still be delivered "
+    + "as the English or first available language. `isLanguageFallback` is `true` if the client's first choice "
     + "(`language` or, if not given, the most preferred valid `Accept-Language` entry) is not available, and "
     + "`false` if the client did not express any preference."
 )
@@ -172,24 +174,14 @@ def _common_prefix_length(a: Sequence[str], b: Sequence[str]) -> int:
 # - It compares spellings instead of canonical forms (`iw` does not find `he`) and lets wildcards match any language.
 # - It only returns the matched value, so it cannot tell whether the client's first choice was available.
 def _find_available_language(
-    language: Language, available_languages: Sequence[_MatchableLanguage]
+    requested: _MatchableLanguage, available_languages: Sequence[_MatchableLanguage]
 ) -> Optional[Language]:
-    """Return the available language that best matches `language`, or `None`
+    """Return the available language that best matches `requested`, or `None`
     if none is the same written language.
 
     Matching is symmetric (`de-DE` finds `de`, and `de` finds `de-DE`), see
     the module documentation for the preference among several matches.
     """
-    requested: Final = _matchable_language(language)
-    if requested is None:
-        return None
-    return _find_available_matchable_language(requested, available_languages)
-
-
-def _find_available_matchable_language(
-    requested: _MatchableLanguage, available_languages: Sequence[_MatchableLanguage]
-) -> Optional[Language]:
-    """Like `_find_available_language()`, but for a precomputed requested language."""
     candidates: Final = [
         available for available in available_languages if available.written_language == requested.written_language
     ]
@@ -213,7 +205,7 @@ def _parse_valid_language(tag: str) -> Optional[Language]:
         return None
 
 
-def _parse_accept_language_header(header: str) -> Iterator[Language]:
+def _parse_accept_language_header(header: str) -> Iterator[_MatchableLanguage]:
     """Yield the languages of an `Accept-Language` header, most preferred first.
 
     Entries are parsed lazily, so the selection stops parsing at the first
@@ -224,6 +216,8 @@ def _parse_accept_language_header(header: str) -> Iterator[Language]:
     tags are skipped: the header is controlled by the client and an invalid
     entry must not make the whole request fail. Entries are validated like the
     requested language, so an invalid entry is never the client's first choice.
+    Neither is an entry without a language (`und`), which cannot match any
+    language.
 
     Excluded languages are ignored rather than avoided, so the English or first
     available language may still be an excluded one: the content is always
@@ -235,8 +229,9 @@ def _parse_accept_language_header(header: str) -> Iterator[Language]:
         if quality <= 0.0 or tag == "*":
             continue
         language = _parse_valid_language(tag)
-        if language is not None:
-            yield language
+        matchable = None if language is None else _matchable_language(language)
+        if matchable is not None:
+            yield matchable
 
 
 def _determine_language_to_be_delivered(
@@ -251,10 +246,15 @@ def _determine_language_to_be_delivered(
 
     # An empty tag (`?language=`) does not express a preference, e.g. if a client always passes the parameter.
     requested_tag: Final = language or None
-    # An invalid tag still expresses a preference, so it is handled like an unavailable language.
     requested_language: Final = None if requested_tag is None else _parse_valid_language(requested_tag)
-    if requested_language is not None:
-        available_route_language: Final = _find_available_language(requested_language, indexed_languages)
+    requested: Final = None if requested_language is None else _matchable_language(requested_language)
+    # An invalid tag still expresses a preference, so it is handled like an unavailable language. A valid tag without a
+    # language (`und`) does not, since it cannot match any language.
+    requested_expressed_preference: Final = requested_tag is not None and (
+        requested_language is None or requested is not None
+    )
+    if requested is not None:
+        available_route_language: Final = _find_available_language(requested, indexed_languages)
         if available_route_language is not None:
             return _LanguageToBeDelivered(
                 language=available_route_language,
@@ -274,14 +274,14 @@ def _determine_language_to_be_delivered(
             if available_header_language is not None:
                 return _LanguageToBeDelivered(
                     language=available_header_language,
-                    is_language_fallback=requested_tag is not None or header_expressed_preference,
+                    is_language_fallback=requested_expressed_preference or header_expressed_preference,
                     varies_with_accept_language=True,
                 )
             header_expressed_preference = True
 
     # Without a requested language or a valid header entry, there is no first choice that could be missing.
-    client_expressed_preference: Final = requested_tag is not None or header_expressed_preference
-    english: Final = _find_available_matchable_language(_ENGLISH, indexed_languages)
+    client_expressed_preference: Final = requested_expressed_preference or header_expressed_preference
+    english: Final = _find_available_language(_ENGLISH, indexed_languages)
     return _LanguageToBeDelivered(
         language=available_languages[0] if english is None else english,
         is_language_fallback=client_expressed_preference,

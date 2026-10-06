@@ -138,8 +138,6 @@ def test_select_translation_matches_the_same_written_language(
         # Different scripts are different written languages.
         ("zh-TW", ["en", "zh-Hans"]),
         ("sr-Latn", ["en", "sr-Cyrl"]),
-        # A tag without a language does not match anything.
-        ("und", ["en", "de"]),
     ],
 )
 def test_select_translation_does_not_match_other_written_languages(
@@ -299,10 +297,10 @@ def test_select_translation_prefers_header_entries_by_quality() -> None:
 
 
 # Without any usable preference, English (or the first available language) is not a fallback: there is no first
-# choice that could have been unavailable. Wildcards, excluded languages (`q=0`), and an empty requested language
-# (`?language=`) are ignored.
-@pytest.mark.parametrize("language", [None, ""])
-@pytest.mark.parametrize("accept_language", [None, "", "*", "!!!", "en;q=0"])
+# choice that could have been unavailable. Wildcards, excluded languages (`q=0`), tags without a language (`und`), which
+# cannot match any language, and an empty requested language (`?language=`) are ignored.
+@pytest.mark.parametrize("language", [None, "", "und", "und-x-private"])
+@pytest.mark.parametrize("accept_language", [None, "", "*", "!!!", "en;q=0", "und", "und-DE"])
 @pytest.mark.parametrize(
     ("translations_by_language", "expected_language"),
     [({_DE: "Hallo", _EN: "Hello"}, _EN), ({_DE: "Hallo", Language.get("es"): "Hola"}, _DE)],
@@ -329,6 +327,19 @@ def test_select_translation_without_preference_is_no_fallback(
 def test_select_translation_with_empty_requested_language_uses_header_without_fallback() -> None:
     result: Final = select_translation(
         {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), language="", accept_language="de")
+    )
+
+    assert result.translation == "Hallo"
+    assert result.language_details.is_language_fallback is False
+
+
+@pytest.mark.parametrize(("language", "accept_language"), [(None, "und, de"), ("und", "de")])
+def test_select_translation_does_not_count_tags_without_a_language_as_first_choice(
+    language: Optional[str], accept_language: str
+) -> None:
+    result: Final = select_translation(
+        {Language.get("und"): "Undetermined", _DE: "Hallo"},
+        LanguageRequest(Response(), language=language, accept_language=accept_language),
     )
 
     assert result.translation == "Hallo"
