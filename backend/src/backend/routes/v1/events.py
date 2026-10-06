@@ -5,8 +5,6 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import Header
-from fastapi import Response
 from fastapi import status
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,7 +14,8 @@ from sqlmodel import select
 
 from backend.database import get_session
 from backend.language_selection import LANGUAGE_SELECTION_DESCRIPTION
-from backend.language_selection import RequestedLanguageTag
+from backend.language_selection import LanguageRequest
+from backend.language_selection import get_language_request
 from backend.language_selection import select_translation
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
@@ -41,9 +40,7 @@ ROUTER = APIRouter()
 )
 async def get_current_event(
     session: Annotated[AsyncSession, Depends(get_session)],
-    response: Response,
-    language: Optional[RequestedLanguageTag] = None,
-    accept_language: Annotated[Optional[str], Header()] = None,
+    language_request: Annotated[LanguageRequest, Depends(get_language_request)],
 ) -> EventResponseV1:
     now: Final = utc_now()
     current_event_id: Final = (
@@ -71,12 +68,7 @@ async def get_current_event(
     )
     rows: Final = list((await session.execute(statement)).all())
 
-    return _event_response_v1_from_rows(
-        rows,
-        language=language,
-        accept_language=accept_language,
-        response=response,
-    )
+    return _event_response_v1_from_rows(rows, language_request)
 
 
 @ROUTER.get(
@@ -95,11 +87,9 @@ async def get_current_event(
 )
 async def get_event_by_year_and_sequence_number(
     session: Annotated[AsyncSession, Depends(get_session)],
-    response: Response,
+    language_request: Annotated[LanguageRequest, Depends(get_language_request)],
     year: int,
     sequence_number: int | Literal["latest"],
-    language: Optional[RequestedLanguageTag] = None,
-    accept_language: Annotated[Optional[str], Header()] = None,
 ) -> EventResponseV1:
     if isinstance(sequence_number, int) and sequence_number <= 0:
         raise create_http_exception(
@@ -130,24 +120,14 @@ async def get_event_by_year_and_sequence_number(
         if last_event_id is None or last_event_id != row.Event.id:
             last_event_id = row.Event.id
             if current_sequence_number == sequence_number:
-                return _event_response_v1_from_rows(
-                    current_rows,
-                    language=language,
-                    accept_language=accept_language,
-                    response=response,
-                )
+                return _event_response_v1_from_rows(current_rows, language_request)
             current_sequence_number += 1
             current_rows.clear()
 
         current_rows.append(row)
 
     if sequence_number == current_sequence_number or sequence_number == "latest":
-        return _event_response_v1_from_rows(
-            current_rows,
-            language=language,
-            accept_language=accept_language,
-            response=response,
-        )
+        return _event_response_v1_from_rows(current_rows, language_request)
 
     raise create_http_exception(
         status.HTTP_404_NOT_FOUND,
@@ -157,10 +137,7 @@ async def get_event_by_year_and_sequence_number(
 
 def _event_response_v1_from_rows(
     rows: list[Row[tuple[tuple[Event, EventTranslation]]]],
-    *,
-    language: Optional[RequestedLanguageTag],
-    accept_language: Optional[str],
-    response: Response,
+    language_request: LanguageRequest,
 ) -> EventResponseV1:
     if not rows:
         raise create_http_exception(
@@ -174,12 +151,7 @@ def _event_response_v1_from_rows(
     event: Final = rows[0].Event
     translations_by_language: Final = {row.EventTranslation.language: row.EventTranslation for row in rows}
 
-    selected: Final = select_translation(
-        translations_by_language,
-        language=language,
-        accept_language=accept_language,
-        response=response,
-    )
+    selected: Final = select_translation(translations_by_language, language_request)
     translation: Final = selected.translation
 
     return EventResponseV1(

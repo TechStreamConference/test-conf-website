@@ -3,14 +3,14 @@ from typing import Final
 from typing import Optional
 
 from fastapi import APIRouter
-from fastapi import Header
+from fastapi import Depends
 from fastapi import Query
-from fastapi import Response
 from fastapi import status
 from langcodes import Language
 
 from backend.language_selection import LANGUAGE_SELECTION_DESCRIPTION
-from backend.language_selection import RequestedLanguageTag
+from backend.language_selection import LanguageRequest
+from backend.language_selection import get_language_request
 from backend.language_selection import select_language
 from backend.language_tags import Bcp47LanguageTag
 from backend.language_tags import parse_language
@@ -46,14 +46,12 @@ _MAX_SUPPORTED_LANGUAGES = 32
     operation_id="get display language v1",
 )
 async def get_display_language(
-    response: Response,
-    language: Optional[RequestedLanguageTag] = None,
+    language_request: Annotated[LanguageRequest, Depends(get_language_request)],
     # Without `Query()`, FastAPI would expect a list parameter in the request body.
     supported_language: Annotated[
         Optional[list[Bcp47LanguageTag]],
         Query(max_length=_MAX_SUPPORTED_LANGUAGES),
     ] = None,
-    accept_language: Annotated[Optional[str], Header()] = None,
 ) -> DisplayLanguageResponseV1:
     if not supported_language:
         raise create_http_exception(
@@ -65,12 +63,7 @@ async def get_display_language(
     spelling_by_language: Final[dict[Language, str]] = {}
     for tag in supported_language:
         _ = spelling_by_language.setdefault(parse_language(tag), tag)
-    language_details: Final = select_language(
-        list(spelling_by_language),
-        language=language,
-        accept_language=accept_language,
-        response=response,
-    )
+    language_details: Final = select_language(list(spelling_by_language), language_request)
     return DisplayLanguageResponseV1(
         available_languages=list(spelling_by_language.values()),
         language_tag=spelling_by_language[language_details.language_tag],

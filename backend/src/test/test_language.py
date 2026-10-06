@@ -5,6 +5,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi import Response
 
+from backend.language_selection import LanguageRequest
 from backend.routes.v1.language import get_display_language
 
 
@@ -13,10 +14,7 @@ async def test_display_language_selects_supported_language() -> None:
     response: Final = Response()
 
     result: Final = await get_display_language(
-        response,
-        language="de-AT",
-        supported_language=["de", "en"],
-        accept_language="en",
+        LanguageRequest(response, language="de-AT", accept_language="en"), supported_language=["de", "en"]
     )
 
     assert result.available_languages == ["de", "en"]
@@ -27,10 +25,7 @@ async def test_display_language_selects_supported_language() -> None:
 
 @pytest.mark.asyncio
 async def test_display_language_lists_repeated_supported_languages_once() -> None:
-    result: Final = await get_display_language(
-        Response(),
-        supported_language=["de", "en", "de"],
-    )
+    result: Final = await get_display_language(LanguageRequest(Response()), supported_language=["de", "en", "de"])
 
     assert result.available_languages == ["de", "en"]
 
@@ -38,10 +33,7 @@ async def test_display_language_lists_repeated_supported_languages_once() -> Non
 @pytest.mark.asyncio
 async def test_display_language_returns_tags_in_the_spelling_of_the_supported_languages() -> None:
     result: Final = await get_display_language(
-        Response(),
-        language="he",
-        # `en-us` and `iw` are normalized to `en-US` and `he`, `en-US` is another spelling of `en-us`.
-        supported_language=["en-us", "iw", "en-US"],
+        LanguageRequest(Response(), language="he"), supported_language=["en-us", "iw", "en-US"]
     )
 
     assert result.available_languages == ["en-us", "iw"]
@@ -64,9 +56,7 @@ async def test_display_language_matches_regional_supported_languages(
     accept_language: Optional[str], expected_tag: str, is_language_fallback: bool
 ) -> None:
     result: Final = await get_display_language(
-        Response(),
-        supported_language=["de-DE", "en-US"],
-        accept_language=accept_language,
+        LanguageRequest(Response(), accept_language=accept_language), supported_language=["de-DE", "en-US"]
     )
 
     assert result.language_tag == expected_tag
@@ -77,7 +67,7 @@ async def test_display_language_matches_regional_supported_languages(
 async def test_display_language_without_any_preference_returns_english_without_fallback() -> None:
     response: Final = Response()
 
-    result: Final = await get_display_language(response, supported_language=["de", "en"])
+    result: Final = await get_display_language(LanguageRequest(response), supported_language=["de", "en"])
 
     assert result.language_tag == "en"
     assert result.is_language_fallback is False
@@ -90,7 +80,7 @@ async def test_display_language_returns_bad_request_without_supported_languages(
     supported_language: Optional[list[str]],
 ) -> None:
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_display_language(Response(), supported_language=supported_language)
+        _ = await get_display_language(LanguageRequest(Response()), supported_language=supported_language)
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "At least one supported language must be given."

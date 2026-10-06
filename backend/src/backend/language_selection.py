@@ -32,11 +32,13 @@ from collections.abc import Iterator
 from collections.abc import Mapping
 from collections.abc import Sequence
 from itertools import islice
+from typing import Annotated
 from typing import Final
 from typing import NamedTuple
 from typing import Optional
 from typing import final
 
+from fastapi import Header
 from fastapi import Response
 from langcodes import Language
 from werkzeug.datastructures import LanguageAccept
@@ -67,6 +69,28 @@ _MAX_ACCEPT_LANGUAGE_ENTRIES = 16
 # Deliberately not validated as `Bcp47Language`: an invalid tag must not fail the request but is handled like an
 # unavailable language, so a stale or malformed tag still delivers content.
 type RequestedLanguageTag = str
+
+
+@final
+class LanguageRequest(NamedTuple):
+    """What a request says about the language to be delivered, together with
+    the response that has to state what the selection depended on.
+    """
+
+    response: Response
+    language: Optional[RequestedLanguageTag] = None
+    accept_language: Optional[str] = None
+
+
+async def get_language_request(
+    response: Response,
+    language: Optional[RequestedLanguageTag] = None,
+    accept_language: Annotated[Optional[str], Header()] = None,
+) -> LanguageRequest:
+    """Collect the parameters of the language selection, see
+    `LANGUAGE_SELECTION_DESCRIPTION`.
+    """
+    return LanguageRequest(response=response, language=language, accept_language=accept_language)
 
 
 @final
@@ -261,26 +285,20 @@ def _determine_language_to_be_delivered(
     )
 
 
-def select_language(
-    available_languages: Sequence[Language],
-    *,
-    language: Optional[RequestedLanguageTag],
-    accept_language: Optional[str],
-    response: Response,
-) -> LanguageDetailsV1:
+def select_language(available_languages: Sequence[Language], request: LanguageRequest) -> LanguageDetailsV1:
     """Select the language to be delivered and describe the selection.
 
     Adds `Vary: Accept-Language` to the response if the selection depends on
     that header. Raises `ValueError` if no language is available at all.
     """
     language_to_be_delivered: Final = _determine_language_to_be_delivered(
-        language=language,
-        accept_language_header=accept_language,
+        language=request.language,
+        accept_language_header=request.accept_language,
         available_languages=available_languages,
     )
     if language_to_be_delivered.varies_with_accept_language:
         # Caches must not serve this response to clients with a different `Accept-Language` header.
-        response.headers.add_vary_header("Accept-Language")
+        request.response.headers.add_vary_header("Accept-Language")
     return LanguageDetailsV1(
         available_languages=list(available_languages),
         language_tag=language_to_be_delivered.language,
@@ -290,10 +308,7 @@ def select_language(
 
 def select_translation[T](
     translations_by_language: Mapping[Language, T],
-    *,
-    language: Optional[RequestedLanguageTag],
-    accept_language: Optional[str],
-    response: Response,
+    request: LanguageRequest,
 ) -> SelectedTranslation[T]:
     """Select the translation to be delivered and describe the selection.
 
@@ -301,12 +316,7 @@ def select_translation[T](
     at all, so callers have to handle missing content before selecting a
     translation.
     """
-    language_details: Final = select_language(
-        list(translations_by_language),
-        language=language,
-        accept_language=accept_language,
-        response=response,
-    )
+    language_details: Final = select_language(list(translations_by_language), request)
     translation: Final = translations_by_language.get(language_details.language_tag)
     if translation is None:
         # This should never happen because the language to be delivered is always one of the available ones.

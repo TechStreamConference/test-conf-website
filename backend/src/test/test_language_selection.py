@@ -6,6 +6,8 @@ from fastapi import Response
 from langcodes import Language
 
 import backend.language_selection
+from backend.language_selection import LanguageRequest
+from backend.language_selection import get_language_request
 from backend.language_selection import select_language
 from backend.language_selection import select_translation
 
@@ -13,10 +15,19 @@ _DE = Language.get("de")
 _EN = Language.get("en")
 
 
+@pytest.mark.asyncio
+async def test_get_language_request_bundles_the_parameters() -> None:
+    response: Final = Response()
+
+    result: Final = await get_language_request(response, language="de", accept_language="en")
+
+    assert result == LanguageRequest(response, language="de", accept_language="en")
+
+
 def test_select_language_describes_the_selection() -> None:
     response: Final = Response()
 
-    result: Final = select_language([_DE, _EN], language=None, accept_language="de", response=response)
+    result: Final = select_language([_DE, _EN], LanguageRequest(response, accept_language="de"))
 
     assert result.available_languages == [_DE, _EN]
     assert result.language_tag == _DE
@@ -26,7 +37,7 @@ def test_select_language_describes_the_selection() -> None:
 
 def test_select_language_rejects_missing_languages() -> None:
     with pytest.raises(ValueError, match="At least one language must be available"):
-        _ = select_language([], language="de", accept_language=None, response=Response())
+        _ = select_language([], LanguageRequest(Response(), language="de"))
 
 
 def test_select_translation_rejects_missing_translations() -> None:
@@ -34,18 +45,13 @@ def test_select_translation_rejects_missing_translations() -> None:
     translations_by_language: Final[dict[Language, str]] = {}
 
     with pytest.raises(ValueError, match="At least one language must be available"):
-        _ = select_translation(translations_by_language, language="de", accept_language="de", response=response)
+        _ = select_translation(translations_by_language, LanguageRequest(response, language="de", accept_language="de"))
 
     assert "vary" not in response.headers
 
 
 def test_select_translation_returns_translation_and_language_details() -> None:
-    result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language="de",
-        accept_language=None,
-        response=Response(),
-    )
+    result: Final = select_translation({_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), language="de"))
 
     assert result.translation == "Hallo"
     assert result.language_details.available_languages == [_DE, _EN]
@@ -55,10 +61,7 @@ def test_select_translation_returns_translation_and_language_details() -> None:
 
 def test_select_translation_matches_canonical_form_of_more_specific_region() -> None:
     result: Final = select_translation(
-        {Language.get("en-US"): "Howdy", _DE: "Hallo"},
-        language=None,
-        accept_language="EN-us-x-private",
-        response=Response(),
+        {Language.get("en-US"): "Howdy", _DE: "Hallo"}, LanguageRequest(Response(), accept_language="EN-us-x-private")
     )
 
     assert result.translation == "Howdy"
@@ -67,12 +70,7 @@ def test_select_translation_matches_canonical_form_of_more_specific_region() -> 
 
 
 def test_select_translation_returns_the_available_language_for_a_broader_match() -> None:
-    result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language="de-AT-1996",
-        accept_language=None,
-        response=Response(),
-    )
+    result: Final = select_translation({_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), language="de-AT-1996"))
 
     assert result.translation == "Hallo"
     assert result.language_details.language_tag == _DE
@@ -94,10 +92,7 @@ def test_select_translation_follows_rfc_4647_lookup(
     language_tag: str, available_tags: list[str], expected_tag: str
 ) -> None:
     result: Final = select_translation(
-        {Language.get(tag): tag for tag in available_tags},
-        language=language_tag,
-        accept_language=None,
-        response=Response(),
+        {Language.get(tag): tag for tag in available_tags}, LanguageRequest(Response(), language=language_tag)
     )
 
     assert result.translation == expected_tag
@@ -125,10 +120,7 @@ def test_select_translation_matches_the_same_written_language(
     language_tag: str, available_tags: list[str], expected_tag: str
 ) -> None:
     result: Final = select_translation(
-        {Language.get(tag): tag for tag in available_tags},
-        language=language_tag,
-        accept_language=None,
-        response=Response(),
+        {Language.get(tag): tag for tag in available_tags}, LanguageRequest(Response(), language=language_tag)
     )
 
     assert result.translation == expected_tag
@@ -149,10 +141,7 @@ def test_select_translation_does_not_match_other_written_languages(
     language_tag: str, available_tags: list[str]
 ) -> None:
     result: Final = select_translation(
-        {Language.get(tag): tag for tag in available_tags},
-        language=language_tag,
-        accept_language=None,
-        response=Response(),
+        {Language.get(tag): tag for tag in available_tags}, LanguageRequest(Response(), language=language_tag)
     )
 
     assert result.translation == "en"
@@ -162,10 +151,7 @@ def test_select_translation_does_not_match_other_written_languages(
 # `und` maximizes to `en-Latn-US`, but must not count as English.
 def test_select_translation_ignores_available_languages_without_a_language() -> None:
     result: Final = select_translation(
-        {Language.get("und"): "Undetermined", _DE: "Hallo"},
-        language="en",
-        accept_language=None,
-        response=Response(),
+        {Language.get("und"): "Undetermined", _DE: "Hallo"}, LanguageRequest(Response(), language="en")
     )
 
     assert result.translation == "Undetermined"
@@ -186,9 +172,7 @@ def test_select_translation_finds_regional_content(
 ) -> None:
     result: Final = select_translation(
         {Language.get("de-DE"): "Hallo", Language.get("en-US"): "Howdy"},
-        language=None,
-        accept_language=accept_language,
-        response=Response(),
+        LanguageRequest(Response(), accept_language=accept_language),
     )
 
     assert result.translation == expected_translation
@@ -197,12 +181,7 @@ def test_select_translation_finds_regional_content(
 
 @pytest.mark.parametrize("available_tags", [["de", "en-GB"], ["de", "en-GB", "en"]])
 def test_select_translation_falls_back_to_any_english(available_tags: list[str]) -> None:
-    result: Final = select_translation(
-        {Language.get(tag): tag for tag in available_tags},
-        language=None,
-        accept_language=None,
-        response=Response(),
-    )
+    result: Final = select_translation({Language.get(tag): tag for tag in available_tags}, LanguageRequest(Response()))
 
     # Plain `en` is preferred if available.
     assert result.translation == available_tags[-1]
@@ -212,10 +191,7 @@ def test_select_translation_falls_back_to_header_when_route_language_is_unavaila
     response: Final = Response()
 
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language="fr",
-        accept_language="de",
-        response=response,
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(response, language="fr", accept_language="de")
     )
 
     assert result.translation == "Hallo"
@@ -232,10 +208,7 @@ def test_select_translation_handles_invalid_route_language_like_an_unavailable_o
     response: Final = Response()
 
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language=language,
-        accept_language=accept_language,
-        response=response,
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(response, language=language, accept_language=accept_language)
     )
 
     assert result.translation == expected_translation
@@ -246,10 +219,7 @@ def test_select_translation_handles_invalid_route_language_like_an_unavailable_o
 @pytest.mark.parametrize("accept_language", ["*, de;q=0.5", "not a tag!, de;q=0.5", "en;q=0, de;q=0.5"])
 def test_select_translation_skips_wildcard_invalid_and_excluded_header_entries(accept_language: str) -> None:
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language=None,
-        accept_language=accept_language,
-        response=Response(),
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), accept_language=accept_language)
     )
 
     assert result.translation == "Hallo"
@@ -259,10 +229,7 @@ def test_select_translation_skips_wildcard_invalid_and_excluded_header_entries(a
 @pytest.mark.parametrize("accept_language", ["zz, de", "en_US, de", "jp;q=0.9, de;q=0.8"])
 def test_select_translation_does_not_count_invalid_header_entries_as_first_choice(accept_language: str) -> None:
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language=None,
-        accept_language=accept_language,
-        response=Response(),
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), accept_language=accept_language)
     )
 
     assert result.translation == "Hallo"
@@ -285,10 +252,7 @@ def test_select_translation_orders_header_entries_by_quality_then_position(
     accept_language: str, expected_translation: str
 ) -> None:
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language=None,
-        accept_language=accept_language,
-        response=Response(),
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), accept_language=accept_language)
     )
 
     assert result.translation == expected_translation
@@ -299,11 +263,7 @@ def test_select_translation_only_considers_the_most_preferred_header_entries(mon
     monkeypatch.setattr(backend.language_selection, "_MAX_ACCEPT_LANGUAGE_ENTRIES", 2)
 
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language=None,
-        # The less preferred `de` comes first in the header, but is not among the two most preferred entries.
-        accept_language="de;q=0.1, fr, es;q=0.5",
-        response=Response(),
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), accept_language="de;q=0.1, fr, es;q=0.5")
     )
 
     assert result.translation == "Hello"
@@ -319,19 +279,14 @@ def test_select_translation_stops_parsing_at_the_first_available_header_entry(mo
 
     monkeypatch.setattr(backend.language_selection, "_parse_valid_language", _parse_valid_language)
 
-    _ = select_translation(
-        {_DE: "Hallo", _EN: "Hello"}, language=None, accept_language="fr, de, es", response=Response()
-    )
+    _ = select_translation({_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), accept_language="fr, de, es"))
 
     assert parsed_tags == ["fr", "de"]
 
 
 def test_select_translation_prefers_header_entries_by_quality() -> None:
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language=None,
-        accept_language="fr;q=0.9, de;q=0.8, en;q=0.7",
-        response=Response(),
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), accept_language="fr;q=0.9, de;q=0.8, en;q=0.7")
     )
 
     assert result.translation == "Hallo"
@@ -356,10 +311,7 @@ def test_select_translation_without_preference_is_no_fallback(
     response: Final = Response()
 
     result: Final = select_translation(
-        translations_by_language,
-        language=language,
-        accept_language=accept_language,
-        response=response,
+        translations_by_language, LanguageRequest(response, language=language, accept_language=accept_language)
     )
 
     assert result.translation == translations_by_language[expected_language]
@@ -371,10 +323,7 @@ def test_select_translation_without_preference_is_no_fallback(
 
 def test_select_translation_with_empty_requested_language_uses_header_without_fallback() -> None:
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language="",
-        accept_language="de",
-        response=Response(),
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), language="", accept_language="de")
     )
 
     assert result.translation == "Hallo"
@@ -384,7 +333,7 @@ def test_select_translation_with_empty_requested_language_uses_header_without_fa
 def test_select_translation_appends_to_existing_vary_header() -> None:
     response: Final = Response(headers={"Vary": "Cookie"})
 
-    _ = select_translation({_EN: "Hello"}, language=None, accept_language=None, response=response)
+    _ = select_translation({_EN: "Hello"}, LanguageRequest(response))
 
     assert response.headers["vary"] == "Cookie, Accept-Language"
 
@@ -408,17 +357,14 @@ def test_select_translation_raises_if_selected_language_is_not_available(
     )
 
     with pytest.raises(RuntimeError):
-        _ = select_translation({_DE: "Hallo"}, language=None, accept_language=None, response=Response())
+        _ = select_translation({_DE: "Hallo"}, LanguageRequest(Response()))
 
 
 def test_select_translation_falls_back_to_english_when_no_header_language_is_available() -> None:
     response: Final = Response()
 
     result: Final = select_translation(
-        {_DE: "Hallo", _EN: "Hello"},
-        language=None,
-        accept_language="fr, es;q=0.5",
-        response=response,
+        {_DE: "Hallo", _EN: "Hello"}, LanguageRequest(response, accept_language="fr, es;q=0.5")
     )
 
     assert result.translation == "Hello"
