@@ -115,6 +115,7 @@ export const HttpRequestFailedSchema = z.object({
     method: z.string(),
     path: z.string(),
     exception_type: z.string(),
+    exception_stack: z.string(),
     request_id: z.string().optional()
 });
 

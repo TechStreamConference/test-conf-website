@@ -49,6 +49,7 @@ class HttpRequestFailed(LogEventBase):
     method: str
     path: str
     exception_type: str
+    exception_stack: str
     request_id: str | None = None
 
 

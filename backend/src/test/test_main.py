@@ -1,4 +1,5 @@
 import json
+import re
 from collections.abc import AsyncGenerator
 from typing import Final
 from unittest.mock import AsyncMock
@@ -17,7 +18,6 @@ from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
 from backend.logging.events_gen import HttpRequestFailed
 from backend.logging.events_gen import HttpRequestReceived
-from backend.main import _handle_unexpected_exception  # type: ignore[reportPrivateUsage]
 from backend.main import _lifespan  # type: ignore[reportPrivateUsage]
 from backend.main import _log_requests  # type: ignore[reportPrivateUsage]
 from backend.main import app
@@ -82,41 +82,42 @@ async def test_request_middleware_logs_received_and_completed(
 
 
 @pytest.mark.asyncio
-async def test_request_middleware_logs_unexpected_exceptions_as_internal_server_errors(
+async def test_request_middleware_returns_unexpected_exceptions_as_internal_server_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     request: Final = Mock()
     request.method = "GET"
     request.url.path = "/v1/imprint"
-    error: Final = RuntimeError("unexpected")
     log_info: Final = Mock()
     log_error: Final = Mock()
     monkeypatch.setattr(main_module.logging, "info", log_info)
     monkeypatch.setattr(main_module.logging, "error", log_error)
     monkeypatch.setattr(main_module, "time", Mock(monotonic=Mock(side_effect=[10.0, 10.5])))
 
-    with pytest.raises(RuntimeError) as exc_info:
-        _ = await _log_requests(request, AsyncMock(side_effect=error))
+    async def _call_next(_request: Request) -> Response:
+        raise RuntimeError("Key (email)=(jane@example.com) already exists.")
 
-    # Re-raised for `_handle_unexpected_exception()` and the server's traceback logging.
-    assert exc_info.value is error
-    log_error.assert_called_once_with(
-        HttpRequestFailed(method="GET", path="/v1/imprint", exception_type="builtins.RuntimeError")
-    )
+    response: Final = await _log_requests(request, _call_next)
+
+    assert response.status_code == 500
+    assert json.loads(bytes(response.body)) == {"detail": "Internal server error."}
+    log_error.assert_called_once()
+    failed: Final = log_error.call_args.args[0]
+    assert isinstance(failed, HttpRequestFailed)
+    assert failed.method == "GET"
+    assert failed.path == "/v1/imprint"
+    assert failed.exception_type == "builtins.RuntimeError"
+    # Only code locations, never the message, which may contain personal data.
+    locations: Final = failed.exception_stack.splitlines()
+    assert len(locations) == 2
+    assert re.fullmatch(r"backend\.main:\d+ in _log_requests", locations[0])
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + re.escape(_call_next.__qualname__), locations[1])
     assert log_info.call_count == 2
     completed: Final = log_info.call_args_list[1].args[0]
     assert isinstance(completed, HttpRequestCompleted)
     assert completed.path == "/v1/imprint"
     assert completed.status_code == 500
     assert completed.duration_ms == 500.0
-
-
-@pytest.mark.asyncio
-async def test_unexpected_exception_handler_returns_internal_server_error() -> None:
-    response: Final = await _handle_unexpected_exception(Mock(spec=Request), RuntimeError("unexpected"))
-
-    assert response.status_code == 500
-    assert json.loads(bytes(response.body)) == {"detail": "Internal server error."}
 
 
 def test_unexpected_exception_is_returned_as_documented_internal_server_error(
@@ -130,7 +131,8 @@ def test_unexpected_exception_is_returned_as_documented_internal_server_error(
     monkeypatch.setattr(main_module.logging, "info", log_info)
     app.dependency_overrides[get_session] = _failing_session
     try:
-        response: Final = TestClient(app, raise_server_exceptions=False).get("/v1/globals")
+        # Raises if the exception reaches the server, which would log it with its message as an unstructured traceback.
+        response: Final = TestClient(app).get("/v1/globals")
     finally:
         _ = app.dependency_overrides.pop(get_session)
 
@@ -154,7 +156,7 @@ def test_request_middleware_logs_the_path_without_the_query_string(monkeypatch: 
     app.dependency_overrides[get_session] = _failing_session
     try:
         # Query strings may contain personal data.
-        _ = TestClient(app, raise_server_exceptions=False).get("/v1/globals", params={"language": "de"})
+        _ = TestClient(app).get("/v1/globals", params={"language": "de"})
     finally:
         _ = app.dependency_overrides.pop(get_session)
 

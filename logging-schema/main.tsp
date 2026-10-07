@@ -85,6 +85,13 @@ namespace LogEvents {
     /** Fully qualified name of the exception type, e.g. `sqlalchemy.exc.IntegrityError`. */
     exception_type: string;
 
+    /**
+     * Code locations of the exception's traceback, outermost first and one per
+     * line, e.g. `backend.routes.v1.globals:42 in get_globals`. Unlike a
+     * formatted traceback, it includes neither the message nor file paths.
+     */
+    exception_stack: string;
+
     /** Opaque request correlation identifier, if available. */
     request_id?: string;
   }
