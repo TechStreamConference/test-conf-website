@@ -553,7 +553,7 @@ export type GetCurrentEventV1Data = {
         /**
          * Accept-Language
          */
-        'accept-language'?: string | null;
+        'accept-language'?: Array<string> | null;
     };
     path?: never;
     query?: {
@@ -597,7 +597,7 @@ export type GetEventByYearAndSequenceNumberV1Data = {
         /**
          * Accept-Language
          */
-        'accept-language'?: string | null;
+        'accept-language'?: Array<string> | null;
     };
     path: {
         /**
@@ -679,7 +679,7 @@ export type GetImprintV1Data = {
         /**
          * Accept-Language
          */
-        'accept-language'?: string | null;
+        'accept-language'?: Array<string> | null;
     };
     path?: never;
     query?: {
@@ -723,7 +723,7 @@ export type GetDisplayLanguageV1Data = {
         /**
          * Accept-Language
          */
-        'accept-language'?: string | null;
+        'accept-language'?: Array<string> | null;
     };
     path?: never;
     query?: {
