@@ -101,3 +101,14 @@ def test_display_language_rejects_supported_languages_whose_normalized_form_is_i
     response: Final = TestClient(app).get("/v1/display-language", params={"supported_language": [tag, "en"]})
 
     assert response.status_code == 422
+
+
+def test_display_language_considers_all_accept_language_lines() -> None:
+    response: Final = TestClient(app).get(
+        "/v1/display-language",
+        params={"supported_language": ["de", "en"]},
+        headers=[("Accept-Language", "fr"), ("Accept-Language", "de;q=0.9")],
+    )
+
+    assert response.status_code == 200
+    assert response.json()["languageTag"] == "de"

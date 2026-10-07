@@ -89,12 +89,17 @@ class LanguageRequest(NamedTuple):
 async def get_language_request(
     response: Response,
     language: Optional[RequestedLanguageTag] = None,
-    accept_language: Annotated[Optional[str], Header()] = None,
+    accept_language: Annotated[Optional[list[str]], Header()] = None,
 ) -> LanguageRequest:
     """Collect the parameters of the language selection, see
     `LANGUAGE_SELECTION_DESCRIPTION`.
     """
-    return LanguageRequest(response=response, language=language, accept_language=accept_language)
+    # A header sent in several lines is a single comma-separated list (RFC 9110, section 5.3).
+    return LanguageRequest(
+        response=response,
+        language=language,
+        accept_language=None if accept_language is None else ", ".join(accept_language),
+    )
 
 
 @final

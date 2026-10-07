@@ -19,9 +19,27 @@ _EN = Language.get("en")
 async def test_get_language_request_bundles_the_parameters() -> None:
     response: Final = Response()
 
-    result: Final = await get_language_request(response, language="de", accept_language="en")
+    result: Final = await get_language_request(response, language="de", accept_language=["en"])
 
     assert result == LanguageRequest(response, language="de", accept_language="en")
+
+
+@pytest.mark.asyncio
+async def test_get_language_request_combines_several_accept_language_lines() -> None:
+    response: Final = Response()
+
+    result: Final = await get_language_request(response, accept_language=["fr", "de;q=0.9"])
+
+    assert result == LanguageRequest(response, accept_language="fr, de;q=0.9")
+
+
+@pytest.mark.asyncio
+async def test_get_language_request_without_accept_language() -> None:
+    response: Final = Response()
+
+    result: Final = await get_language_request(response)
+
+    assert result == LanguageRequest(response)
 
 
 def test_select_language_describes_the_selection() -> None:
