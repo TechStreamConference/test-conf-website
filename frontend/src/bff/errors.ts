@@ -11,16 +11,6 @@ export class GenericBackendError<T = unknown> extends Error {
 }
 
 /**
- * @brief Thrown when a backend call succeeded but did not return any data.
- */
-export class UndefinedDataError extends Error {
-    constructor(message: string) {
-        super(message);
-        this.name = 'UndefinedDataError';
-    }
-}
-
-/**
  * @brief Thrown when ZonedDates differ in context.
  */
 export class MissmatchZonedDateTimeContextError extends Error {

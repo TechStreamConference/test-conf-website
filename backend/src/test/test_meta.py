@@ -13,6 +13,7 @@ from fastapi.routing import APIRoute
 from pydantic import BaseModel
 
 from backend.config import Settings
+from backend.main import app
 from backend.models import responses
 from backend.models.responses import ApiResponseModel
 from backend.routes import v1_api
@@ -142,3 +143,11 @@ def test_env_example_satisfies_settings(monkeypatch: pytest.MonkeyPatch) -> None
     assert _ENV_EXAMPLE_FILE.is_file(), f"'{_ENV_EXAMPLE_FILE}' does not exist"
 
     Settings(_env_file=_ENV_EXAMPLE_FILE)  # type: ignore[reportCallIssue]
+
+
+def test_all_v1_operations_document_internal_server_error() -> None:
+    for path, operations in app.openapi()["paths"].items():
+        if not path.startswith("/v1/"):
+            continue
+        for method, operation in operations.items():
+            assert "500" in operation["responses"], f"{method.upper()} '{path}' does not document status code 500"
