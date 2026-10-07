@@ -59,7 +59,7 @@ async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerato
     try:
         alembic_config: Final = Config()
         alembic_config.set_main_option("script_location", str(_MIGRATIONS_PATH))
-        alembic_config.set_main_option("sqlalchemy.url", _POSTGRES.get_connection_url())
+        alembic_config.set_main_option("sqlalchemy.url", _POSTGRES.get_connection_url(driver="psycopg"))
         command.upgrade(alembic_config, "head")
 
         engine: Final = create_async_engine(
@@ -96,8 +96,8 @@ def migration_database() -> Generator[tuple[Config, sa.Engine]]:
     try:
         config: Final = Config()
         config.set_main_option("script_location", str(_MIGRATIONS_PATH))
-        config.set_main_option("sqlalchemy.url", container.get_connection_url())
-        engine: Final = sa.create_engine(container.get_connection_url())
+        config.set_main_option("sqlalchemy.url", container.get_connection_url(driver="psycopg"))
+        engine: Final = sa.create_engine(container.get_connection_url(driver="psycopg"))
         try:
             yield config, engine
         finally:
