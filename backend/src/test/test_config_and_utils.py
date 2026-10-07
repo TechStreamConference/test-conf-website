@@ -8,9 +8,11 @@ from unittest.mock import call
 
 import pytest
 from pydantic import BaseModel
+from pydantic import ValidationError
 
 import backend.utils as utils_module
 from backend.config import SETTINGS
+from backend.config import Settings
 from backend.models.responses import NotAuthenticatedResponseV1
 from backend.utils import create_http_exception
 from backend.utils import generate_browser_secret
@@ -34,6 +36,26 @@ def test_settings_build_oidc_and_database_urls() -> None:
         assert SETTINGS.database_host in url
         assert str(SETTINGS.database_port) in url
         assert url.endswith(f"/{SETTINGS.database_name}")
+
+
+@pytest.mark.parametrize(
+    "locale",
+    ["", "en_US", "en-x-" + "-".join(["abcdefgh"] * 7)],
+    ids=["empty", "invalid", "overlong"],
+)
+def test_settings_reject_invalid_default_locales(monkeypatch: pytest.MonkeyPatch, locale: str) -> None:
+    monkeypatch.setenv("DEFAULT_LOCALE", locale)
+
+    with pytest.raises(ValidationError, match="default_locale"):
+        _ = Settings()  # type: ignore[reportCallIssue]
+
+
+@pytest.mark.parametrize("timezone", ["", "+02:00", "localtime", "Europe/Does_Not_Exist"])
+def test_settings_reject_invalid_default_timezones(monkeypatch: pytest.MonkeyPatch, timezone: str) -> None:
+    monkeypatch.setenv("DEFAULT_TIMEZONE", timezone)
+
+    with pytest.raises(ValidationError, match="default_timezone"):
+        _ = Settings()  # type: ignore[reportCallIssue]
 
 
 def test_utc_now_returns_aware_utc_timestamp() -> None:

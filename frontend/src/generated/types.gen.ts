@@ -6,7 +6,31 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type Bcp47Language = string;
+
+export type Bcp47LanguageTag = string;
+
 export type Bcp47Locale = string;
+
+/**
+ * DisplayLanguageResponseV1
+ *
+ * Like `LanguageDetailsV1`, but the tags are spelled exactly as the client passed them as supported languages.
+ */
+export type DisplayLanguageResponseV1 = {
+    /**
+     * Available Languages
+     */
+    availableLanguages: Array<Bcp47LanguageTag>;
+    /**
+     * Language Tag
+     */
+    languageTag: Bcp47LanguageTag;
+    /**
+     * Is Language Fallback
+     */
+    isLanguageFallback: boolean;
+};
 
 /**
  * EmailNotVerifiedResponseV1
@@ -179,6 +203,16 @@ export type ImprintResponseV1 = {
 };
 
 /**
+ * InternalServerErrorResponseV1
+ */
+export type InternalServerErrorResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Internal server error.';
+};
+
+/**
  * InvalidLoginTransactionResponseV1
  */
 export type InvalidLoginTransactionResponseV1 = {
@@ -215,11 +249,11 @@ export type LanguageDetailsV1 = {
     /**
      * Available Languages
      */
-    availableLanguages: Array<string>;
+    availableLanguages: Array<Bcp47Language>;
     /**
      * Language Tag
      */
-    languageTag: string;
+    languageTag: Bcp47Language;
     /**
      * Is Language Fallback
      */
@@ -260,6 +294,16 @@ export type MeResponseV1 = {
      * Regional Settings Change
      */
     regionalSettingsChange: RegionalSettingsChangeV1 | null;
+};
+
+/**
+ * MissingSupportedLanguagesResponseV1
+ */
+export type MissingSupportedLanguagesResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'At least one supported language must be given.';
 };
 
 /**
@@ -335,6 +379,8 @@ export type ReportedRegionalSettingsInputV1 = {
     locale: Bcp47Locale;
 };
 
+export type RequestedLanguageTag = string;
+
 /**
  * UserPreferencesInputV1
  */
@@ -406,6 +452,10 @@ export type LoginV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type LoginV1Error = LoginV1Errors[keyof LoginV1Errors];
@@ -447,6 +497,10 @@ export type LoginCallbackV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type LoginCallbackV1Error = LoginCallbackV1Errors[keyof LoginCallbackV1Errors];
@@ -476,6 +530,10 @@ export type GetCurrentUserV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetCurrentUserV1Error = GetCurrentUserV1Errors[keyof GetCurrentUserV1Errors];
@@ -491,14 +549,20 @@ export type GetCurrentUserV1Response = GetCurrentUserV1Responses[keyof GetCurren
 
 export type GetCurrentEventV1Data = {
     body?: never;
-    path: {
+    headers?: {
         /**
-         * Language Tag
+         * Accept-Language
          */
-        language_tag: string;
+        'accept-language'?: Array<string> | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/event';
+    path?: never;
+    query?: {
+        /**
+         * Language
+         */
+        language?: RequestedLanguageTag | null;
+    };
+    url: '/v1/event';
 };
 
 export type GetCurrentEventV1Errors = {
@@ -510,6 +574,10 @@ export type GetCurrentEventV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetCurrentEventV1Error = GetCurrentEventV1Errors[keyof GetCurrentEventV1Errors];
@@ -525,11 +593,13 @@ export type GetCurrentEventV1Response = GetCurrentEventV1Responses[keyof GetCurr
 
 export type GetEventByYearAndSequenceNumberV1Data = {
     body?: never;
-    path: {
+    headers?: {
         /**
-         * Language Tag
+         * Accept-Language
          */
-        language_tag: string;
+        'accept-language'?: Array<string> | null;
+    };
+    path: {
         /**
          * Year
          */
@@ -539,8 +609,13 @@ export type GetEventByYearAndSequenceNumberV1Data = {
          */
         sequence_number: number | 'latest';
     };
-    query?: never;
-    url: '/v1/{language_tag}/event/{year}/{sequence_number}';
+    query?: {
+        /**
+         * Language
+         */
+        language?: RequestedLanguageTag | null;
+    };
+    url: '/v1/event/{year}/{sequence_number}';
 };
 
 export type GetEventByYearAndSequenceNumberV1Errors = {
@@ -556,6 +631,10 @@ export type GetEventByYearAndSequenceNumberV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetEventByYearAndSequenceNumberV1Error = GetEventByYearAndSequenceNumberV1Errors[keyof GetEventByYearAndSequenceNumberV1Errors];
@@ -576,6 +655,15 @@ export type GetGlobalsV1Data = {
     url: '/v1/globals';
 };
 
+export type GetGlobalsV1Errors = {
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
+};
+
+export type GetGlobalsV1Error = GetGlobalsV1Errors[keyof GetGlobalsV1Errors];
+
 export type GetGlobalsV1Responses = {
     /**
      * Successful Response
@@ -587,14 +675,20 @@ export type GetGlobalsV1Response = GetGlobalsV1Responses[keyof GetGlobalsV1Respo
 
 export type GetImprintV1Data = {
     body?: never;
-    path: {
+    headers?: {
         /**
-         * Language Tag
+         * Accept-Language
          */
-        language_tag: string;
+        'accept-language'?: Array<string> | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/imprint';
+    path?: never;
+    query?: {
+        /**
+         * Language
+         */
+        language?: RequestedLanguageTag | null;
+    };
+    url: '/v1/imprint';
 };
 
 export type GetImprintV1Errors = {
@@ -606,6 +700,10 @@ export type GetImprintV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetImprintV1Error = GetImprintV1Errors[keyof GetImprintV1Errors];
@@ -618,6 +716,54 @@ export type GetImprintV1Responses = {
 };
 
 export type GetImprintV1Response = GetImprintV1Responses[keyof GetImprintV1Responses];
+
+export type GetDisplayLanguageV1Data = {
+    body?: never;
+    headers?: {
+        /**
+         * Accept-Language
+         */
+        'accept-language'?: Array<string> | null;
+    };
+    path?: never;
+    query?: {
+        /**
+         * Supported Language
+         */
+        supported_language?: Array<Bcp47LanguageTag> | null;
+        /**
+         * Language
+         */
+        language?: RequestedLanguageTag | null;
+    };
+    url: '/v1/display-language';
+};
+
+export type GetDisplayLanguageV1Errors = {
+    /**
+     * Bad Request
+     */
+    400: MissingSupportedLanguagesResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
+};
+
+export type GetDisplayLanguageV1Error = GetDisplayLanguageV1Errors[keyof GetDisplayLanguageV1Errors];
+
+export type GetDisplayLanguageV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: DisplayLanguageResponseV1;
+};
+
+export type GetDisplayLanguageV1Response = GetDisplayLanguageV1Responses[keyof GetDisplayLanguageV1Responses];
 
 export type UpdateCurrentUserPreferencesV1Data = {
     body: UserPreferencesInputV1;
@@ -635,6 +781,10 @@ export type UpdateCurrentUserPreferencesV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type UpdateCurrentUserPreferencesV1Error = UpdateCurrentUserPreferencesV1Errors[keyof UpdateCurrentUserPreferencesV1Errors];
@@ -664,6 +814,10 @@ export type ReportRegionalSettingsV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type ReportRegionalSettingsV1Error = ReportRegionalSettingsV1Errors[keyof ReportRegionalSettingsV1Errors];
@@ -702,6 +856,10 @@ export type DecideRegionalSettingsChangeV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type DecideRegionalSettingsChangeV1Error = DecideRegionalSettingsChangeV1Errors[keyof DecideRegionalSettingsChangeV1Errors];

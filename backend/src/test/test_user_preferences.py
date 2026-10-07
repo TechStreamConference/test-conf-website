@@ -4,8 +4,10 @@ from typing import Optional
 import pytest
 
 from backend.config import SETTINGS
+from backend.language_tags import validate_locale
 from backend.models.requests import UserPreferencesInputV1
 from backend.models.tables import UserPreferences
+from backend.timezones import validate_timezone
 from backend.user_preferences import RegionalSettingsReportOutcome
 from backend.user_preferences import canonical_locale
 from backend.user_preferences import canonical_timezone
@@ -14,8 +16,6 @@ from backend.user_preferences import locales_equivalent
 from backend.user_preferences import process_regional_settings_report
 from backend.user_preferences import resolve_effective_user_preferences
 from backend.user_preferences import timezones_equivalent
-from backend.user_preferences import validate_locale
-from backend.user_preferences import validate_timezone
 
 
 @pytest.mark.parametrize("timezone", ["Europe/Berlin", "Europe/Istanbul", "America/New_York"])
@@ -96,8 +96,16 @@ def test_locales_equivalent_distinguishes_different_locales() -> None:
     assert not locales_equivalent("en-US", "en-GB")
 
 
+def test_locales_equivalent_ignores_redundant_script() -> None:
+    assert locales_equivalent("en-Latn-US", "en-US")
+
+
 def test_canonical_locale_normalizes_casing() -> None:
     assert canonical_locale("en-us") == "en-US"
+
+
+def test_canonical_locale_removes_redundant_script() -> None:
+    assert canonical_locale("de-Latn-DE") == "de-DE"
 
 
 def _report_outcome(

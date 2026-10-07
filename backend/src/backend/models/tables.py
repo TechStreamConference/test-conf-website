@@ -11,6 +11,8 @@ import sqlalchemy as sa
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
+from backend.language_tags import Bcp47Language
+from backend.models.column_types import LanguageTagType
 from backend.utils import utc_now
 
 
@@ -158,7 +160,7 @@ class StaticPage(SQLModel, table=True):
     __tablename__ = "static_pages"  # type: ignore[reportAssignmentType]
 
     kind: StaticPageKind = Field(primary_key=True)
-    language_tag: str = Field(primary_key=True)
+    language: Bcp47Language = Field(primary_key=True, sa_type=LanguageTagType)
     content: str
 
 
@@ -188,7 +190,7 @@ class EventTranslation(_AuditMixin, table=True):
     __tablename__ = "event_translations"  # type: ignore[reportAssignmentType]
 
     event_id: int = Field(foreign_key="events.id", primary_key=True)
-    language_tag: str = Field(primary_key=True)  # Following BCP 47.
+    language: Bcp47Language = Field(primary_key=True, sa_type=LanguageTagType)
     title: str
     subtitle: str
     presskit_url: Optional[str]

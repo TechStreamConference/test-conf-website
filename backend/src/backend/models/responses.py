@@ -10,6 +10,8 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic.alias_generators import to_camel
 
+from backend.language_tags import Bcp47Language
+from backend.language_tags import Bcp47LanguageTag
 from backend.models.preference_types import Bcp47Locale
 from backend.models.preference_types import IanaTimezone
 
@@ -35,14 +37,33 @@ class ApiResponseModel(BaseModel):
 
 @final
 class LanguageDetailsV1(ApiResponseModel):
-    available_languages: list[str]
-    language_tag: str
+    available_languages: list[Bcp47Language]
+    language_tag: Bcp47Language
     is_language_fallback: bool
+
+
+@final
+class DisplayLanguageResponseV1(ApiResponseModel):
+    """Like `LanguageDetailsV1`, but the tags are spelled exactly as the client passed them as supported languages."""
+
+    available_languages: list[Bcp47LanguageTag]
+    language_tag: Bcp47LanguageTag
+    is_language_fallback: bool
+
+
+@final
+class MissingSupportedLanguagesResponseV1(ApiResponseModel):
+    detail: Literal["At least one supported language must be given."] = "At least one supported language must be given."
 
 
 @final
 class GlobalsResponseV1(ApiResponseModel):
     footer_text: str
+
+
+@final
+class InternalServerErrorResponseV1(ApiResponseModel):
+    detail: Literal["Internal server error."] = "Internal server error."
 
 
 @final

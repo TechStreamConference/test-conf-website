@@ -41,7 +41,7 @@ namespace LogEvents {
     /** HTTP method (GET, POST, …). */
     method: string;
 
-    /** Request path including query string. */
+    /** Request path without the query string, which may contain personal data. */
     path: string;
 
     /** Opaque request correlation identifier, if available. */
@@ -55,7 +55,7 @@ namespace LogEvents {
     /** HTTP method (GET, POST, …). */
     method: string;
 
-    /** Request path including query string. */
+    /** Request path without the query string, which may contain personal data. */
     path: string;
 
     /** HTTP response status code. */
@@ -63,6 +63,37 @@ namespace LogEvents {
 
     /** Wall-clock time from request receipt to response completion in milliseconds. */
     duration_ms: float64;
+
+    /** Opaque request correlation identifier, if available. */
+    request_id?: string;
+  }
+
+  /**
+   * Emitted when handling an HTTP request fails with an unexpected exception,
+   * before the request is logged as completed with status 500. Never includes
+   * the exception message, which may contain personal data.
+   */
+  @extension("x-event-name", "http.request.failed")
+  @extension("x-event-body", "HTTP request failed with an unexpected exception")
+  model HttpRequestFailed {
+    /** HTTP method (GET, POST, …). */
+    method: string;
+
+    /** Request path without the query string, which may contain personal data. */
+    path: string;
+
+    /** Fully qualified name of the exception type, e.g. `sqlalchemy.exc.IntegrityError`. */
+    exception_type: string;
+
+    /**
+     * Code locations of the exception's traceback, outermost first and one per
+     * line, e.g. `backend.routes.v1.globals:42 in get_globals`. They are
+     * followed by the locations of each chained exception, introduced by a line
+     * naming its type: `caused by <type>` for an explicit cause, or
+     * `while handling <type>` for an implicit context. Unlike a formatted
+     * traceback, it includes neither messages nor file paths.
+     */
+    exception_stack: string;
 
     /** Opaque request correlation identifier, if available. */
     request_id?: string;

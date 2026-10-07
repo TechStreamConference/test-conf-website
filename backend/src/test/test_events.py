@@ -8,7 +8,10 @@ from unittest.mock import Mock
 
 import pytest
 from fastapi import HTTPException
+from fastapi import Response
+from langcodes import Language
 
+from backend.language_selection import LanguageRequest
 from backend.models.responses import EventResponseV1
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
@@ -44,7 +47,7 @@ def _event(
 def _translation(event_id: int, language_tag: str) -> EventTranslation:
     return EventTranslation(
         event_id=event_id,
-        language_tag=language_tag,
+        language=Language.get(language_tag),
         title=f"Title {event_id} ({language_tag})",
         subtitle="Subtitle",
         presskit_url=None,
@@ -81,12 +84,12 @@ async def test_current_event_returns_spotlighted_event_and_requested_translation
         _row(event, _translation(2, "en")),
     ])
 
-    result: Final = await get_current_event(session, "en")
+    result: Final = await get_current_event(session, LanguageRequest(Response(), language="en"))
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
-    assert result.language_details.available_languages == ["de", "en"]
-    assert result.language_details.language_tag == "en"
+    assert result.language_details.available_languages == [Language.get("de"), Language.get("en")]
+    assert result.language_details.language_tag == Language.get("en")
     assert result.language_details.is_language_fallback is False
     session.execute.assert_awaited_once()
 
@@ -96,7 +99,7 @@ async def test_current_event_returns_not_found_when_no_event_is_applicable() -> 
     session: Final = _session_with_rows([])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_current_event(session, "de")
+        _ = await get_current_event(session, LanguageRequest(Response(), language="de"))
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Event not found in the database."
@@ -112,12 +115,14 @@ async def test_event_returns_requested_numbered_event_and_translation() -> None:
         _row(second_event, _translation(2, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, "en", 2024, 2)
+    result: Final = await get_event_by_year_and_sequence_number(
+        session, LanguageRequest(Response(), language="en"), 2024, 2
+    )
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
-    assert result.language_details.available_languages == ["de", "en"]
-    assert result.language_details.language_tag == "en"
+    assert result.language_details.available_languages == [Language.get("de"), Language.get("en")]
+    assert result.language_details.language_tag == Language.get("en")
     assert result.language_details.is_language_fallback is False
 
 
@@ -130,12 +135,14 @@ async def test_event_returns_before_processing_later_events() -> None:
         _row(second_event, _translation(2, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, "en", 2024, 1)
+    result: Final = await get_event_by_year_and_sequence_number(
+        session, LanguageRequest(Response(), language="en"), 2024, 1
+    )
 
     assert result.id == 1
     assert result.title == "Title 1 (en)"
-    assert result.language_details.available_languages == ["en"]
-    assert result.language_details.language_tag == "en"
+    assert result.language_details.available_languages == [Language.get("en")]
+    assert result.language_details.language_tag == Language.get("en")
     assert result.language_details.is_language_fallback is False
 
 
@@ -147,9 +154,11 @@ async def test_event_latest_falls_back_to_english() -> None:
         _row(event, _translation(1, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, "fr", 2024, "latest")
+    result: Final = await get_event_by_year_and_sequence_number(
+        session, LanguageRequest(Response(), language="fr"), 2024, "latest"
+    )
 
-    assert result.language_details.language_tag == "en"
+    assert result.language_details.language_tag == Language.get("en")
     assert result.language_details.is_language_fallback is True
 
 
@@ -158,9 +167,11 @@ async def test_event_falls_back_to_first_available_translation() -> None:
     event: Final = _event(1, date(2024, 5, 1))
     session: Final = _session_with_rows([_row(event, _translation(1, "de"))])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, "fr", 2024, 1)
+    result: Final = await get_event_by_year_and_sequence_number(
+        session, LanguageRequest(Response(), language="fr"), 2024, 1
+    )
 
-    assert result.language_details.language_tag == "de"
+    assert result.language_details.language_tag == Language.get("de")
     assert result.language_details.is_language_fallback is True
 
 
@@ -169,7 +180,7 @@ async def test_event_rejects_invalid_sequence_number() -> None:
     session: Final = AsyncMock()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_event_by_year_and_sequence_number(session, "de", 2024, 0)
+        _ = await get_event_by_year_and_sequence_number(session, LanguageRequest(Response(), language="de"), 2024, 0)
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid sequence number."
@@ -182,7 +193,66 @@ async def test_event_returns_not_found_when_no_event_exists(sequence_number: int
     session: Final = _session_with_rows([])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_event_by_year_and_sequence_number(session, "de", 2025, sequence_number)
+        _ = await get_event_by_year_and_sequence_number(
+            session, LanguageRequest(Response(), language="de"), 2025, sequence_number
+        )
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Event not found in the database."
+
+
+@pytest.mark.asyncio
+async def test_current_event_without_language_tag_uses_accept_language_header() -> None:
+    event: Final = _event(
+        2,
+        date(2026, 9, 1),
+        frontpage_spotlight_date=datetime(2026, 8, 1, tzinfo=UTC),
+    )
+    session: Final = _session_with_rows([
+        _row(event, _translation(2, "de")),
+        _row(event, _translation(2, "en")),
+    ])
+    response: Final = Response()
+
+    result: Final = await get_current_event(session, LanguageRequest(response, accept_language="fr;q=0.9, de;q=0.8"))
+
+    assert result.title == "Title 2 (de)"
+    assert result.language_details.language_tag == Language.get("de")
+    assert result.language_details.is_language_fallback is True
+    assert response.headers["vary"] == "Accept-Language"
+
+
+@pytest.mark.asyncio
+async def test_event_without_language_tag_uses_first_header_choice_without_fallback() -> None:
+    event: Final = _event(1, date(2024, 5, 1))
+    session: Final = _session_with_rows([
+        _row(event, _translation(1, "de")),
+        _row(event, _translation(1, "en")),
+    ])
+    response: Final = Response()
+
+    result: Final = await get_event_by_year_and_sequence_number(
+        session, LanguageRequest(response, accept_language="de-DE,de;q=0.9,en;q=0.8"), 2024, "latest"
+    )
+
+    assert result.language_details.language_tag == Language.get("de")
+    assert result.language_details.is_language_fallback is False
+    assert response.headers["vary"] == "Accept-Language"
+
+
+@pytest.mark.asyncio
+async def test_event_route_language_beats_accept_language_header() -> None:
+    event: Final = _event(1, date(2024, 5, 1))
+    session: Final = _session_with_rows([
+        _row(event, _translation(1, "de")),
+        _row(event, _translation(1, "en")),
+    ])
+    response: Final = Response()
+
+    result: Final = await get_event_by_year_and_sequence_number(
+        session, LanguageRequest(response, language="en", accept_language="de"), 2024, 1
+    )
+
+    assert result.language_details.language_tag == Language.get("en")
+    assert result.language_details.is_language_fallback is False
+    assert "vary" not in response.headers

@@ -7,6 +7,9 @@ from pydantic import SecretStr
 from pydantic_settings import BaseSettings
 from pydantic_settings import SettingsConfigDict
 
+from backend.models.preference_types import Bcp47Locale
+from backend.models.preference_types import IanaTimezone
+
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 _ROOT_ENV_FILE = _REPO_ROOT / ".env"
 
@@ -41,8 +44,9 @@ class Settings(BaseSettings):
 
     # Defaults are resolved at use time. They are deliberately not database
     # defaults because NULL records that a user has not chosen a preference.
-    default_timezone: str = Field(default="Europe/Berlin", min_length=1)
-    default_locale: str = Field(default="en", min_length=1)
+    # They are validated like the preferences of users, which they stand in for.
+    default_timezone: IanaTimezone = "Europe/Berlin"
+    default_locale: Bcp47Locale = "en"
 
     @cached_property
     def zitadel_redirect_uri(self) -> str:
