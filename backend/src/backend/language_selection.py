@@ -116,6 +116,17 @@ class _LanguageToBeDelivered(NamedTuple):
 
 
 @final
+class SelectedLanguage(NamedTuple):
+    language: Language
+    """
+    The selected one of the available languages. It is the very same object
+    rather than an equal one, so it is usable as a key into whatever the
+    available languages were taken from, even if that key is not normalized.
+    """
+    is_language_fallback: bool
+
+
+@final
 class SelectedTranslation[T](NamedTuple):
     translation: T
     language_details: LanguageDetailsV1
@@ -294,8 +305,8 @@ def _determine_language_to_be_delivered(
     )
 
 
-def select_language(available_languages: Sequence[Language], request: LanguageRequest) -> LanguageDetailsV1:
-    """Select the language to be delivered and describe the selection.
+def select_language(available_languages: Sequence[Language], request: LanguageRequest) -> SelectedLanguage:
+    """Select the language to be delivered.
 
     Adds `Vary: Accept-Language` to the response if the selection depends on
     that header. Raises `ValueError` if no language is available at all.
@@ -308,9 +319,8 @@ def select_language(available_languages: Sequence[Language], request: LanguageRe
     if language_to_be_delivered.varies_with_accept_language:
         # Caches must not serve this response to clients with a different `Accept-Language` header.
         request.response.headers.add_vary_header("Accept-Language")
-    return LanguageDetailsV1(
-        available_languages=list(available_languages),
-        language_tag=language_to_be_delivered.language,
+    return SelectedLanguage(
+        language=language_to_be_delivered.language,
         is_language_fallback=language_to_be_delivered.is_language_fallback,
     )
 
@@ -325,9 +335,13 @@ def select_translation[T](
     at all, so callers have to handle missing content before selecting a
     translation.
     """
-    language_details: Final = select_language(list(translations_by_language), request)
-    translation: Final = translations_by_language.get(language_details.language_tag)
-    if translation is None:
-        # This should never happen because the language to be delivered is always one of the available ones.
-        raise RuntimeError("Selected language is not among the available translations.")
-    return SelectedTranslation(translation=translation, language_details=language_details)
+    available_languages: Final = list(translations_by_language)
+    selected_language: Final = select_language(available_languages, request)
+    return SelectedTranslation(
+        translation=translations_by_language[selected_language.language],
+        language_details=LanguageDetailsV1(
+            available_languages=available_languages,
+            language_tag=selected_language.language,
+            is_language_fallback=selected_language.is_language_fallback,
+        ),
+    )

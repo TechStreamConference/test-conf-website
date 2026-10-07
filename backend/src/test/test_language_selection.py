@@ -7,6 +7,7 @@ from langcodes import Language
 
 import backend.language_selection
 from backend.language_selection import LanguageRequest
+from backend.language_selection import SelectedLanguage
 from backend.language_selection import get_language_request
 from backend.language_selection import select_language
 from backend.language_selection import select_translation
@@ -47,9 +48,7 @@ def test_select_language_describes_the_selection() -> None:
 
     result: Final = select_language([_DE, _EN], LanguageRequest(response, accept_language="de"))
 
-    assert result.available_languages == [_DE, _EN]
-    assert result.language_tag == _DE
-    assert result.is_language_fallback is False
+    assert result == SelectedLanguage(language=_DE, is_language_fallback=False)
     assert response.headers["vary"] == "Accept-Language"
 
 
@@ -372,26 +371,16 @@ def test_select_translation_appends_to_existing_vary_header() -> None:
     assert response.headers["vary"] == "Cookie, Accept-Language"
 
 
-def test_select_translation_raises_if_selected_language_is_not_available(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    def _determine_unavailable_language(
-        **_: object,
-    ) -> backend.language_selection._LanguageToBeDelivered:  # pyright: ignore[reportPrivateUsage]
-        return backend.language_selection._LanguageToBeDelivered(  # pyright: ignore[reportPrivateUsage]
-            language=Language.get("fr"),
-            is_language_fallback=False,
-            varies_with_accept_language=False,
-        )
+def test_select_translation_finds_translations_of_unnormalized_languages() -> None:
+    # Created without normalization, so it differs from the normalized `de-DE` that its tag is parsed into.
+    unnormalized: Final = Language.make(language="de", territory="de")
 
-    monkeypatch.setattr(
-        backend.language_selection,
-        "_determine_language_to_be_delivered",
-        _determine_unavailable_language,
+    result: Final = select_translation(
+        {unnormalized: "Hallo", _EN: "Hello"}, LanguageRequest(Response(), language="de")
     )
 
-    with pytest.raises(RuntimeError):
-        _ = select_translation({_DE: "Hallo"}, LanguageRequest(Response()))
+    assert result.translation == "Hallo"
+    assert result.language_details.language_tag == Language.get("de-DE")
 
 
 def test_select_translation_falls_back_to_english_when_no_header_language_is_available() -> None:

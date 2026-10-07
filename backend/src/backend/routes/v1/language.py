@@ -63,9 +63,9 @@ async def get_display_language(
     spelling_by_language: Final[dict[Language, str]] = {}
     for tag in supported_language:
         _ = spelling_by_language.setdefault(parse_language(tag), tag)
-    language_details: Final = select_language(list(spelling_by_language), language_request)
+    selected_language: Final = select_language(list(spelling_by_language), language_request)
     return DisplayLanguageResponseV1(
         available_languages=list(spelling_by_language.values()),
-        language_tag=spelling_by_language[language_details.language_tag],
-        is_language_fallback=language_details.is_language_fallback,
+        language_tag=spelling_by_language[selected_language.language],
+        is_language_fallback=selected_language.is_language_fallback,
     )
