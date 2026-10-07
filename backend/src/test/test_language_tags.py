@@ -9,6 +9,8 @@ from typing import Optional
 
 import pytest
 from langcodes import Language
+from langcodes.data_dicts import LANGUAGE_DISTANCES
+from langcodes.language_distance import DEFAULT_TERRITORY_DISTANCE
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 
@@ -18,6 +20,7 @@ from backend.language_tags import Bcp47Language
 from backend.language_tags import Bcp47LanguageTag
 from backend.language_tags import is_valid_bcp_47_tag
 from backend.language_tags import parse_language
+from backend.language_tags import written_language
 
 _ADAPTER = TypeAdapter[Bcp47Language](Bcp47Language)
 
@@ -206,3 +209,38 @@ def test_bcp_47_language_tag_keeps_the_original_spelling() -> None:
 def test_bcp_47_language_tag_rejects_invalid_tags(value: str) -> None:
     with pytest.raises(ValidationError):
         _ = _TAG_ADAPTER.validate_python(value)
+
+
+def _closest_different_languages() -> Iterator[tuple[str, str]]:
+    """Yield the pairs of different languages that CLDR's language matching
+    treats as closer than the same language in different regions.
+    """
+    # Besides languages, the distances also cover scripts of languages (`sr_Latn`) and wildcards (`*`).
+    for desired, distances in LANGUAGE_DISTANCES.items():
+        for supported, distance in distances.items():
+            if (
+                desired.isalpha()
+                and supported.isalpha()
+                and desired != supported
+                and distance < DEFAULT_TERRITORY_DISTANCE
+            ):
+                yield desired, supported
+
+
+def test_closest_different_languages_are_the_same_written_language() -> None:
+    pairs: Final = list(_closest_different_languages())
+
+    # Keeps the test from passing without checking anything if the matching data of langcodes changes its format.
+    assert ("nb", "no") in pairs
+    for desired, supported in pairs:
+        assert written_language(parse_language(desired)) == written_language(parse_language(supported))
+
+
+@pytest.mark.parametrize(("tag", "macrolanguage"), [("cmn", "zh"), ("zsm", "ms"), ("arb", "ar")])
+def test_dominant_languages_are_the_same_written_language_as_their_macrolanguage(tag: str, macrolanguage: str) -> None:
+    assert written_language(parse_language(tag)) == written_language(parse_language(macrolanguage))
+
+
+@pytest.mark.parametrize(("tag", "other_tag"), [("nn", "nb"), ("nn", "no"), ("yue", "zh-Hant")])
+def test_other_languages_are_different_written_languages(tag: str, other_tag: str) -> None:
+    assert written_language(parse_language(tag)) != written_language(parse_language(other_tag))

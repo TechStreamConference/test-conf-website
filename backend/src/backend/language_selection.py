@@ -12,12 +12,17 @@ The language is resolved in the following order:
 Languages match if they are the same written language, i.e. the same
 language in the same (likely) script, regardless of region or variants: `de`,
 `de-AT`, and `de-DE` all match each other, while `zh-TW` (Traditional) and
-`zh-Hans` (Simplified) do not. Of several matching available languages, the
+`zh-Hans` (Simplified) do not. Languages that CLDR's language matching
+treats as the same match as well: a macrolanguage and its dominant
+individual language (`zh` and `cmn`), and Norwegian and Norwegian Bokmål
+(`no` and `nb`). Of several matching available languages, the
 one sharing the longest prefix of subtags with the requested tag wins (so
 `de-AT-1996` prefers `de-AT` over `de`), then the least specific one (so
 `de-AT` prefers `de` over `de-DE`), then the first one. Script subtags are
 ignored for this, since matching languages share their script anyway (so
-`zh-TW` prefers `zh-Hant-TW` over `zh-Hant-HK`). English is any available
+`zh-TW` prefers `zh-Hant-TW` over `zh-Hant-HK`), and so are differences
+between language subtags of the same language (so `nb-NO` prefers `no-NO`
+over `no`). English is any available
 language matching `en`.
 
 The delivered language is marked as a fallback if the client's first choice
@@ -60,9 +65,11 @@ LANGUAGE_SELECTION_DESCRIPTION = (
     + "the best available language from the `Accept-Language` header (respecting quality values), "
     + "English, and finally the first available language. Languages match if they are the same language "
     + "in the same (likely) script, regardless of region or variants (e.g. `de-AT` matches `de` and `de-DE`, "
-    + "but `zh-TW` does not match `zh-Hans`); the closest available tag is preferred. Wildcards, tags without "
-    + "a language, and languages excluded with `q=0` are ignored, so an excluded language may still be delivered "
-    + "as the English or first available language. `isLanguageFallback` is `true` if the client's first choice "
+    + "but `zh-TW` does not match `zh-Hans`), and languages that CLDR's language matching treats as the same "
+    + "match as well (e.g. `cmn` matches `zh`, and `nb` matches `no`); the closest available tag is preferred. "
+    + "Wildcards, tags without a language, and languages excluded with `q=0` are ignored, so an excluded "
+    + "language may still be delivered as the English or first available language. `isLanguageFallback` is "
+    + "`true` if the client's first choice "
     + "(`language` or, if not given, the most preferred valid `Accept-Language` entry) is not available, and "
     + "`false` if the client did not express any preference."
 )
@@ -138,7 +145,8 @@ class _MatchableLanguage(NamedTuple):
     written_language: WrittenLanguage
     subtags: list[str]
     """The subtags without the script, since matching languages share their (likely) script anyway: whether it is
-    spelled out must not affect which language is the closest.
+    spelled out must not affect which language is the closest. For the same reason, the language subtag is the one of
+    the written language.
     """
 
 
@@ -151,7 +159,8 @@ def _matchable_language(language: Language) -> Optional[_MatchableLanguage]:
     language_written_language: Final = written_language(language)
     if language_written_language is None:
         return None
-    subtags: Final = language.to_tag().split("-")
+    # The tag starts with the language subtag, since the language is not missing.
+    subtags: Final = [language_written_language.language, *language.to_tag().split("-")[1:]]
     if language.script is not None:
         subtags.remove(language.script)
     return _MatchableLanguage(language=language, written_language=language_written_language, subtags=subtags)

@@ -123,11 +123,18 @@ def standardize_language_tag(value: str) -> str:
         return standardize_tag(value)
 
 
+# Different languages that CLDR's language matching treats as the same language (with a distance smaller than between
+# regions of the same language), mapped to one of them: Norwegian (`no`) is written as Norwegian Bokmål (`nb`) by far
+# most of the time, unlike Norwegian Nynorsk (`nn`). A test checks this against the matching data of langcodes.
+_EQUIVALENT_LANGUAGES = {"no": "nb"}
+
+
 @final
 class WrittenLanguage(NamedTuple):
     """A language together with the script it is written in, e.g. `zh` in `Hant` for `zh-TW`."""
 
     language: str
+    """The language subtag, where languages that are matched as the same language share one of their subtags."""
     script: Optional[str]
 
 
@@ -137,14 +144,23 @@ def written_language(language: Language) -> Optional[WrittenLanguage]:
     region or variants (`de-AT` and `de-DE`), while tags in different scripts
     are kept apart (`zh-TW` and `zh-Hans`).
 
+    Like in CLDR's language matching, an individual language is the same as
+    its macrolanguage if it is the dominant one (`cmn` and `zh`), and
+    Norwegian is the same as Norwegian Bokmål (`no` and `nb`).
+
     Returns `None` for tags without a language, such as `und`.
     """
     if language.language is None:
         return None
     with _using_langcodes():
         # Likely subtags are taken from the CLDR, e.g. `zh-TW` -> `zh-Hant-TW`.
-        maximized: Final = language.maximize()
-    return WrittenLanguage(language=language.language, script=maximized.script)
+        maximized: Final = language.prefer_macrolanguage().maximize()
+    # Neither replacing a language with its macrolanguage nor maximizing removes the language.
+    matched_language: Final = maximized.language or language.language
+    return WrittenLanguage(
+        language=_EQUIVALENT_LANGUAGES.get(matched_language, matched_language),
+        script=maximized.script,
+    )
 
 
 def _validate_language(value: object) -> Language:

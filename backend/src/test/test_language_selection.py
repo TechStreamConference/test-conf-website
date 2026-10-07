@@ -136,6 +136,15 @@ def test_select_translation_follows_rfc_4647_lookup(
         ("zh-Hant-TW", ["zh-HK", "zh-TW"], "zh-TW"),
         ("de-Latn-AT", ["de", "de-AT"], "de-AT"),
         ("de", ["de-AT", "de-Latn"], "de-Latn"),
+        # Languages that CLDR's language matching treats as the same match each other.
+        ("nb-NO", ["en", "no"], "no"),
+        ("no", ["en", "nb-NO"], "nb-NO"),
+        ("zsm", ["en", "ms"], "ms"),
+        ("ar", ["en", "arb"], "arb"),
+        ("cmn-TW", ["zh-Hans", "zh-Hant"], "zh-Hant"),
+        # Their differing language subtags do not affect which language is the closest.
+        ("nb-NO", ["no", "no-NO"], "no-NO"),
+        ("cmn-TW", ["zh-Hant", "zh-TW"], "zh-TW"),
     ],
 )
 def test_select_translation_matches_the_same_written_language(
@@ -155,6 +164,11 @@ def test_select_translation_matches_the_same_written_language(
         # Different scripts are different written languages.
         ("zh-TW", ["en", "zh-Hans"]),
         ("sr-Latn", ["en", "sr-Cyrl"]),
+        # Norwegian Nynorsk is not the same written language as Norwegian (Bokmål).
+        ("nn", ["en", "no"]),
+        ("nn", ["en", "nb"]),
+        # Non-dominant languages of a macrolanguage are not the same as the macrolanguage.
+        ("yue", ["en", "zh-Hant"]),
     ],
 )
 def test_select_translation_does_not_match_other_written_languages(
