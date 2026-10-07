@@ -52,12 +52,11 @@ async def _log_requests(
         # Unexpected exceptions are turned into the documented response here instead of being re-raised: Starlette
         # would pass them on to the server, which logs them as unstructured tracebacks including their message. The
         # message is never logged, since it may contain personal data (e.g. the values violating a constraint).
-        exception_type: Final = type(exception)
         logging.error(
             HttpRequestFailed(
                 method=request.method,
                 path=request.url.path,
-                exception_type=f"{exception_type.__module__}.{exception_type.__qualname__}",
+                exception_type=_qualified_type_name(exception),
                 exception_stack=_code_locations(exception),
             )
         )
@@ -70,17 +69,44 @@ async def _log_requests(
     return response
 
 
-def _code_locations(exception: BaseException) -> str:
-    """Describe where `exception` was raised by the code locations of its
-    traceback, outermost first and one per line.
+def _qualified_type_name(exception: BaseException) -> str:
+    exception_type: Final = type(exception)
+    return f"{exception_type.__module__}.{exception_type.__qualname__}"
 
-    Only module names, line numbers, and function names are included. Unlike
-    file paths (e.g. of a home directory), they cannot contain personal data.
+
+def _code_locations(exception: BaseException) -> str:
+    """Describe where `exception` and the exceptions chained to it were raised
+    by the code locations of their tracebacks, outermost first and one per line.
+
+    Each chained exception follows the locations of the exception it led to,
+    introduced by a line naming its type: `caused by <type>` for an explicit
+    cause (`raise ... from ...`), `while handling <type>` for an implicit
+    context, just like Python's tracebacks (which list them in reverse order).
+
+    Only exception types, module names, line numbers, and function names are
+    included. Unlike messages or file paths (e.g. of a home directory), they
+    cannot contain personal data.
     """
     locations: Final[list[str]] = []
-    for frame, line_number in traceback.walk_tb(exception.__traceback__):
-        module: object = frame.f_globals.get("__name__")
-        locations.append(f"{module if isinstance(module, str) else '?'}:{line_number} in {frame.f_code.co_qualname}")
+    # Exceptions can form cycles, e.g. when an exception is re-raised while handling its own cause.
+    seen: Final = {id(exception)}
+    current = exception
+    while True:
+        for frame, line_number in traceback.walk_tb(current.__traceback__):
+            module: object = frame.f_globals.get("__name__")
+            locations.append(
+                f"{module if isinstance(module, str) else '?'}:{line_number} in {frame.f_code.co_qualname}"
+            )
+        if current.__cause__ is not None:
+            current, relation = current.__cause__, "caused by"
+        elif current.__context__ is not None and not current.__suppress_context__:
+            current, relation = current.__context__, "while handling"
+        else:
+            break
+        if id(current) in seen:
+            break
+        seen.add(id(current))
+        locations.append(f"{relation} {_qualified_type_name(current)}")
     return "\n".join(locations)
 
 

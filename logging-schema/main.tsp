@@ -87,8 +87,11 @@ namespace LogEvents {
 
     /**
      * Code locations of the exception's traceback, outermost first and one per
-     * line, e.g. `backend.routes.v1.globals:42 in get_globals`. Unlike a
-     * formatted traceback, it includes neither the message nor file paths.
+     * line, e.g. `backend.routes.v1.globals:42 in get_globals`. They are
+     * followed by the locations of each chained exception, introduced by a line
+     * naming its type: `caused by <type>` for an explicit cause, or
+     * `while handling <type>` for an implicit context. Unlike a formatted
+     * traceback, it includes neither messages nor file paths.
      */
     exception_stack: string;
 

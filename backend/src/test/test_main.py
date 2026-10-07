@@ -1,6 +1,7 @@
 import json
 import re
 from collections.abc import AsyncGenerator
+from collections.abc import Callable
 from typing import Final
 from unittest.mock import AsyncMock
 from unittest.mock import Mock
@@ -18,6 +19,7 @@ from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
 from backend.logging.events_gen import HttpRequestFailed
 from backend.logging.events_gen import HttpRequestReceived
+from backend.main import _code_locations  # type: ignore[reportPrivateUsage]
 from backend.main import _lifespan  # type: ignore[reportPrivateUsage]
 from backend.main import _log_requests  # type: ignore[reportPrivateUsage]
 from backend.main import app
@@ -118,6 +120,69 @@ async def test_request_middleware_returns_unexpected_exceptions_as_internal_serv
     assert completed.path == "/v1/imprint"
     assert completed.status_code == 500
     assert completed.duration_ms == 500.0
+
+
+def _raise_wrapped_key_error() -> None:
+    try:
+        raise KeyError("jane@example.com")
+    except KeyError as error:
+        raise RuntimeError("lookup failed") from error
+
+
+def _raise_while_handling_key_error() -> None:
+    try:
+        raise KeyError("jane@example.com")
+    except KeyError:
+        raise RuntimeError("lookup failed")  # noqa: B904
+
+
+def _raise_without_context() -> None:
+    try:
+        raise KeyError("jane@example.com")
+    except KeyError:
+        raise RuntimeError("lookup failed") from None
+
+
+def _code_locations_of(raise_exception: Callable[[], None]) -> list[str]:
+    try:
+        raise_exception()
+    except RuntimeError as exception:
+        return _code_locations(exception).splitlines()
+    raise AssertionError("No exception was raised.")
+
+
+@pytest.mark.parametrize(
+    ("raise_exception", "relation"),
+    [(_raise_wrapped_key_error, "caused by"), (_raise_while_handling_key_error, "while handling")],
+)
+def test_code_locations_include_chained_exceptions(raise_exception: Callable[[], None], relation: str) -> None:
+    locations: Final = _code_locations_of(raise_exception)
+
+    function: Final = re.escape(raise_exception.__qualname__)
+    assert len(locations) == 4
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in _code_locations_of", locations[0])
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + function, locations[1])
+    assert locations[2] == f"{relation} builtins.KeyError"
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + function, locations[3])
+    # The locations of the cause are those of its own traceback, which ends where it was caught.
+    assert locations[3] != locations[1]
+    assert "jane@example.com" not in "\n".join(locations)
+
+
+def test_code_locations_omit_suppressed_context() -> None:
+    locations: Final = _code_locations_of(_raise_without_context)
+
+    assert len(locations) == 2
+    assert not any(location.startswith(("caused by", "while handling")) for location in locations)
+
+
+def test_code_locations_terminate_for_cyclic_chains() -> None:
+    first: Final = RuntimeError("first")
+    second: Final = KeyError("second")
+    first.__cause__ = second
+    second.__cause__ = first
+
+    assert _code_locations(first) == "caused by builtins.KeyError"
 
 
 def test_unexpected_exception_is_returned_as_documented_internal_server_error(
