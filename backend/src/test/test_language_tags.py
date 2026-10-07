@@ -244,3 +244,8 @@ def test_dominant_languages_are_the_same_written_language_as_their_macrolanguage
 @pytest.mark.parametrize(("tag", "other_tag"), [("nn", "nb"), ("nn", "no"), ("yue", "zh-Hant")])
 def test_other_languages_are_different_written_languages(tag: str, other_tag: str) -> None:
     assert written_language(parse_language(tag)) != written_language(parse_language(other_tag))
+
+
+@pytest.mark.parametrize("tag", ["und", "und-DE", "und-x-foo", "x-foo", "x-pig-latin"])
+def test_tags_without_a_language_have_no_written_language(tag: str) -> None:
+    assert written_language(parse_language(tag)) is None

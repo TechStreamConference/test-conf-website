@@ -328,10 +328,10 @@ def test_select_translation_prefers_header_entries_by_quality() -> None:
 
 
 # Without any usable preference, English (or the first available language) is not a fallback: there is no first
-# choice that could have been unavailable. Wildcards, excluded languages (`q=0`), tags without a language (`und`), which
-# cannot match any language, and an empty requested language (`?language=`) are ignored.
-@pytest.mark.parametrize("language", [None, "", "und", "und-x-private"])
-@pytest.mark.parametrize("accept_language", [None, "", "*", "!!!", "en;q=0", "und", "und-DE"])
+# choice that could have been unavailable. Wildcards, excluded languages (`q=0`), tags without a language (`und`,
+# `x-foo`), which cannot match any language, and an empty requested language (`?language=`) are ignored.
+@pytest.mark.parametrize("language", [None, "", "und", "und-x-private", "x-private"])
+@pytest.mark.parametrize("accept_language", [None, "", "*", "!!!", "en;q=0", "und", "und-DE", "x-pig-latin"])
 @pytest.mark.parametrize(
     ("translations_by_language", "expected_language"),
     [({_DE: "Hallo", _EN: "Hello"}, _EN), ({_DE: "Hallo", Language.get("es"): "Hola"}, _DE)],
@@ -364,7 +364,9 @@ def test_select_translation_with_empty_requested_language_uses_header_without_fa
     assert result.language_details.is_language_fallback is False
 
 
-@pytest.mark.parametrize(("language", "accept_language"), [(None, "und, de"), ("und", "de")])
+@pytest.mark.parametrize(
+    ("language", "accept_language"), [(None, "und, de"), ("und", "de"), (None, "x-pig-latin, de"), ("x-foo", "de")]
+)
 def test_select_translation_does_not_count_tags_without_a_language_as_first_choice(
     language: Optional[str], accept_language: str
 ) -> None:

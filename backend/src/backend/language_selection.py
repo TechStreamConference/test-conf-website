@@ -30,9 +30,9 @@ The delivered language is marked as a fallback if the client's first choice
 entry) is not available, i.e. no available language matches it. A requested
 language that is not a valid BCP 47 tag is handled like an unavailable one
 rather than failing the request, so a stale or malformed tag still delivers
-content. A valid tag without a language (`und`) cannot match any language,
-so it does not express a preference, neither as the requested language nor
-as a header entry. If the client did not express any preference at all,
+content. A valid tag without a language (`und`, or a private-use tag such as
+`x-foo`) cannot match any language, so it does not express a preference,
+neither as the requested language nor as a header entry. If the client did not express any preference at all,
 there is no first choice that could be missing, so English or the first
 available language is not marked as a fallback.
 """

@@ -148,9 +148,12 @@ def written_language(language: Language) -> Optional[WrittenLanguage]:
     its macrolanguage if it is the dominant one (`cmn` and `zh`), and
     Norwegian is the same as Norwegian Bokmål (`no` and `nb`).
 
-    Returns `None` for tags without a language, such as `und`.
+    Returns `None` for tags without a language, such as `und` or the
+    private-use tag `x-foo`.
     """
-    if language.language is None:
+    # langcodes stores the subtags of a tag that consists of private-use subtags only (`x-foo`) as its language, unlike
+    # those of a tag that has a language subtag before them (`und-x-foo`).
+    if language.language is None or language.language.startswith("x-"):
         return None
     with _using_langcodes():
         # Likely subtags are taken from the CLDR, e.g. `zh-TW` -> `zh-Hant-TW`.
