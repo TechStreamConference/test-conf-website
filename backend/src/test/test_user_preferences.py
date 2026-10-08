@@ -4,42 +4,11 @@ from typing import Optional
 import pytest
 
 from backend.config import SETTINGS
-from backend.models.requests import UserPreferencesInputV1
 from backend.models.tables import UserPreferences
 from backend.user_preferences import RegionalSettingsReportOutcome
-from backend.user_preferences import canonical_locale
-from backend.user_preferences import canonical_timezone
 from backend.user_preferences import categorize_field_outcome
-from backend.user_preferences import locales_equivalent
 from backend.user_preferences import process_regional_settings_report
 from backend.user_preferences import resolve_effective_user_preferences
-from backend.user_preferences import timezones_equivalent
-from backend.user_preferences import validate_locale
-from backend.user_preferences import validate_timezone
-
-
-@pytest.mark.parametrize("timezone", ["Europe/Berlin", "Europe/Istanbul", "America/New_York"])
-def test_valid_iana_timezones_are_accepted(timezone: str) -> None:
-    assert validate_timezone(timezone) == timezone
-
-
-@pytest.mark.parametrize("timezone", ["+02:00", "GMT+2", "localtime", "Europe/Does_Not_Exist", ""])
-def test_invalid_timezones_are_rejected(timezone: str) -> None:
-    with pytest.raises(ValueError, match="IANA"):
-        _ = validate_timezone(timezone)
-
-
-@pytest.mark.parametrize("locale", ["de-DE", "en", "en-US", "tr-TR", "haw", "zh-Hant-TW"])
-def test_valid_bcp_47_locales_are_accepted_and_preserved(locale: str) -> None:
-    # `haw` is valid but is not one of the languages currently seeded by the UI.
-    assert validate_locale(locale) == locale
-    assert UserPreferencesInputV1(timezone="Europe/Berlin", locale=locale).locale == locale
-
-
-@pytest.mark.parametrize("locale", ["", "en_US", "en--US", "not a locale", "abc-123"])
-def test_invalid_locales_are_rejected(locale: str) -> None:
-    with pytest.raises(ValueError, match="BCP 47"):
-        _ = validate_locale(locale)
 
 
 def test_effective_preferences_use_fallbacks_when_no_row_exists() -> None:
@@ -56,56 +25,6 @@ def test_effective_preferences_preserve_explicit_values_including_unsupported_lo
 
     assert effective.timezone == "America/New_York"
     assert effective.locale == "haw"
-
-
-@pytest.mark.parametrize(
-    ("alias", "canonical"),
-    [
-        ("Asia/Istanbul", "Europe/Istanbul"),
-        ("Asia/Calcutta", "Asia/Kolkata"),
-        ("Europe/Istanbul", "Europe/Istanbul"),
-    ],
-)
-def test_canonical_timezone_resolves_known_aliases(alias: str, canonical: str) -> None:
-    assert canonical_timezone(alias) == canonical
-
-
-def test_timezones_equivalent_treats_aliases_as_equal() -> None:
-    assert timezones_equivalent("Asia/Istanbul", "Europe/Istanbul")
-
-
-def test_timezones_equivalent_does_not_use_current_utc_offset() -> None:
-    # Berlin and Paris currently share an offset but have different histories
-    # (for example, differing DST transition dates before EU unification).
-    assert not timezones_equivalent("Europe/Berlin", "Europe/Paris")
-
-
-@pytest.mark.parametrize(
-    ("a", "b"),
-    [
-        ("en-us", "en-US"),
-        ("EN-US", "en-US"),
-        ("zh-Hant-TW", "zh-hant-tw"),
-    ],
-)
-def test_locales_equivalent_ignores_casing(a: str, b: str) -> None:
-    assert locales_equivalent(a, b)
-
-
-def test_locales_equivalent_distinguishes_different_locales() -> None:
-    assert not locales_equivalent("en-US", "en-GB")
-
-
-def test_locales_equivalent_ignores_redundant_script() -> None:
-    assert locales_equivalent("en-Latn-US", "en-US")
-
-
-def test_canonical_locale_normalizes_casing() -> None:
-    assert canonical_locale("en-us") == "en-US"
-
-
-def test_canonical_locale_removes_redundant_script() -> None:
-    assert canonical_locale("de-Latn-DE") == "de-DE"
 
 
 def _report_outcome(

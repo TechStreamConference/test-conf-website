@@ -6,8 +6,8 @@ from typing import final
 from pydantic import BaseModel
 from pydantic import model_validator
 
-from backend.models.preference_types import Bcp47Locale
-from backend.models.preference_types import IanaTimezone
+from backend.locales import Bcp47Locale
+from backend.timezones import IanaTimezone
 
 
 class RegionalSettingsDecision(StrEnum):
