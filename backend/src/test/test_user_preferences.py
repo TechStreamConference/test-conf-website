@@ -4,7 +4,6 @@ from typing import Optional
 import pytest
 
 from backend.config import SETTINGS
-from backend.models.requests import UserPreferencesInputV1
 from backend.models.tables import UserPreferences
 from backend.user_preferences import RegionalSettingsReportOutcome
 from backend.user_preferences import canonical_locale
@@ -12,20 +11,6 @@ from backend.user_preferences import categorize_field_outcome
 from backend.user_preferences import locales_equivalent
 from backend.user_preferences import process_regional_settings_report
 from backend.user_preferences import resolve_effective_user_preferences
-from backend.user_preferences import validate_locale
-
-
-@pytest.mark.parametrize("locale", ["de-DE", "en", "en-US", "tr-TR", "haw", "zh-Hant-TW"])
-def test_valid_bcp_47_locales_are_accepted_and_preserved(locale: str) -> None:
-    # `haw` is valid but is not one of the languages currently seeded by the UI.
-    assert validate_locale(locale) == locale
-    assert UserPreferencesInputV1(timezone="Europe/Berlin", locale=locale).locale == locale
-
-
-@pytest.mark.parametrize("locale", ["", "en_US", "en--US", "not a locale", "abc-123"])
-def test_invalid_locales_are_rejected(locale: str) -> None:
-    with pytest.raises(ValueError, match="BCP 47"):
-        _ = validate_locale(locale)
 
 
 def test_effective_preferences_use_fallbacks_when_no_row_exists() -> None:

@@ -1,3 +1,4 @@
+import ast
 import functools
 import inspect
 import sys
@@ -5,6 +6,7 @@ import threading
 from collections.abc import Callable
 from collections.abc import Iterator
 from collections.abc import Sized
+from pathlib import Path
 from typing import Final
 from typing import Literal
 from typing import Optional
@@ -17,18 +19,22 @@ from langcodes.language_distance import DEFAULT_TERRITORY_DISTANCE
 from pydantic import TypeAdapter
 from pydantic import ValidationError
 
+import backend
 import backend.language_tags
 from backend.language_tags import Bcp47Language
 from backend.language_tags import Bcp47LanguageTag
+from backend.language_tags import Bcp47Locale
 from backend.language_tags import is_valid_bcp_47_tag
 from backend.language_tags import normalize_language_tag
 from backend.language_tags import parse_language
 from backend.language_tags import select_content_language
 from backend.language_tags import standardize_language_tag
+from backend.language_tags import validate_locale
 from backend.language_tags import written_language
 
 _ADAPTER = TypeAdapter[Bcp47Language](Bcp47Language)
 _TAG_ADAPTER = TypeAdapter[Bcp47LanguageTag](Bcp47LanguageTag)
+_LOCALE_ADAPTER = TypeAdapter[Bcp47Locale](Bcp47Locale)
 
 
 @pytest.mark.parametrize(
@@ -168,6 +174,83 @@ def test_langcodes_may_be_used_reentrantly() -> None:
     thread.join(timeout=5)
 
     assert not thread.is_alive()
+
+
+def _annotations(module: ast.Module) -> Iterator[ast.expr]:
+    for node in ast.walk(module):
+        if isinstance(node, ast.arg | ast.AnnAssign) and node.annotation is not None:
+            yield node.annotation
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.returns is not None:
+            yield node.returns
+        elif isinstance(node, ast.TypeAlias):
+            yield node.value
+
+
+def _langcodes_uses(module: ast.Module) -> Iterator[str]:
+    """Yield the uses of langcodes in `module` other than annotating with `Language`."""
+    in_annotations: Final = {id(node) for annotation in _annotations(module) for node in ast.walk(annotation)}
+    for node in ast.walk(module):
+        if isinstance(node, ast.Import):
+            yield from (ast.unparse(alias) for alias in node.names if alias.name.split(".")[0] == "langcodes")
+        elif isinstance(node, ast.ImportFrom) and (node.module or "").split(".")[0] == "langcodes":
+            # `Language` may only be imported under its own name, so that every use of it is found below.
+            yield from (
+                ast.unparse(alias)
+                for alias in node.names
+                if node.module != "langcodes" or alias.name != "Language" or alias.asname is not None
+            )
+        elif isinstance(node, ast.Name) and node.id == "Language" and id(node) not in in_annotations:
+            # Any other use, including passing `Language` on (`getattr(Language, "get")`) or binding it to another name.
+            yield f"Language in line {node.lineno}"
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value.split(".")[0] == "langcodes":
+            # Dynamic imports (`importlib.import_module("langcodes")`, `sys.modules["langcodes"]`).
+            yield repr(node.value)
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import langcodes",
+        "import langcodes.tag_parser as parser",
+        "from langcodes import standardize_tag",
+        "from langcodes import Language as Lang",
+        "from langcodes.language_distance import tuple_distance_cached",
+        "from langcodes import Language\nLanguage.get('de')",
+        "from langcodes import Language\nLanguage('de')",
+        "from langcodes import Language\ngetattr(Language, 'get')('de')",
+        "from langcodes import Language\nLang = Language",
+        "from langcodes import Language\nadapter = TypeAdapter[Language](Language)",
+        "import importlib\nimportlib.import_module('langcodes')",
+        "import sys\nsys.modules['langcodes.tag_parser']",
+    ],
+)
+def test_uses_of_langcodes_are_found(source: str) -> None:
+    assert list(_langcodes_uses(ast.parse(source)))
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "from langcodes import Language\ndef f(language: Language) -> list[Language]: ...",
+        "from langcodes import Language\nlanguages: dict[Language, str] = {}",
+        "from langcodes import Language\ntype Languages = list[Language]",
+        "from langcodes import Language\nclass C:\n    language: Language",
+    ],
+)
+def test_annotating_with_language_is_no_use_of_langcodes(source: str) -> None:
+    assert list(_langcodes_uses(ast.parse(source))) == []
+
+
+def test_langcodes_is_only_used_through_the_language_tags_module() -> None:
+    package_path: Final = Path(backend.__file__).parent
+    module_path: Final = Path(backend.language_tags.__file__)
+    uses: Final = {
+        str(path.relative_to(package_path)): sorted(set(_langcodes_uses(ast.parse(path.read_text(encoding="utf-8")))))
+        for path in sorted(package_path.rglob("*.py"))
+        if path != module_path
+    }
+
+    assert {path: names for path, names in uses.items() if names} == {}
 
 
 @pytest.mark.parametrize("cache_name", ["_PARSE_CACHE", "_INSTANCES"])
@@ -377,6 +460,24 @@ def test_bcp_47_language_tag_keeps_the_original_spelling() -> None:
 def test_bcp_47_language_tag_rejects_invalid_tags(value: str) -> None:
     with pytest.raises(ValidationError):
         _ = _TAG_ADAPTER.validate_python(value)
+
+
+@pytest.mark.parametrize("locale", ["de-DE", "en", "en-US", "tr-TR", "haw", "zh-Hant-TW", "en-us"])
+def test_valid_bcp_47_locales_are_accepted_and_preserved(locale: str) -> None:
+    # `haw` is valid but is not one of the languages currently seeded by the UI.
+    assert validate_locale(locale) == locale
+    assert _LOCALE_ADAPTER.validate_python(locale) == locale
+
+
+@pytest.mark.parametrize(
+    "locale",
+    ["", "en_US", "en--US", "not a locale", "abc-123", "i-klingon", "x-foo", "en-x-" + "-".join(["abcdefgh"] * 7)],
+)
+def test_invalid_locales_are_rejected(locale: str) -> None:
+    with pytest.raises(ValueError, match="Locale must be a valid BCP 47 language tag"):
+        _ = validate_locale(locale)
+    with pytest.raises(ValidationError):
+        _ = _LOCALE_ADAPTER.validate_python(locale)
 
 
 def _closest_different_languages() -> Iterator[tuple[str, str]]:

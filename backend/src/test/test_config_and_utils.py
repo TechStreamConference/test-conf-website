@@ -8,9 +8,11 @@ from unittest.mock import call
 
 import pytest
 from pydantic import BaseModel
+from pydantic import ValidationError
 
 import backend.utils as utils_module
 from backend.config import SETTINGS
+from backend.config import Settings
 from backend.models.responses import NotAuthenticatedResponseV1
 from backend.utils import create_http_exception
 from backend.utils import generate_browser_secret
@@ -34,6 +36,23 @@ def test_settings_build_oidc_and_database_urls() -> None:
         assert SETTINGS.database_host in url
         assert str(SETTINGS.database_port) in url
         assert url.endswith(f"/{SETTINGS.database_name}")
+
+
+# Accepted by langcodes, but not by browsers, so they would fail the validation of responses.
+@pytest.mark.parametrize("locale", ["en_US", "en-GB-oed", "x-foo"])
+def test_settings_reject_an_invalid_default_locale(monkeypatch: pytest.MonkeyPatch, locale: str) -> None:
+    monkeypatch.setenv("DEFAULT_LOCALE", locale)
+
+    with pytest.raises(ValidationError, match="Locale must be a valid BCP 47 language tag"):
+        _ = Settings()  # type: ignore[reportCallIssue]
+
+
+@pytest.mark.parametrize("timezone", ["localtime", "posix/Europe/Berlin", "Europe/Does_Not_Exist"])
+def test_settings_reject_an_invalid_default_timezone(monkeypatch: pytest.MonkeyPatch, timezone: str) -> None:
+    monkeypatch.setenv("DEFAULT_TIMEZONE", timezone)
+
+    with pytest.raises(ValidationError, match="Timezone must be a valid IANA timezone identifier"):
+        _ = Settings()  # type: ignore[reportCallIssue]
 
 
 def test_utc_now_returns_aware_utc_timestamp() -> None:

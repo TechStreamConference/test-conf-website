@@ -10,7 +10,7 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic.alias_generators import to_camel
 
-from backend.models.preference_types import Bcp47Locale
+from backend.language_tags import Bcp47Locale
 from backend.timezones import IanaTimezone
 
 # class name should include the api version since the typescript generator uses the same name.

@@ -366,3 +366,16 @@ def _validate_language_tag(value: str) -> str:
 
 # Validated like `Bcp47Language`, but kept in its original spelling for clients that look the tag up in their own list.
 type Bcp47LanguageTag = Annotated[str, AfterValidator(_validate_language_tag)]
+
+
+def validate_locale(value: str) -> str:
+    """Validate a browser-style BCP 47 language tag without canonicalizing it."""
+    if not is_valid_bcp_47_tag(value):
+        raise ValueError("Locale must be a valid BCP 47 language tag.")
+    return value
+
+
+# The locale of a user, which only affects the formatting of values, in its original spelling. It is validated just like
+# `Bcp47LanguageTag`, but deliberately a separate type: a language tag selects the language that content is delivered
+# in, while a locale only selects how values such as dates are formatted, and both are chosen independently.
+type Bcp47Locale = Annotated[str, AfterValidator(validate_locale)]
