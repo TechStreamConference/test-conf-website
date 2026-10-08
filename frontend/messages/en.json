@@ -1,8 +1,14 @@
 {
     "$schema": "https://inlang.com/schema/inlang-message-format",
+    "global_logoBig_alt": "Tech Stream Conference Logo",
+    "global_logoSmall_alt": "Tech Stream Conference Logo",
+    "global_themeSelect_aria": "Theme selector",
+    "global_themeSelectDark": "Dark",
+    "global_themeSelectLight": "Light",
+    "global_themeSelectSystem": "System",
+    "menu_homepage": "Home",
+    "menu_homepage_aria": "Go to the homepage",
     "test_plain": "Valid test text",
     "test_plain2": "second valid test text",
-    "test_withPlaceholder": "Valid test text with placeholder: '{placeholder2}' : '{placeholder1}'",
-    "menu_homepage": "Home",
-    "menu_homepage_aria": "Go to the homepage"
+    "test_withPlaceholder": "Valid test text with placeholder: '{placeholder2}' : '{placeholder1}'"
 }
