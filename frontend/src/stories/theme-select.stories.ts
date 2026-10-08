@@ -10,4 +10,8 @@ const META = {
 
 export default META;
 type Story = StoryObj<typeof META>;
-export const ThemeSelect: Story = {};
+export const ThemeSelect: Story = {
+    args: {
+        languageTag: 'en'
+    }
+};

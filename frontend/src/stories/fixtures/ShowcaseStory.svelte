@@ -5,10 +5,12 @@
     import Paragraph from '$lib/elements/text/Paragraph.svelte';
     import SubHeadline from '$lib/elements/text/SubHeadline.svelte';
     import TagWrapper from '$lib/elements/text/TagWrapper.svelte';
+
+    const LANGUAGE_TAG = 'en';
 </script>
 
 <article>
-    <LogoSmall width="4rem" />
+    <LogoSmall languageTag={LANGUAGE_TAG} width="4rem" />
     <Headline renderLine>Tech Stream Conference 2026</Headline>
     <SubHeadline>Building reliable software together</SubHeadline>
     <Paragraph>
