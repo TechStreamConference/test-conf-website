@@ -2,7 +2,23 @@ import type { Locale } from '$paraglide/runtime';
 
 import { isLocale } from '$paraglide/runtime';
 
-type Message<TInputs> = (inputs: TInputs, options: { locale: Locale }) => string;
+/**
+ * @brief The placeholder values of a message by placeholder name.
+ */
+export type Inputs = Record<string, unknown>;
+
+/**
+ * @brief The placeholders of a message or menu that needs none.
+ * A message without placeholders accepts any inputs, so it fits every menu.
+ * A message that requires placeholders does not fit a menu without them.
+ */
+export type NoInputs = Inputs;
+
+/**
+ * @brief A message function as Paraglide generates it (e.g. `m.save`).
+ * `TInputs` are the placeholder values the message needs.
+ */
+export type Message<TInputs> = (inputs: TInputs, options: { locale: Locale }) => string;
 
 /**
  * @brief Prepares a language tag from the backend for Paraglide.
