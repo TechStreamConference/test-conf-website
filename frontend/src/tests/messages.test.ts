@@ -11,6 +11,7 @@ const SCHEMA_KEY = '$schema';
 const SETTINGS_FILE = path.resolve(import.meta.dirname, '../../project.inlang/settings.json');
 const PLACEHOLDER_PATTERN = /\{([^{}]*)\}/g; // Also matches an empty `{}`, so it can be reported.
 const KEY_POSTFIXES = ['alt', 'aria']; // Allowed last part of a key: `global_logoSmall_alt`, `menu_homepage_aria`. Add new ones here.
+const KEY_PREFIXES = ['global', 'menu', 'test']; // Allowed first part (the scope) of a key: `global_logoBig_alt`. Add new ones here.
 const KEY_PATTERN = new RegExp(
     `^[a-z][A-Za-z0-9]*_[a-z][A-Za-z0-9]*(?:_(?:${KEY_POSTFIXES.join('|')}))?$`
 ); // `scope_name` or `scope_name_postfix`, all parts in camelCase.
@@ -124,6 +125,28 @@ describe.each(FILE_NAMES)('%s naming', (fileName) => {
 
     it(`${fileName}: should use the format scope_name or scope_name_postfix for every key (allowed postfixes: see KEY_POSTFIXES)`, () => {
         expect(Object.keys(messages).filter((key) => !KEY_PATTERN.test(key))).toEqual([]);
+    });
+
+    it(`${fileName}: should start every key with an allowed prefix (allowed prefixes: see KEY_PREFIXES)`, () => {
+        const keysWithUnknownPrefix = Object.keys(messages).filter(
+            (key) => !KEY_PREFIXES.includes(key.split('_')[0] ?? '')
+        );
+
+        expect(keysWithUnknownPrefix).toEqual([]);
+    });
+
+    it(`${fileName}: should sort the keys alphabetically (ignoring case, "_" before letters)`, () => {
+        const keys = Object.keys(messages);
+        const sortedKeys = [...keys].sort((a, b) => {
+            const lowerA = a.toLowerCase();
+            const lowerB = b.toLowerCase();
+            if (lowerA === lowerB) {
+                return 0;
+            }
+            return lowerA < lowerB ? -1 : 1;
+        });
+
+        expect(keys).toEqual(sortedKeys);
     });
 
     it(`${fileName}: should use camelCase for every placeholder`, () => {
