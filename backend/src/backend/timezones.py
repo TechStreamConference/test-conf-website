@@ -11,7 +11,9 @@ from zoneinfo import available_timezones
 
 from pydantic import AfterValidator
 
-# The timezones and their aliases are loaded only once, on first use, since loading them reads the timezone database.
+# The timezones and their aliases are loaded only once, since loading them reads the timezone database. The timezones
+# are loaded as soon as `backend.config` is imported, since the default timezone in the settings is validated then; the
+# aliases are only loaded once timezones are compared.
 
 
 @cache
