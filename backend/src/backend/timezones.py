@@ -42,16 +42,13 @@ def _timezone_aliases() -> Mapping[str, str]:
 
 
 def canonical_timezone(value: str) -> str:
-    """Resolve an IANA timezone identifier to its canonical (non-alias) form."""
-    return _timezone_aliases().get(value, value)
+    """Resolve an IANA timezone identifier to its canonical (non-alias) form.
 
-
-def timezones_equivalent(a: str, b: str) -> bool:
-    """Compare two IANA timezone identifiers by canonical zone, not by spelling
-    or current UTC offset: distinct zones may temporarily share an offset and
-    later diverge because of daylight-saving or political changes.
+    Timezones are compared by canonical zone, not by spelling or current UTC
+    offset: distinct zones may temporarily share an offset and later diverge
+    because of daylight-saving or political changes.
     """
-    return canonical_timezone(a) == canonical_timezone(b)
+    return _timezone_aliases().get(value, value)
 
 
 def validate_timezone(value: str) -> str:

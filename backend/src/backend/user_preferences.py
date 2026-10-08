@@ -1,6 +1,7 @@
 from collections.abc import Callable
 from enum import StrEnum
 from enum import auto
+from functools import cache
 from typing import Final
 from typing import NamedTuple
 from typing import Optional
@@ -9,21 +10,15 @@ from typing import final
 from backend.config import SETTINGS
 from backend.language_tags import standardize_language_tag
 from backend.models.tables import UserPreferences
-from backend.timezones import timezones_equivalent
+from backend.timezones import canonical_timezone
 
 
 def canonical_locale(value: str) -> str:
     """Resolve a valid BCP 47 language tag, such as all stored and reported
-    locales, to its canonical form (see `standardize_language_tag()`).
+    locales, to its canonical form (see `standardize_language_tag()`), so that
+    locales are compared by canonical form, not raw spelling.
     """
     return standardize_language_tag(value)
-
-
-def locales_equivalent(a: str, b: str) -> bool:
-    """Compare two valid BCP 47 language tags, such as all stored and reported
-    locales, by canonical form, not raw spelling.
-    """
-    return a == b or canonical_locale(a) == canonical_locale(b)
 
 
 @final
@@ -54,29 +49,50 @@ class FieldObservationOutcome(NamedTuple):
     is no pending decision for this field."""
 
 
+@final
+class _ReportedFieldOutcome(NamedTuple):
+    is_repeated: bool
+    """`True` when the reported value is equivalent to the session’s previous
+    report."""
+
+    observation: FieldObservationOutcome
+
+
 def _process_reported_field(
     *,
     reported: str,
     previous_reported: Optional[str],
     preference: Optional[str],
     previous_suggestion: Optional[str],
-    equivalent: Callable[[str, str], bool],
-) -> FieldObservationOutcome:
-    if previous_reported is not None and equivalent(reported, previous_reported):
+    canonical: Callable[[str], str],
+) -> _ReportedFieldOutcome:
+    @cache
+    def canonical_reported() -> str:
+        return canonical(reported)
+
+    def is_equivalent_to_reported(value: str) -> bool:
+        # Canonicalizing a locale parses it, so the reported value is canonicalized at most once, and not at all if it
+        # is spelled like the value that it is compared to.
+        return value == reported or canonical(value) == canonical_reported()
+
+    if previous_reported is not None and is_equivalent_to_reported(previous_reported):
         # Equivalent report: retain current preference and suggestion state.
-        return FieldObservationOutcome(preference=preference, suggestion=previous_suggestion)
+        return _ReportedFieldOutcome(
+            is_repeated=True,
+            observation=FieldObservationOutcome(preference=preference, suggestion=previous_suggestion),
+        )
 
     if preference is None:
         # Unreported -> InSync: first report initializes a missing preference.
-        return FieldObservationOutcome(preference=reported, suggestion=None)
-
-    if equivalent(reported, preference):
+        observation = FieldObservationOutcome(preference=reported, suggestion=None)
+    elif is_equivalent_to_reported(preference):
         # (InSync|Pending|Dismissed) -> InSync: report now matches the preference.
-        return FieldObservationOutcome(preference=preference, suggestion=None)
-
-    # InSync -> Pending, or Pending/Dismissed -> Pending: report differs from
-    # the preference. The preference itself does not move until decided.
-    return FieldObservationOutcome(preference=preference, suggestion=reported)
+        observation = FieldObservationOutcome(preference=preference, suggestion=None)
+    else:
+        # InSync -> Pending, or Pending/Dismissed -> Pending: report differs from
+        # the preference. The preference itself does not move until decided.
+        observation = FieldObservationOutcome(preference=preference, suggestion=reported)
+    return _ReportedFieldOutcome(is_repeated=False, observation=observation)
 
 
 @final
@@ -102,30 +118,24 @@ def process_regional_settings_report(
 ) -> RegionalSettingsReportOutcome:
     """Pure state-machine step for one browser report. The caller loads and
     locks the current state and persists the result transactionally."""
-    timezone_repeated: Final = previous_reported_timezone is not None and timezones_equivalent(
-        reported_timezone,
-        previous_reported_timezone,
+    timezone: Final = _process_reported_field(
+        reported=reported_timezone,
+        previous_reported=previous_reported_timezone,
+        preference=preference_timezone,
+        previous_suggestion=suggested_timezone,
+        canonical=canonical_timezone,
     )
-    locale_repeated: Final = previous_reported_locale is not None and locales_equivalent(
-        reported_locale,
-        previous_reported_locale,
+    locale: Final = _process_reported_field(
+        reported=reported_locale,
+        previous_reported=previous_reported_locale,
+        preference=preference_locale,
+        previous_suggestion=suggested_locale,
+        canonical=canonical_locale,
     )
     return RegionalSettingsReportOutcome(
-        is_no_op=timezone_repeated and locale_repeated,
-        timezone=_process_reported_field(
-            reported=reported_timezone,
-            previous_reported=previous_reported_timezone,
-            preference=preference_timezone,
-            previous_suggestion=suggested_timezone,
-            equivalent=timezones_equivalent,
-        ),
-        locale=_process_reported_field(
-            reported=reported_locale,
-            previous_reported=previous_reported_locale,
-            preference=preference_locale,
-            previous_suggestion=suggested_locale,
-            equivalent=locales_equivalent,
-        ),
+        is_no_op=timezone.is_repeated and locale.is_repeated,
+        timezone=timezone.observation,
+        locale=locale.observation,
     )
 
 

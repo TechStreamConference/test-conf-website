@@ -3,12 +3,12 @@ from typing import Optional
 
 import pytest
 
+import backend.user_preferences
 from backend.config import SETTINGS
 from backend.models.tables import UserPreferences
 from backend.user_preferences import RegionalSettingsReportOutcome
 from backend.user_preferences import canonical_locale
 from backend.user_preferences import categorize_field_outcome
-from backend.user_preferences import locales_equivalent
 from backend.user_preferences import process_regional_settings_report
 from backend.user_preferences import resolve_effective_user_preferences
 
@@ -37,16 +37,12 @@ def test_effective_preferences_preserve_explicit_values_including_unsupported_lo
         ("zh-Hant-TW", "zh-hant-tw"),
     ],
 )
-def test_locales_equivalent_ignores_casing(a: str, b: str) -> None:
-    assert locales_equivalent(a, b)
+def test_canonical_locale_ignores_casing(a: str, b: str) -> None:
+    assert canonical_locale(a) == canonical_locale(b)
 
 
-def test_locales_equivalent_distinguishes_different_locales() -> None:
-    assert not locales_equivalent("en-US", "en-GB")
-
-
-def test_locales_equivalent_ignores_redundant_script() -> None:
-    assert locales_equivalent("en-Latn-US", "en-US")
+def test_canonical_locale_distinguishes_different_locales() -> None:
+    assert canonical_locale("en-US") != canonical_locale("en-GB")
 
 
 def test_canonical_locale_normalizes_casing() -> None:
@@ -139,6 +135,39 @@ def test_report_differing_only_in_spelling_is_still_a_no_op() -> None:
     )
 
     assert outcome.is_no_op
+
+
+@pytest.mark.parametrize(
+    ("reported_locale", "previous_reported_locale", "preference_locale", "canonicalized"),
+    [
+        pytest.param("en-GB", "en-GB", "en-US", [], id="same spelling as previous report"),
+        pytest.param("en-US", "en-us", "en-US", ["en-us", "en-US"], id="other spelling than previous report"),
+        pytest.param("en-US", "de", "en-US", ["de", "en-US"], id="same spelling as preference"),
+        pytest.param("en-US", "de", "EN-us", ["de", "en-US", "EN-us"], id="other spelling than preference"),
+    ],
+)
+def test_reported_locale_is_canonicalized_at_most_once(
+    monkeypatch: pytest.MonkeyPatch,
+    reported_locale: str,
+    previous_reported_locale: str,
+    preference_locale: str,
+    canonicalized: list[str],
+) -> None:
+    calls: Final[list[str]] = []
+
+    def _canonical_locale(value: str) -> str:
+        calls.append(value)
+        return canonical_locale(value)
+
+    monkeypatch.setattr(backend.user_preferences, "canonical_locale", _canonical_locale)
+
+    _ = _report_outcome(
+        reported_locale=reported_locale,
+        previous_reported_locale=previous_reported_locale,
+        preference_locale=preference_locale,
+    )
+
+    assert calls == canonicalized
 
 
 def test_in_sync_report_diverging_from_preference_creates_a_pending_suggestion() -> None:
