@@ -1,0 +1,51 @@
+name: validate-i18n
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  generated-i18n:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Install frontend project dependencies
+        run: nix develop --command pnpm --dir frontend install --frozen-lockfile
+
+      - name: Create .env file
+        run: cp .env.example .env
+
+      # The checked-in output is removed first. If the build does not generate it again,
+      # the checks below fail because the files are missing.
+      - name: Remove checked-in translation functions
+        run: rm -rf frontend/src/paraglide
+
+      - name: Build frontend
+        run: nix develop --command just frontend-build
+
+      - name: Check that the build generated the translation functions
+        run: |
+          for file in messages.js runtime.js server.js; do
+            test -f "frontend/src/paraglide/$file" || {
+              echo "::error::The frontend build did not generate frontend/src/paraglide/$file"
+              exit 1
+            }
+          done
+
+      # `git diff` alone does not show files that are not tracked yet.
+      - name: Check for new or deleted generated files
+        run: |
+          changes="$(git status --porcelain -- frontend/src/paraglide)"
+          if [ -n "$changes" ]; then
+            echo "::error::frontend/src/paraglide is not up to date. Run 'just frontend-build' and commit the result."
+            echo "$changes"
+            exit 1
+          fi
+
+      - name: Compare generated translation functions
+        run: git diff --exit-code -- frontend/src/paraglide

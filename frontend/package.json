@@ -27,6 +27,7 @@
     "devDependencies": {
         "@eslint/js": "^10.0.1",
         "@hey-api/openapi-ts": "^0.99.0",
+        "@inlang/paraglide-js": "^2.25.4",
         "@lucide/svelte": "^1.48.0",
         "@storybook/addon-a11y": "^10.6.0",
         "@storybook/sveltekit": "^10.6.0",
