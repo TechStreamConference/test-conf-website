@@ -4,7 +4,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BackendHealthCheckData, BackendHealthCheckResponses, DecideRegionalSettingsChangeV1Data, DecideRegionalSettingsChangeV1Errors, DecideRegionalSettingsChangeV1Responses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors, ReportRegionalSettingsV1Data, ReportRegionalSettingsV1Errors, ReportRegionalSettingsV1Responses, UpdateCurrentUserPreferencesV1Data, UpdateCurrentUserPreferencesV1Errors, UpdateCurrentUserPreferencesV1Responses } from './types.gen';
+import type { BackendHealthCheckData, BackendHealthCheckResponses, DecideRegionalSettingsChangeV1Data, DecideRegionalSettingsChangeV1Errors, DecideRegionalSettingsChangeV1Responses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Errors, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors, ReportRegionalSettingsV1Data, ReportRegionalSettingsV1Errors, ReportRegionalSettingsV1Responses, UpdateCurrentUserPreferencesV1Data, UpdateCurrentUserPreferencesV1Errors, UpdateCurrentUserPreferencesV1Responses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -60,7 +60,7 @@ export const getEventByYearAndSequenceNumberV1 = <ThrowOnError extends boolean =
  *
  * Retrieve all global key-value configuration pairs stored in the database.
  */
-export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Options<GetGlobalsV1Data, ThrowOnError>): RequestResult<GetGlobalsV1Responses, unknown, ThrowOnError> => (options?.client ?? client).get<GetGlobalsV1Responses, unknown, ThrowOnError>({ url: '/v1/globals', ...options });
+export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Options<GetGlobalsV1Data, ThrowOnError>): RequestResult<GetGlobalsV1Responses, GetGlobalsV1Errors, ThrowOnError> => (options?.client ?? client).get<GetGlobalsV1Responses, GetGlobalsV1Errors, ThrowOnError>({ url: '/v1/globals', ...options });
 
 /**
  * Get the markdown contents of the imprint page

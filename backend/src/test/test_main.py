@@ -1,15 +1,25 @@
+import json
+import re
+from collections.abc import AsyncGenerator
+from collections.abc import Callable
 from typing import Final
 from unittest.mock import AsyncMock
 from unittest.mock import Mock
 
 import pytest
+from fastapi import Request
 from fastapi import Response
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import backend.main as main_module
+from backend.database import get_session
 from backend.logging.events_gen import ApplicationStarted
 from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
+from backend.logging.events_gen import HttpRequestFailed
 from backend.logging.events_gen import HttpRequestReceived
+from backend.main import _code_locations  # type: ignore[reportPrivateUsage]
 from backend.main import _lifespan  # type: ignore[reportPrivateUsage]
 from backend.main import _log_requests  # type: ignore[reportPrivateUsage]
 from backend.main import app
@@ -71,3 +81,150 @@ async def test_request_middleware_logs_received_and_completed(
     assert completed.path == "/health/database"
     assert completed.status_code == 204
     assert completed.duration_ms == 12.34
+
+
+@pytest.mark.asyncio
+async def test_request_middleware_returns_unexpected_exceptions_as_internal_server_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    request: Final = Mock()
+    request.method = "GET"
+    request.url.path = "/v1/imprint"
+    log_info: Final = Mock()
+    log_error: Final = Mock()
+    monkeypatch.setattr(main_module.logging, "info", log_info)
+    monkeypatch.setattr(main_module.logging, "error", log_error)
+    monkeypatch.setattr(main_module, "time", Mock(monotonic=Mock(side_effect=[10.0, 10.5])))
+
+    async def _call_next(_request: Request) -> Response:
+        raise RuntimeError("Key (email)=(jane@example.com) already exists.")
+
+    response: Final = await _log_requests(request, _call_next)
+
+    assert response.status_code == 500
+    assert json.loads(bytes(response.body)) == {"detail": "Internal server error."}
+    log_error.assert_called_once()
+    failed: Final = log_error.call_args.args[0]
+    assert isinstance(failed, HttpRequestFailed)
+    assert failed.method == "GET"
+    assert failed.path == "/v1/imprint"
+    assert failed.exception_type == "builtins.RuntimeError"
+    # Only code locations, never the message, which may contain personal data.
+    locations: Final = failed.exception_stack.splitlines()
+    assert len(locations) == 2
+    assert re.fullmatch(r"backend\.main:\d+ in _log_requests", locations[0])
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + re.escape(_call_next.__qualname__), locations[1])
+    assert log_info.call_count == 2
+    completed: Final = log_info.call_args_list[1].args[0]
+    assert isinstance(completed, HttpRequestCompleted)
+    assert completed.path == "/v1/imprint"
+    assert completed.status_code == 500
+    assert completed.duration_ms == 500.0
+
+
+def _raise_wrapped_key_error() -> None:
+    try:
+        raise KeyError("jane@example.com")
+    except KeyError as error:
+        raise RuntimeError("lookup failed") from error
+
+
+def _raise_while_handling_key_error() -> None:
+    try:
+        raise KeyError("jane@example.com")
+    except KeyError:
+        raise RuntimeError("lookup failed")  # noqa: B904
+
+
+def _raise_without_context() -> None:
+    try:
+        raise KeyError("jane@example.com")
+    except KeyError:
+        raise RuntimeError("lookup failed") from None
+
+
+def _code_locations_of(raise_exception: Callable[[], None]) -> list[str]:
+    try:
+        raise_exception()
+    except RuntimeError as exception:
+        return _code_locations(exception).splitlines()
+    raise AssertionError("No exception was raised.")
+
+
+@pytest.mark.parametrize(
+    ("raise_exception", "relation"),
+    [(_raise_wrapped_key_error, "caused by"), (_raise_while_handling_key_error, "while handling")],
+)
+def test_code_locations_include_chained_exceptions(raise_exception: Callable[[], None], relation: str) -> None:
+    locations: Final = _code_locations_of(raise_exception)
+
+    function: Final = re.escape(raise_exception.__qualname__)
+    assert len(locations) == 4
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in _code_locations_of", locations[0])
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + function, locations[1])
+    assert locations[2] == f"{relation} builtins.KeyError"
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + function, locations[3])
+    # The locations of the cause are those of its own traceback, which ends where it was caught.
+    assert locations[3] != locations[1]
+    assert "jane@example.com" not in "\n".join(locations)
+
+
+def test_code_locations_omit_suppressed_context() -> None:
+    locations: Final = _code_locations_of(_raise_without_context)
+
+    assert len(locations) == 2
+    assert not any(location.startswith(("caused by", "while handling")) for location in locations)
+
+
+def test_code_locations_terminate_for_cyclic_chains() -> None:
+    first: Final = RuntimeError("first")
+    second: Final = KeyError("second")
+    first.__cause__ = second
+    second.__cause__ = first
+
+    assert _code_locations(first) == "caused by builtins.KeyError"
+
+
+def test_unexpected_exception_is_returned_as_documented_internal_server_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    async def _failing_session() -> AsyncGenerator[AsyncSession]:
+        raise RuntimeError("unexpected")
+        yield  # pyright: ignore[reportUnreachable]
+
+    log_info: Final = Mock()
+    monkeypatch.setattr(main_module.logging, "info", log_info)
+    app.dependency_overrides[get_session] = _failing_session
+    try:
+        # Raises if the exception reaches the server, which would log it with its message as an unstructured traceback.
+        response: Final = TestClient(app).get("/v1/globals")
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+
+    assert response.status_code == 500
+    assert response.json() == {"detail": "Internal server error."}
+    completed: Final = [
+        call.args[0] for call in log_info.call_args_list if isinstance(call.args[0], HttpRequestCompleted)
+    ]
+    assert [event.status_code for event in completed] == [500]
+
+
+def test_request_middleware_logs_the_path_without_the_query_string(monkeypatch: pytest.MonkeyPatch) -> None:
+    async def _failing_session() -> AsyncGenerator[AsyncSession]:
+        raise RuntimeError("unexpected")
+        yield  # pyright: ignore[reportUnreachable]
+
+    log_info: Final = Mock()
+    log_error: Final = Mock()
+    monkeypatch.setattr(main_module.logging, "info", log_info)
+    monkeypatch.setattr(main_module.logging, "error", log_error)
+    app.dependency_overrides[get_session] = _failing_session
+    try:
+        # Query strings may contain personal data.
+        _ = TestClient(app).get("/v1/globals", params={"language": "de"})
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+
+    logged: Final = [call.args[0] for call in log_info.call_args_list + log_error.call_args_list]
+    assert [type(event) for event in logged] == [HttpRequestReceived, HttpRequestCompleted, HttpRequestFailed]
+    assert all(event.path == "/v1/globals" for event in logged)

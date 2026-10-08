@@ -179,6 +179,16 @@ export type ImprintResponseV1 = {
 };
 
 /**
+ * InternalServerErrorResponseV1
+ */
+export type InternalServerErrorResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Internal server error.';
+};
+
+/**
  * InvalidLoginTransactionResponseV1
  */
 export type InvalidLoginTransactionResponseV1 = {
@@ -406,6 +416,10 @@ export type LoginV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type LoginV1Error = LoginV1Errors[keyof LoginV1Errors];
@@ -447,6 +461,10 @@ export type LoginCallbackV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type LoginCallbackV1Error = LoginCallbackV1Errors[keyof LoginCallbackV1Errors];
@@ -476,6 +494,10 @@ export type GetCurrentUserV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetCurrentUserV1Error = GetCurrentUserV1Errors[keyof GetCurrentUserV1Errors];
@@ -510,6 +532,10 @@ export type GetCurrentEventV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetCurrentEventV1Error = GetCurrentEventV1Errors[keyof GetCurrentEventV1Errors];
@@ -556,6 +582,10 @@ export type GetEventByYearAndSequenceNumberV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetEventByYearAndSequenceNumberV1Error = GetEventByYearAndSequenceNumberV1Errors[keyof GetEventByYearAndSequenceNumberV1Errors];
@@ -575,6 +605,15 @@ export type GetGlobalsV1Data = {
     query?: never;
     url: '/v1/globals';
 };
+
+export type GetGlobalsV1Errors = {
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
+};
+
+export type GetGlobalsV1Error = GetGlobalsV1Errors[keyof GetGlobalsV1Errors];
 
 export type GetGlobalsV1Responses = {
     /**
@@ -606,6 +645,10 @@ export type GetImprintV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type GetImprintV1Error = GetImprintV1Errors[keyof GetImprintV1Errors];
@@ -635,6 +678,10 @@ export type UpdateCurrentUserPreferencesV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type UpdateCurrentUserPreferencesV1Error = UpdateCurrentUserPreferencesV1Errors[keyof UpdateCurrentUserPreferencesV1Errors];
@@ -664,6 +711,10 @@ export type ReportRegionalSettingsV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type ReportRegionalSettingsV1Error = ReportRegionalSettingsV1Errors[keyof ReportRegionalSettingsV1Errors];
@@ -702,6 +753,10 @@ export type DecideRegionalSettingsChangeV1Errors = {
      * Validation Error
      */
     422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
 };
 
 export type DecideRegionalSettingsChangeV1Error = DecideRegionalSettingsChangeV1Errors[keyof DecideRegionalSettingsChangeV1Errors];
