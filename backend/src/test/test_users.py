@@ -425,3 +425,19 @@ async def test_deciding_a_field_without_a_pending_candidate_returns_conflict() -
 
     assert exc_info.value.status_code == 409
     session.commit.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_accepting_a_locale_decision_updates_the_locale_preference() -> None:
+    preferences: Final = UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE")
+    pending: Final = _suggestion(locale="en-US")
+    session: Final = _session()
+    session.get = AsyncMock(side_effect=[pending, preferences])
+    decision: Final = RegionalSettingsDecisionInputV1(locale=RegionalSettingsDecision.ACCEPT)
+
+    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)
+
+    assert preferences.timezone == "Europe/Berlin"
+    assert preferences.locale == "en-US"
+    session.delete.assert_awaited_once_with(pending)
+    session.commit.assert_awaited_once()

@@ -350,3 +350,17 @@ async def test_me_exposes_pending_regional_settings_change() -> None:
     assert result.regional_settings_change.id == pending.id
     assert result.regional_settings_change.timezone == "America/New_York"
     assert result.regional_settings_change.locale is None
+
+
+@pytest.mark.asyncio
+async def test_me_exposes_pending_locale_change() -> None:
+    session: Final = _session()
+    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE")
+    pending: Final = RegionalSettingsSuggestion(session_id=1, timezone=None, locale="en-US")
+    session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=pending))
+
+    result: Final = await me(_authenticated(), session)
+
+    assert result.regional_settings_change is not None
+    assert result.regional_settings_change.timezone is None
+    assert result.regional_settings_change.locale == "en-US"
