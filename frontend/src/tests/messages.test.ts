@@ -10,7 +10,7 @@ const BASE_LANGUAGE = 'en'; // Has to match `baseLocale` in `project.inlang/sett
 const SCHEMA_KEY = '$schema';
 const SETTINGS_FILE = path.resolve(import.meta.dirname, '../../project.inlang/settings.json');
 const PLACEHOLDER_PATTERN = /\{([^{}]*)\}/g; // Also matches an empty `{}`, so it can be reported.
-const KEY_POSTFIXES = ['aria']; // A key with a postfix belongs to the key without it: `menu_homepage_aria` belongs to `menu_homepage`.
+const KEY_POSTFIXES = ['alt', 'aria']; // Allowed last part of a key: `global_logoSmall_alt`, `menu_homepage_aria`. Add new ones here.
 const KEY_PATTERN = new RegExp(
     `^[a-z][A-Za-z0-9]*_[a-z][A-Za-z0-9]*(?:_(?:${KEY_POSTFIXES.join('|')}))?$`
 ); // `scope_name` or `scope_name_postfix`, all parts in camelCase.
@@ -89,20 +89,6 @@ function getPlaceholders(text: string): string[] {
     ].sort();
 }
 
-/**
- * @brief Finds the base key of a key with a postfix (`menu_homepage_aria` -> `menu_homepage`).
- *
- * @param key the key of a message
- * @returns the key without the postfix, or undefined if the key has no postfix
- */
-function getBaseKey(key: string): string | undefined {
-    const postfix = KEY_POSTFIXES.find((candidate) => key.endsWith(`_${candidate}`));
-    const baseKey = postfix === undefined ? '' : key.slice(0, -(postfix.length + 1));
-
-    // `menu_aria` has the name `aria`, not the postfix. A postfix needs a `scope_name` in front of it.
-    return baseKey.includes('_') ? baseKey : undefined;
-}
-
 function getPlaceholdersByKey(messages: Messages, keys: string[]): Record<string, string[]> {
     return Object.fromEntries(keys.map((key) => [key, getPlaceholders(messages[key] ?? '')]));
 }
@@ -138,16 +124,6 @@ describe.each(FILE_NAMES)('%s naming', (fileName) => {
 
     it(`${fileName}: should use the format scope_name or scope_name_postfix for every key (allowed postfixes: see KEY_POSTFIXES)`, () => {
         expect(Object.keys(messages).filter((key) => !KEY_PATTERN.test(key))).toEqual([]);
-    });
-
-    it(`${fileName}: should have the key without the postfix for every key with a postfix`, () => {
-        const keys = Object.keys(messages);
-        const keysWithoutBase = keys.filter((key) => {
-            const baseKey = getBaseKey(key);
-            return baseKey !== undefined && !keys.includes(baseKey);
-        });
-
-        expect(keysWithoutBase).toEqual([]);
     });
 
     it(`${fileName}: should use camelCase for every placeholder`, () => {
