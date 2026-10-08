@@ -1,4 +1,3 @@
-import importlib.resources
 from collections.abc import Callable
 from enum import StrEnum
 from enum import auto
@@ -6,52 +5,13 @@ from typing import Final
 from typing import NamedTuple
 from typing import Optional
 from typing import final
-from zoneinfo import ZoneInfo
-from zoneinfo import ZoneInfoNotFoundError
-from zoneinfo import available_timezones
 
 from langcodes import standardize_tag
 from langcodes import tag_is_valid
 
 from backend.config import SETTINGS
 from backend.models.tables import UserPreferences
-
-_IANA_TIMEZONES = available_timezones()
-
-
-def _load_timezone_aliases() -> dict[str, str]:
-    """Map each IANA alias to its canonical zone name.
-
-    `zoneinfo` has no public API for this: two `ZoneInfo` instances for
-    aliased keys (for example "Asia/Istanbul" and "Europe/Istanbul") are
-    neither `==` nor `is` to each other. The `tzdata` package ships the raw
-    zic input file, whose "L <target> <alias>" lines are the same Link
-    records that produce those aliases, so we parse it once at import time.
-    """
-    aliases: dict[str, str] = {}
-    zi_file = importlib.resources.files("tzdata.zoneinfo").joinpath("tzdata.zi")
-    with zi_file.open("r", encoding="ascii") as file:
-        for line in file:
-            if line.startswith("L "):
-                _, target, alias = line.split()
-                aliases[alias] = target
-    return aliases
-
-
-_TIMEZONE_ALIASES: Final = _load_timezone_aliases()
-
-
-def canonical_timezone(value: str) -> str:
-    """Resolve an IANA timezone identifier to its canonical (non-alias) form."""
-    return _TIMEZONE_ALIASES.get(value, value)
-
-
-def timezones_equivalent(a: str, b: str) -> bool:
-    """Compare two IANA timezone identifiers by canonical zone, not by spelling
-    or current UTC offset: distinct zones may temporarily share an offset and
-    later diverge because of daylight-saving or political changes.
-    """
-    return canonical_timezone(a) == canonical_timezone(b)
+from backend.timezones import timezones_equivalent
 
 
 def canonical_locale(value: str) -> str:
@@ -64,19 +24,6 @@ def canonical_locale(value: str) -> str:
 def locales_equivalent(a: str, b: str) -> bool:
     """Compare two BCP 47 language tags by canonical form, not raw spelling."""
     return canonical_locale(a) == canonical_locale(b)
-
-
-def validate_timezone(value: str) -> str:
-    """Validate an IANA timezone identifier while preserving its spelling."""
-    # Some system zoneinfo installations expose host-specific convenience files
-    # that are not timezone identifiers from the IANA database.
-    if value in {"localtime", "posixrules"} or value.startswith(("posix/", "right/")) or value not in _IANA_TIMEZONES:
-        raise ValueError("Timezone must be a valid IANA timezone identifier.")
-    try:
-        _ = ZoneInfo(value)
-    except (ValueError, ZoneInfoNotFoundError) as error:
-        raise ValueError("Timezone must be a valid IANA timezone identifier.") from error
-    return value
 
 
 def validate_locale(value: str) -> str:
