@@ -35,7 +35,7 @@ app.include_router(v1_api.ROUTER)
 
 
 @app.middleware("http")
-async def _log_requests(  # pyright: ignore[reportUnusedFunction]
+async def _log_requests(
     request: Request,
     call_next: RequestResponseEndpoint,
 ) -> Response:

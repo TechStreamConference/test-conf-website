@@ -5,6 +5,7 @@
   "reportUnusedImport": true,
   "reportUnusedFunction": true,
   "reportUnusedClass": true,
+  "reportUnnecessaryTypeIgnoreComment": true,
   "exclude": [
     "**/__pycache__/**",
     "**/.venv/**",

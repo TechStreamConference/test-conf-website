@@ -96,7 +96,7 @@ async def test_manual_preference_update_replaces_existing_values() -> None:
     )
     preferences: Final = UserPreferencesInputV1(timezone="America/New_York", locale="haw")
 
-    result: Final = await update_preferences(preferences, _authenticated(), session)  # type: ignore[arg-type]
+    result: Final = await update_preferences(preferences, _authenticated(), session)
 
     assert result.model_dump() == {"timezone": "America/New_York", "locale": "haw"}
     statement: Final = session.execute.await_args_list[0].args[0]
@@ -122,7 +122,7 @@ async def test_manual_preference_update_clears_pending_suggestion_for_current_se
     )
     preferences: Final = UserPreferencesInputV1(timezone="America/New_York", locale="haw")
 
-    _ = await update_preferences(preferences, _authenticated(), session)  # type: ignore[arg-type]
+    _ = await update_preferences(preferences, _authenticated(), session)
 
     session.delete.assert_awaited_once_with(pending)
     session.commit.assert_awaited_once()
@@ -143,7 +143,7 @@ async def test_report_initializes_missing_preference_and_does_not_create_suggest
     )
     report: Final = ReportedRegionalSettingsInputV1(timezone="Europe/Berlin", locale="de-DE")
 
-    await report_regional_settings(report, _authenticated(), session)  # type: ignore[arg-type]
+    await report_regional_settings(report, _authenticated(), session)
 
     preferences_upsert: Final = session.execute.await_args_list[2].args[0]
     assert "ON CONFLICT (user_id) DO NOTHING" in str(preferences_upsert)
@@ -185,7 +185,7 @@ async def test_repeated_equivalent_report_is_a_no_op(monkeypatch: pytest.MonkeyP
     )
     report: Final = ReportedRegionalSettingsInputV1(timezone="Europe/Berlin", locale="de-DE")
 
-    await report_regional_settings(report, _authenticated(), session)  # type: ignore[arg-type]
+    await report_regional_settings(report, _authenticated(), session)
 
     session.rollback.assert_awaited_once()
     session.commit.assert_not_awaited()
@@ -216,7 +216,7 @@ async def test_report_differing_from_preference_creates_pending_suggestion(
     )
     report: Final = ReportedRegionalSettingsInputV1(timezone="America/New_York", locale="en-US")
 
-    await report_regional_settings(report, _authenticated(), session)  # type: ignore[arg-type]
+    await report_regional_settings(report, _authenticated(), session)
 
     # The row already exists, so "do nothing on conflict" leaves the
     # preference untouched; verified for real against Postgres in the
@@ -260,7 +260,7 @@ async def test_report_matching_preference_again_clears_pending_suggestion(
     )
     report: Final = ReportedRegionalSettingsInputV1(timezone="Europe/Berlin", locale="de-DE")
 
-    await report_regional_settings(report, _authenticated(), session)  # type: ignore[arg-type]
+    await report_regional_settings(report, _authenticated(), session)
 
     session.delete.assert_awaited_once_with(pending)
     added_suggestions: Final = [
@@ -289,7 +289,7 @@ async def test_newer_differing_report_replaces_pending_suggestion(monkeypatch: p
     )
     report: Final = ReportedRegionalSettingsInputV1(timezone="Asia/Tokyo", locale="de-DE")
 
-    await report_regional_settings(report, _authenticated(), session)  # type: ignore[arg-type]
+    await report_regional_settings(report, _authenticated(), session)
 
     session.delete.assert_awaited_once_with(pending)
     session.flush.assert_awaited_once()
@@ -327,7 +327,7 @@ async def test_accepting_a_decision_updates_the_preference_and_resolves_the_fiel
     session.get = AsyncMock(side_effect=[pending, preferences])
     decision: Final = RegionalSettingsDecisionInputV1(timezone=RegionalSettingsDecision.ACCEPT)
 
-    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)  # type: ignore[arg-type]
+    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)
 
     assert preferences.timezone == "America/New_York"
     session.delete.assert_awaited_once_with(pending)
@@ -342,7 +342,7 @@ async def test_keeping_a_decision_does_not_change_the_preference() -> None:
     session.get = AsyncMock(side_effect=[pending, preferences])
     decision: Final = RegionalSettingsDecisionInputV1(timezone=RegionalSettingsDecision.KEEP)
 
-    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)  # type: ignore[arg-type]
+    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)
 
     assert preferences.timezone == "Europe/Berlin"
     session.delete.assert_awaited_once_with(pending)
@@ -357,7 +357,7 @@ async def test_deciding_one_field_leaves_the_other_pending() -> None:
     session.get = AsyncMock(side_effect=[pending, preferences])
     decision: Final = RegionalSettingsDecisionInputV1(timezone=RegionalSettingsDecision.ACCEPT)
 
-    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)  # type: ignore[arg-type]
+    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)
 
     assert preferences.timezone == "America/New_York"
     assert preferences.locale == "de-DE"
@@ -379,7 +379,7 @@ async def test_deciding_both_fields_resolves_the_suggestion() -> None:
         locale=RegionalSettingsDecision.KEEP,
     )
 
-    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)  # type: ignore[arg-type]
+    await decide_regional_settings_change(pending.id, decision, _authenticated(), session)
 
     assert preferences.timezone == "America/New_York"
     assert preferences.locale == "de-DE"
@@ -393,7 +393,7 @@ async def test_unknown_suggestion_id_returns_conflict() -> None:
     decision: Final = RegionalSettingsDecisionInputV1(timezone=RegionalSettingsDecision.ACCEPT)
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await decide_regional_settings_change(uuid4(), decision, _authenticated(), session)  # type: ignore[arg-type]
+        _ = await decide_regional_settings_change(uuid4(), decision, _authenticated(), session)
 
     assert exc_info.value.status_code == 409
     session.commit.assert_not_awaited()
@@ -407,7 +407,7 @@ async def test_suggestion_from_another_session_returns_conflict() -> None:
     decision: Final = RegionalSettingsDecisionInputV1(timezone=RegionalSettingsDecision.ACCEPT)
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await decide_regional_settings_change(pending.id, decision, _authenticated(session_id=1), session)  # type: ignore[arg-type]
+        _ = await decide_regional_settings_change(pending.id, decision, _authenticated(session_id=1), session)
 
     assert exc_info.value.status_code == 409
     session.commit.assert_not_awaited()
@@ -421,7 +421,7 @@ async def test_deciding_a_field_without_a_pending_candidate_returns_conflict() -
     decision: Final = RegionalSettingsDecisionInputV1(locale=RegionalSettingsDecision.ACCEPT)
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await decide_regional_settings_change(pending.id, decision, _authenticated(), session)  # type: ignore[arg-type]
+        _ = await decide_regional_settings_change(pending.id, decision, _authenticated(), session)
 
     assert exc_info.value.status_code == 409
     session.commit.assert_not_awaited()

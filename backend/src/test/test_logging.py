@@ -38,7 +38,7 @@ def _capture_log(event: LogEventBase, level: str = "info") -> dict[str, object]:
     captured: Final = StringIO()
     original: Final = sys.stdout
     try:
-        sys.stdout = captured  # type: ignore[assignment]
+        sys.stdout = captured
         # Fetch the appropriate logging function by name from the logging module and
         # call it with the event. During this call, `stdout` is redirected to the
         # `StringIO` buffer so that we can capture the output for inspection.
@@ -47,7 +47,7 @@ def _capture_log(event: LogEventBase, level: str = "info") -> dict[str, object]:
         sys.stdout = original
 
     line: Final = captured.getvalue().strip()
-    return json.loads(line)  # type: ignore[no-any-return]
+    return json.loads(line)
 
 
 @final
@@ -118,7 +118,7 @@ class TestLogRecordFormat:
         captured: Final = StringIO()
         original: Final = sys.stdout
         try:
-            sys.stdout = captured  # type: ignore[assignment]
+            sys.stdout = captured
             log_module.info(ApplicationStarted(host="h", port=1))
             log_module.info(ApplicationStopping())
         finally:
@@ -155,7 +155,7 @@ class TestFileLogging:
                 logging_core_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
                 captured: Final = StringIO()
                 original_stdout: Final = sys.stdout
-                sys.stdout = captured  # type: ignore[assignment]
+                sys.stdout = captured
                 try:
                     logging_core_module.info(ApplicationStarted(host="filehost", port=3000))
                 finally:
@@ -264,7 +264,7 @@ def test_log_file_appends(tmp_path: Path) -> None:
             logging_core_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
             devnull: Final = StringIO()
             original_stdout: Final = sys.stdout
-            sys.stdout = devnull  # type: ignore[assignment]
+            sys.stdout = devnull
             try:
                 logging_core_module.info(ApplicationStarted(host="h", port=1))
                 logging_core_module.info(ApplicationStopping())

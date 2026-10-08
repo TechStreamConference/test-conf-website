@@ -55,7 +55,7 @@ async def create_authorization_request() -> AuthorizationRequest:
         redirect_uri=SETTINGS.zitadel_redirect_uri
     )
 
-    return AuthorizationRequest.model_validate(result)  # type: ignore[reportUnknownArgumentType]
+    return AuthorizationRequest.model_validate(result)
 
 
 @final
