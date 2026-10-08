@@ -51,6 +51,38 @@ async def test_imprint_falls_back_to_english_when_requested_language_is_missing(
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("requested", "stored"),
+    [
+        ("DE", "de"),
+        # Deprecated language subtag.
+        ("iw", "he"),
+        # Stored tags are normalized as well.
+        ("de", "DE"),
+        ("he", "iw"),
+    ],
+)
+async def test_imprint_matches_the_normalized_requested_language(requested: str, stored: str) -> None:
+    session: Final = _session_with_pages([_page(stored), _page("en")])
+
+    result: Final = await get_imprint(requested, session)
+
+    assert result.content == f"Imprint ({stored})"
+    assert result.language_details.language_tag == stored
+    assert result.language_details.is_language_fallback is False
+
+
+@pytest.mark.asyncio
+async def test_imprint_falls_back_to_english_when_requested_language_is_invalid() -> None:
+    session: Final = _session_with_pages([_page("de"), _page("en")])
+
+    result: Final = await get_imprint("x-foo", session)
+
+    assert result.content == "Imprint (en)"
+    assert result.language_details.is_language_fallback is True
+
+
+@pytest.mark.asyncio
 async def test_imprint_falls_back_to_first_language_when_english_is_missing() -> None:
     session: Final = _session_with_pages([_page("de"), _page("es")])
 

@@ -6,7 +6,6 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
-from langcodes import Language
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
@@ -14,6 +13,7 @@ from sqlmodel import extract
 from sqlmodel import select
 
 from backend.database import get_session
+from backend.language_tags import select_content_language
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
@@ -152,23 +152,15 @@ def _event_response_v1_from_rows(
     event: Final = rows[0].Event
     translations_by_language_tag: Final = {row.EventTranslation.language_tag: row.EventTranslation for row in rows}
 
-    translation = translations_by_language_tag.get(language_tag)
-    is_language_fallback: Final = translation is None
-
-    # If the translation is missing, we first try to fall back to English.
-    # Only if that is not available, we fall back to the first available
-    # translation.
-    if translation is None:
-        translation = translations_by_language_tag.get(str(Language.get("en")))
-    if translation is None:
-        translation = next(iter(translations_by_language_tag.values()))
+    selection: Final = select_content_language(translations_by_language_tag, language_tag)
+    translation: Final = selection.content
 
     return EventResponseV1(
         id=event.id,
         language_details=LanguageDetailsV1(
             available_languages=list(translations_by_language_tag),
             language_tag=translation.language_tag,
-            is_language_fallback=is_language_fallback,
+            is_language_fallback=selection.is_language_fallback,
         ),
         title=translation.title,
         subtitle=translation.subtitle,

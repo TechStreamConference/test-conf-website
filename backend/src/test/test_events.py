@@ -140,6 +140,22 @@ async def test_event_returns_before_processing_later_events() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(("requested", "stored"), [("DE", "de"), ("he", "iw")])
+async def test_event_matches_the_normalized_language(requested: str, stored: str) -> None:
+    event: Final = _event(1, date(2024, 5, 1))
+    session: Final = _session_with_rows([
+        _row(event, _translation(1, stored)),
+        _row(event, _translation(1, "en")),
+    ])
+
+    result: Final = await get_event_by_year_and_sequence_number(session, requested, 2024, 1)
+
+    assert result.title == f"Title 1 ({stored})"
+    assert result.language_details.language_tag == stored
+    assert result.language_details.is_language_fallback is False
+
+
+@pytest.mark.asyncio
 async def test_event_latest_falls_back_to_english() -> None:
     event: Final = _event(1, date(2024, 5, 1))
     session: Final = _session_with_rows([

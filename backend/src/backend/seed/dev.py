@@ -13,6 +13,7 @@ from faker import Faker
 from langcodes import Language
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.language_tags import parse_language
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.models.tables import Global
@@ -28,9 +29,9 @@ _DATA_PATH = Path(__file__).parent / "data"
 _CONFERENCE_NAME = "Tech Stream Conference"
 
 _FAKER_LOCALES_BY_BCP_47_LANGUAGE_TAG = {
-    Language.get("de"): "de_DE",
-    Language.get("en"): "en_US",
-    Language.get("es"): "es_ES",
+    parse_language("de"): "de_DE",
+    parse_language("en"): "en_US",
+    parse_language("es"): "es_ES",
 }
 
 
@@ -43,16 +44,16 @@ class EventSpec(NamedTuple):
 # Most years have one entry (the default), but a year may appear multiple times
 # (multiple events) or not at all (no event that year).
 _EVENTS: list[EventSpec] = [
-    EventSpec(2022, [Language.get("de")]),
-    EventSpec(2023, [Language.get("de"), Language.get("en")]),
-    EventSpec(2024, [Language.get("de")]),  # Two events in 2024.
-    EventSpec(2024, [Language.get("de"), Language.get("en"), Language.get("es")]),
+    EventSpec(2022, [parse_language("de")]),
+    EventSpec(2023, [parse_language("de"), parse_language("en")]),
+    EventSpec(2024, [parse_language("de")]),  # Two events in 2024.
+    EventSpec(2024, [parse_language("de"), parse_language("en"), parse_language("es")]),
     # 2025: no event
-    EventSpec(2026, [Language.get("de"), Language.get("en")]),
-    EventSpec(2027, [Language.get("de"), Language.get("en"), Language.get("es")]),
-    EventSpec(2028, [Language.get("de"), Language.get("en")]),  # Two events in 2028.
-    EventSpec(2028, [Language.get("de")]),
-    EventSpec(2029, [Language.get("de"), Language.get("en")]),
+    EventSpec(2026, [parse_language("de"), parse_language("en")]),
+    EventSpec(2027, [parse_language("de"), parse_language("en"), parse_language("es")]),
+    EventSpec(2028, [parse_language("de"), parse_language("en")]),  # Two events in 2028.
+    EventSpec(2028, [parse_language("de")]),
+    EventSpec(2029, [parse_language("de"), parse_language("en")]),
 ]
 
 
@@ -92,8 +93,8 @@ def _seed_globals_table(session: AsyncSession) -> None:
 
 def _seed_static_pages_table(session: AsyncSession) -> None:
     for (kind, language), content_file in {
-        (StaticPageKind.IMPRINT, Language.get("de")): _DATA_PATH / "imprint.de.md",
-        (StaticPageKind.IMPRINT, Language.get("en")): _DATA_PATH / "imprint.en.md",
+        (StaticPageKind.IMPRINT, parse_language("de")): _DATA_PATH / "imprint.de.md",
+        (StaticPageKind.IMPRINT, parse_language("en")): _DATA_PATH / "imprint.en.md",
     }.items():
         session.add(
             StaticPage(

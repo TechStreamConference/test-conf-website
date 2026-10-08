@@ -204,6 +204,15 @@ async def test_event_route_keeps_events_starting_on_the_same_day_apart(
 
 
 @pytest.mark.asyncio
+async def test_event_route_matches_the_normalized_requested_language() -> None:
+    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/DE/event/2023/1").raise_for_status()
+    event: Final = EventResponseV1.model_validate(response.json())
+
+    assert event.language_details.language_tag == "de"
+    assert event.language_details.is_language_fallback is False
+
+
+@pytest.mark.asyncio
 async def test_event_route_falls_back_to_english() -> None:
     response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/fr/event/2023/1").raise_for_status()
     event: Final = EventResponseV1.model_validate(response.json())
