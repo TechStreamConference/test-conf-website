@@ -28,7 +28,8 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <a
     {...rest}
-    class:menu={variant === LinkVariant.Menu}
+    class:menu={variant === LinkVariant.Menu || variant === LinkVariant.Footer}
+    class:footer={variant === LinkVariant.Footer}
     class:plain={variant === LinkVariant.Plain}
     {href}
     {target}
@@ -87,6 +88,13 @@
 
         background-color: transparent;
         box-shadow: none;
+    }
+    /* Footer variant: a compact menu link with centered content, so many entries stay small. */
+    a.menu.footer {
+        justify-content: center;
+
+        min-height: 2.25rem;
+        padding: 0 0.75rem;
     }
     a.menu:hover,
     a.menu:focus-visible {
