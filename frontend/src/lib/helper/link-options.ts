@@ -11,6 +11,7 @@ export enum LinkTarget {
 export enum LinkVariant {
     Button,
     Menu,
+    Footer,
     Plain
 }
 
