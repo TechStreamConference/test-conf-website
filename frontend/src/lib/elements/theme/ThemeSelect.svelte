@@ -6,8 +6,8 @@
     import SunMoon from '@lucide/svelte/icons/sun-moon';
 
     import { getTheme } from '$lib/helper/light-dark';
-    import { setTheme } from '$lib/helper/light-dark';
     import { i18n } from '$lib/helper/translate';
+    import { setTheme } from '$lib/helper/light-dark';
     import { Theme } from '$lib/helper/light-dark';
 
     import { m } from '$paraglide/messages';
@@ -23,6 +23,14 @@
 
     let currentTheme: Theme | undefined = $state(undefined);
     let isOpen: boolean = $state(false);
+    let options: HTMLDivElement | undefined = $state(undefined);
+
+    function handleToggle(event: Event): void {
+        const details = event.currentTarget;
+        if (details instanceof HTMLDetailsElement && details.open) {
+            options?.scrollIntoView({ block: 'nearest' });
+        }
+    }
 
     function selectTheme(theme: Theme): void {
         setTheme(theme);
@@ -31,7 +39,7 @@
     }
 </script>
 
-<details bind:open={isOpen}>
+<details bind:open={isOpen} ontoggle={handleToggle}>
     <summary aria-label={i18n(m.global_themeSelect_aria, languageTag)}>
         {#if currentTheme === Theme.Dark}
             <Moon aria-hidden="true" />
@@ -44,7 +52,7 @@
         {/if}
     </summary>
 
-    <div>
+    <div bind:this={options}>
         <button
             class:selected={currentTheme === Theme.System}
             type="button"
@@ -71,8 +79,9 @@
 
 <style>
     details {
-        display: inline-block;
-        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
     summary {
@@ -80,8 +89,8 @@
         align-items: center;
         justify-content: center;
 
-        width: 4.4rem;
-        height: 4.4rem;
+        width: 3rem;
+        height: 3rem;
 
         margin: 0.5rem;
         border-radius: var(--border-radius);
@@ -91,7 +100,7 @@
         cursor: pointer;
         list-style: none;
         background-color: transparent;
-        color: var(--text-color);
+        color: var(--white-color);
 
         font-size: 2rem;
 
@@ -103,34 +112,64 @@
         color: var(--white-color);
     }
 
+    /* On small screens the options open below the button and push the content down, so a scrollable parent does not clip them. */
     div {
-        display: flex;
+        display: none;
         flex-direction: column;
-        position: absolute;
         gap: 0.4rem;
 
-        top: calc(100% + 0.8rem);
-        inset-inline-end: 0;
-        min-width: 15rem;
+        margin-top: 0.4rem;
         padding: 0.6rem;
         border-radius: var(--border-radius);
 
-        background-color: var(--background-color-500);
-        pointer-events: none;
-
-        box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.25);
-        opacity: 0;
-        transform: translateY(-0.5rem);
-
-        transition:
-            opacity var(--transition-duration),
-            transform var(--transition-duration);
+        background-color: var(--primary-color-400);
     }
     details[open] div {
-        pointer-events: auto;
+        display: flex;
+    }
 
-        opacity: 1;
-        transform: translateY(0);
+    @media (min-width: 48rem) {
+        details {
+            display: inline-block;
+            position: relative;
+        }
+
+        div {
+            display: flex;
+            position: absolute;
+
+            top: calc(100% + 0.8rem);
+            inset-inline-end: 0;
+            min-width: 15rem;
+            margin-top: 0;
+
+            background-color: var(--background-color-500);
+            pointer-events: none;
+
+            box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            transform: translateY(-0.5rem);
+
+            transition:
+                opacity var(--transition-duration),
+                transform var(--transition-duration);
+        }
+        details[open] div {
+            pointer-events: auto;
+
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* The popup is a light or dark card, so the options use the normal text color. `details` raises the specificity above the base `button` rules. */
+        details button {
+            color: var(--text-color);
+        }
+        details button:hover,
+        details button:focus-visible {
+            background-color: var(--primary-color-400);
+            color: var(--white-color);
+        }
     }
 
     button {
@@ -145,7 +184,7 @@
 
         border: none;
         background: transparent;
-        color: var(--text-color);
+        color: var(--white-color);
         cursor: pointer;
     }
     button.selected {
@@ -159,7 +198,7 @@
     }
     button:hover,
     button:focus-visible {
-        background-color: var(--primary-color-400);
+        background-color: var(--primary-color-600);
         color: var(--white-color);
 
         outline: none;
