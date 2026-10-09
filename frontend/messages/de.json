@@ -1,5 +1,8 @@
 {
     "$schema": "https://inlang.com/schema/inlang-message-format",
+    "footer_copyright": "© Tech Stream Conference {year}",
+    "footer_eventsHeadline": "Alle Events",
+    "footer_menuHeadline": "Menü",
     "global_logoBig_alt": "Tech Stream Conference Logo",
     "global_logoSmall_alt": "Tech Stream Conference Logo",
     "global_themeSelect_aria": "Farbschema-Auswahl",
