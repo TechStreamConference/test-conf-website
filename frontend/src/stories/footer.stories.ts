@@ -1,7 +1,7 @@
 import type { Meta } from '@storybook/sveltekit';
 import type { StoryObj } from '@storybook/sveltekit';
 
-import { FOOTER_MENU } from '$lib/helper/menus';
+import { MAIN_PAGE_FOOTER_MENU } from '$lib/helper/menus';
 import FooterComponent from '$lib/elements/layout/Footer.svelte';
 import { UserState } from '$lib/helper/menus';
 
@@ -13,7 +13,7 @@ const META = {
     },
     args: {
         languageTag: 'en',
-        menu: FOOTER_MENU,
+        menu: MAIN_PAGE_FOOTER_MENU,
         userState: UserState.LoggedOut,
         events: [
             { label: '2026', url: '/year/2026' },
