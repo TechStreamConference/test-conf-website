@@ -14,8 +14,7 @@ const META = {
     args: {
         languageTag: 'en',
         menu: MAIN_MENU,
-        userState: UserState.LoggedOut,
-        currentPath: '/'
+        userState: UserState.LoggedOut
     },
     argTypes: {
         languageTag: {

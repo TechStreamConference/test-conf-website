@@ -11,7 +11,6 @@
         footerMenu: Menu;
         events: { label: string; url: string }[];
         footerText: string;
-        currentPath?: string | undefined;
         paragraphs: number;
     }
     const { paragraphs, ...rest }: Props = $props();

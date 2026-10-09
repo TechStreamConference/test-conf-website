@@ -88,6 +88,8 @@
 
         background-color: transparent;
         box-shadow: none;
+
+        font-weight: 700;
     }
     /* Footer variant: a compact menu link with centered content, so many entries stay small. */
     a.menu.footer {
@@ -95,6 +97,8 @@
 
         min-height: 2.25rem;
         padding: 0 0.75rem;
+
+        font-weight: 400;
     }
     a.menu:hover,
     a.menu:focus-visible {
@@ -106,9 +110,6 @@
     a.menu:focus-visible {
         outline: 0.2rem solid var(--white-color);
         outline-offset: -0.2rem;
-    }
-    a.menu[aria-current='page'] {
-        font-weight: 700;
     }
 
     /* Plain variant: only the content, without padding, background or hover effect, e.g. for a logo. */
