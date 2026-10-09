@@ -26,7 +26,6 @@ const META = {
         ],
         footerText:
             'TECH STREAM CONFERENCE – online conference with talks on programming, maker culture and game development',
-        currentPath: '/',
         paragraphs: 3
     },
     argTypes: {

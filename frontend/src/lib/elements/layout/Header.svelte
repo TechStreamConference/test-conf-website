@@ -19,9 +19,8 @@
         languageTag: string;
         menu: Menu;
         userState: UserState;
-        currentPath?: string | undefined;
     }
-    const { languageTag, menu, userState, currentPath }: Props = $props();
+    const { languageTag, menu, userState }: Props = $props();
 
     const MENU_ID = 'header-menu';
 
@@ -79,7 +78,6 @@
                         <Link
                             href={entry.url}
                             aria-label={i18n(entry.ariaLabel, languageTag)}
-                            aria-current={entry.url === currentPath ? 'page' : undefined}
                             target={LinkTarget.SameTab}
                             variant={LinkVariant.Menu}
                             onclick={closeMenu}

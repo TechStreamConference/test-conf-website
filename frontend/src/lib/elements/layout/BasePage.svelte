@@ -15,22 +15,13 @@
         footerMenu: Menu;
         events: { label: string; url: string }[];
         footerText: string;
-        currentPath?: string | undefined;
     }
-    const {
-        children,
-        languageTag,
-        userState,
-        headerMenu,
-        footerMenu,
-        events,
-        footerText,
-        currentPath
-    }: Props = $props();
+    const { children, languageTag, userState, headerMenu, footerMenu, events, footerText }: Props =
+        $props();
 </script>
 
 <div>
-    <Header {languageTag} {userState} menu={headerMenu} {currentPath} />
+    <Header {languageTag} {userState} menu={headerMenu} />
     <main>
         {@render children()}
     </main>
