@@ -39,12 +39,12 @@ const HOMEPAGE_ENTRY: MenuEntry = {
 
 //#region Menus
 
-export const MAIN_MENU: Menu = {
+export const MAIN_PAGE_HEADER_MENU: Menu = {
     [UserState.LoggedOut]: [HOMEPAGE_ENTRY],
     [UserState.LoggedIn]: [HOMEPAGE_ENTRY]
 };
 
-export const FOOTER_MENU: Menu = {
+export const MAIN_PAGE_FOOTER_MENU: Menu = {
     [UserState.LoggedOut]: [HOMEPAGE_ENTRY],
     [UserState.LoggedIn]: [HOMEPAGE_ENTRY]
 };

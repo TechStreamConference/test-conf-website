@@ -1,7 +1,7 @@
 import type { Meta } from '@storybook/sveltekit';
 import type { StoryObj } from '@storybook/sveltekit';
 
-import { MAIN_MENU } from '$lib/helper/menus';
+import { MAIN_PAGE_HEADER_MENU } from '$lib/helper/menus';
 import HeaderComponent from '$lib/elements/layout/Header.svelte';
 import { UserState } from '$lib/helper/menus';
 
@@ -13,7 +13,7 @@ const META = {
     },
     args: {
         languageTag: 'en',
-        menu: MAIN_MENU,
+        menu: MAIN_PAGE_HEADER_MENU,
         userState: UserState.LoggedOut
     },
     argTypes: {

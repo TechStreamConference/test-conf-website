@@ -2,8 +2,8 @@ import type { ComponentProps } from 'svelte';
 import type { Meta } from '@storybook/sveltekit';
 import type { StoryObj } from '@storybook/sveltekit';
 
-import { FOOTER_MENU } from '$lib/helper/menus';
-import { MAIN_MENU } from '$lib/helper/menus';
+import { MAIN_PAGE_FOOTER_MENU } from '$lib/helper/menus';
+import { MAIN_PAGE_HEADER_MENU } from '$lib/helper/menus';
 import { UserState } from '$lib/helper/menus';
 
 import BasePageStory from './fixtures/BasePageStory.svelte';
@@ -17,8 +17,8 @@ const META = {
     args: {
         languageTag: 'en',
         userState: UserState.LoggedOut,
-        headerMenu: MAIN_MENU,
-        footerMenu: FOOTER_MENU,
+        headerMenu: MAIN_PAGE_HEADER_MENU,
+        footerMenu: MAIN_PAGE_FOOTER_MENU,
         events: [
             { label: '2026', url: '/year/2026' },
             { label: '2025', url: '/year/2025' },
