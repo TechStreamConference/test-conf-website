@@ -19,6 +19,10 @@ import { UserState } from '$lib/helper/menus';
 import { handle } from '../hooks.server';
 import { load as loadLayout } from '../routes/+layout.server';
 
+// The hook logs every request, which would fill the output of the tests.
+vi.mock('$logging', () => ({
+    logger: { info: vi.fn() }
+}));
 vi.mock('$bff/v1/globals.server', () => ({
     loadGlobals: vi.fn(() => Promise.resolve({ footerText: 'Footer text' }))
 }));
