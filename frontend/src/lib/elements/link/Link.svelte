@@ -48,7 +48,7 @@
         justify-content: center;
         gap: 0.5rem;
 
-        padding: var(--full-padding) var(--2x-padding);
+        padding: 1rem 2rem;
         min-height: 4.4rem;
         border-radius: var(--border-radius);
         border: none;
@@ -84,7 +84,7 @@
         justify-content: flex-start;
 
         min-height: 3rem;
-        padding: 0 var(--full-padding);
+        padding: 0 1rem;
 
         background-color: transparent;
         box-shadow: none;

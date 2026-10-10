@@ -30,6 +30,6 @@
         flex-direction: column;
         gap: 1rem;
 
-        padding: 2rem var(--full-padding);
+        padding: 2rem 1rem;
     }
 </style>
