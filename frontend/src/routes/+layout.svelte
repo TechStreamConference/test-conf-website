@@ -13,13 +13,20 @@
 
     let { children, data }: LayoutProps = $props();
 
+    const languageTag = $derived(page.data.languageTag ?? data.languageTag);
+
     onMount(() => {
         initTheme();
+    });
+
+    // The server renders the right `lang`; this keeps it up to date when the client navigates to a page in another language.
+    $effect(() => {
+        document.documentElement.lang = languageTag;
     });
 </script>
 
 <BasePage
-    languageTag={data.languageTag}
+    {languageTag}
     userState={data.userState}
     headerMenu={page.data.headerMenu ?? MAIN_PAGE_HEADER_MENU}
     footerMenu={page.data.footerMenu ?? MAIN_PAGE_FOOTER_MENU}
