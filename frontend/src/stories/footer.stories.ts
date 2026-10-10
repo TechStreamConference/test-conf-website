@@ -16,9 +16,9 @@ const META = {
         menu: MAIN_PAGE_FOOTER_MENU,
         userState: UserState.LoggedOut,
         events: [
-            { label: '2026', url: '/year/2026' },
+            { label: '2024', url: '/year/2024' },
             { label: '2025', url: '/year/2025' },
-            { label: '2024', url: '/year/2024' }
+            { label: '2026', url: '/year/2026' }
         ],
         footerText:
             'TECH STREAM CONFERENCE – online conference with talks on programming, maker culture and game development'

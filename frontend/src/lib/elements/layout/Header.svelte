@@ -107,7 +107,7 @@
 
         /* box */
         gap: 1rem;
-        padding: 0.5rem var(--full-padding);
+        padding: 0.5rem 1rem;
 
         /* appearance */
         background-color: var(--primary-color-600);
@@ -189,7 +189,7 @@
 
     @media (min-width: 48rem) {
         header {
-            padding-inline: calc(var(--full-padding) * 1.5);
+            padding-inline: 1.5rem;
         }
 
         button {

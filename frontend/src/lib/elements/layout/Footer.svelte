@@ -46,25 +46,23 @@
             </ul>
         </nav>
 
-        {#if events.length > 0}
-            <nav aria-labelledby={EVENTS_HEADLINE_ID}>
-                <h2 id={EVENTS_HEADLINE_ID}>{i18n(m.footer_eventsHeadline, languageTag)}</h2>
-                <ul class:events={true}>
-                    {#each events as event (event.url)}
-                        <li>
-                            <Link
-                                href={event.url}
-                                aria-label={event.label}
-                                target={LinkTarget.SameTab}
-                                variant={LinkVariant.Footer}
-                            >
-                                {event.label}
-                            </Link>
-                        </li>
-                    {/each}
-                </ul>
-            </nav>
-        {/if}
+        <nav aria-labelledby={EVENTS_HEADLINE_ID}>
+            <h2 id={EVENTS_HEADLINE_ID}>{i18n(m.footer_eventsHeadline, languageTag)}</h2>
+            <ul class:events={true}>
+                {#each events as event (event.url)}
+                    <li>
+                        <Link
+                            href={event.url}
+                            aria-label={event.label}
+                            target={LinkTarget.SameTab}
+                            variant={LinkVariant.Footer}
+                        >
+                            {event.label}
+                        </Link>
+                    </li>
+                {/each}
+            </ul>
+        </nav>
 
         <p>{footerText}</p>
 
@@ -92,7 +90,7 @@
 
         /* box */
         gap: 2rem;
-        padding: 2rem var(--full-padding);
+        padding: 2rem 1rem;
 
         /* appearance */
         background-color: var(--primary-color-600);
@@ -149,7 +147,7 @@
 
     @media (min-width: 48rem) {
         footer {
-            padding-inline: calc(var(--full-padding) * 1.5);
+            padding-inline: 1.5rem;
         }
 
         .columns {

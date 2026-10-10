@@ -25,6 +25,6 @@
 
         max-width: 60rem;
         margin: 0 auto;
-        padding: 2rem var(--full-padding);
+        padding: 2rem 1rem;
     }
 </style>
