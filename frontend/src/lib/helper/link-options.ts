@@ -8,6 +8,13 @@ export enum LinkTarget {
     Top = '_top' // Open in the top-level frame (rarely used).
 }
 
+export enum LinkVariant {
+    Button,
+    Menu,
+    Footer,
+    Plain
+}
+
 // This prevents the newly opened page from being able to manipulate the original page through 'window.opener',
 // which is both security and performance improvement.
 const NO_REFERRER: string = 'noopener noreferrer';
