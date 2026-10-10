@@ -10,7 +10,7 @@ const META = {
     title: 'Components/Links',
     component: LinkStory,
     args: {
-        variant: 'inline',
+        variant: 'Inline',
         label: 'Visit the conference website',
         href: 'https://tech-stream.org',
         'aria-label': 'Visit the Tech Stream Conference website',
@@ -18,8 +18,8 @@ const META = {
     },
     argTypes: {
         variant: {
-            control: 'inline-radio',
-            options: ['inline', 'button']
+            control: 'select',
+            options: ['Inline', 'Button', 'Menu', 'Footer', 'Plain']
         },
         target: {
             control: 'select',
@@ -31,9 +31,4 @@ const META = {
 export default META;
 
 type Story = StoryObj<typeof META>;
-export const Inline: Story = {};
-export const Button: Story = {
-    args: {
-        variant: 'button'
-    }
-};
+export const Link: Story = {};
