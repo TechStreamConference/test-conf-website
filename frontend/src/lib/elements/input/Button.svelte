@@ -2,8 +2,6 @@
     import type { HTMLButtonAttributes } from 'svelte/elements';
     import type { Snippet } from 'svelte';
 
-    // Event callbacks (onclick, onfocus, ...) and form attributes (form, formaction, ...) are
-    // forwarded to the native button via `rest`.
     interface Props extends Omit<HTMLButtonAttributes, 'aria-label' | 'type'> {
         children: Snippet;
         'aria-label': string;

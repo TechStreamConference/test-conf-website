@@ -1,5 +1,5 @@
 <script lang="ts">
-    import Button from '$lib/elements/button/Button.svelte';
+    import Button from '$lib/elements/input/Button.svelte';
 
     interface Props {
         label: string;
