@@ -72,7 +72,6 @@ Because a route wins over a language, a top-level route named like a real langua
 
 - The test collects all ISO 639-1 and ISO 639-3 codes from a library (for example `iso-639-3`) and fails if a top-level route has one of these names.
 - The library is only used in the test, so it does not end up in the client bundle.
-- Adding it is a change to `package.json` and needs explicit confirmation.
 
 Limitations (to be decided when they come up):
 
@@ -179,7 +178,6 @@ Goal: make it impossible to forget the language on a link. Instead of checking e
 - `svelte/no-navigation-without-resolve` is already active (through the recommended Svelte config). Today it is switched off with `eslint-disable-next-line` in both link components. After the merge this happens in exactly one place. It has to be checked that `localizeHref`, which calls `resolve()` internally, satisfies the rule.
 - `goto(...)` and `pushState` / `replaceState` for internal pages have to go through `localizeHref`. A rule like `no-restricted-imports` (only a wrapper may import `goto`) is a candidate. Not needed as long as no such call exists.
 - `redirect(...)` is **not** restricted in general. The existing redirects go to the backend (`/api/v1/auth/login` and the `redirect_url` from the backend) and must not get a language prefix. Only redirects to frontend pages use `localizeHref` with the explicit `urlLang`.
-- This changes `eslint.config.js` and therefore needs explicit confirmation before it is done.
 
 ## Backend Issues
 
@@ -233,8 +231,10 @@ Requested change:
 
 A `language` column for users, returned with the user data and changeable through an endpoint. It slots in between the route language and the header.
 
-## Open Questions
+## UI Texts
 
-- Where do the UI texts come from (buttons, `aria-label`s, error messages)? Options: everything from the backend (with an English fallback bundle in the frontend), or an i18n library in the frontend. Not decided yet.
-- Should the language switch change the user setting for logged-in users? Current assumption: no.
-- Is `Vary: Accept-Language` needed for our caching setup?
+The texts of the user interface (buttons, `aria-label`s, error messages) live in the frontend and are translated with [Paraglide](https://paraglidejs.com). The messages are in `messages/*.json`, `en` is the base language. The rules for keys and placeholders are in `style.md`.
+
+Paraglide does not detect the language. The backend resolves it, and the frontend passes the `language_tag` of the backend response to every message call (`i18n(m.global_save, languageTag)`, see `src/lib/helper/translate.ts`). A tag with a region (`en-US`) is reduced to its language. Unsupported languages fall back to the base language.
+
+The generated functions in `src/paraglide` are checked in and validated in CI (`.github/workflows/validate-generated-i18n.yml`).
