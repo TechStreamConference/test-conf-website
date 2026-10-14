@@ -9,3 +9,5 @@ bun.lockb
 /static/
 src/generated/
 src/paraglide/
+project.inlang/*
+!project.inlang/settings.json
