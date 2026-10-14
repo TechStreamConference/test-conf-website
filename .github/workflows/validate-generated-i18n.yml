@@ -17,9 +17,6 @@ jobs:
       - name: Install frontend project dependencies
         run: nix develop --command pnpm --dir frontend install --frozen-lockfile
 
-      - name: Create .env file
-        run: cp .env.example .env
-
       # The checked-in output is removed first. If the build does not generate it again,
       # the checks below fail because the files are missing.
       - name: Remove checked-in translation functions
