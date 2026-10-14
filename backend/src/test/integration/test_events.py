@@ -71,8 +71,8 @@ async def test_current_event_route_returns_most_recently_spotlighted_event(
     current_event: Final = EventResponseV1.model_validate(response.json())
 
     assert current_event.id == events[1].id
-    assert current_event.language_tag == "en"
-    assert current_event.is_language_fallback is False
+    assert current_event.language_details.language_tag == "en"
+    assert current_event.language_details.is_language_fallback is False
 
 
 @pytest.mark.asyncio
@@ -103,13 +103,13 @@ async def test_event_route_returns_numbered_and_latest_events() -> None:
 
     assert first.id != second.id
     assert first.start_date.year == 2024
-    assert first.available_languages == ["de"]
-    assert first.language_tag == "de"
-    assert first.is_language_fallback is True  # We asked for English, but only German is available.
+    assert first.language_details.available_languages == ["de"]
+    assert first.language_details.language_tag == "de"
+    assert first.language_details.is_language_fallback is True  # We asked for English, but only German is available.
 
-    assert second.available_languages == ["de", "en", "es"]
-    assert second.language_tag == "es"
-    assert second.is_language_fallback is False
+    assert second.language_details.available_languages == ["de", "en", "es"]
+    assert second.language_details.language_tag == "es"
+    assert second.language_details.is_language_fallback is False
     assert latest == second
 
 
@@ -118,9 +118,9 @@ async def test_event_route_falls_back_to_english() -> None:
     response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/fr/event/2023/1").raise_for_status()
     event: Final = EventResponseV1.model_validate(response.json())
 
-    assert event.available_languages == ["de", "en"]
-    assert event.language_tag == "en"
-    assert event.is_language_fallback is True
+    assert event.language_details.available_languages == ["de", "en"]
+    assert event.language_details.language_tag == "en"
+    assert event.language_details.is_language_fallback is True
 
 
 @pytest.mark.asyncio
