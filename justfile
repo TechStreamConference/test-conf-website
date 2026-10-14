@@ -142,6 +142,10 @@ storybook: frontend-storybook-build
 frontend-storybook-build:
     pnpm --dir {{ frontend_dir }} run build-storybook
 
+# Builds the frontend. This also regenerates the checked-in translation functions in frontend/src/paraglide.
+frontend-build:
+    pnpm --dir {{ frontend_dir }} run build
+
 # Initializes the frontend workspace
 frontend-init:
     pnpm --dir {{ frontend_dir }} install
