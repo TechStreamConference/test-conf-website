@@ -8,11 +8,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import select
 
-from backend.content_languages import ENGLISH_LANGUAGE_TAG
+from backend.content_language_selection import get_requested_language_ranges
+from backend.content_language_selection import select_content_language
 from backend.database import get_session
 from backend.models.responses import ImprintPageContentNotFoundResponseV1
 from backend.models.responses import ImprintResponseV1
 from backend.models.responses import LanguageDetailsV1
+from backend.models.responses import UnsupportedLanguageTagResponseV1
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
 from backend.utils import create_http_exception
@@ -24,15 +26,20 @@ ROUTER = APIRouter()
     "/{language_tag}/imprint",
     summary="Get the markdown contents of the imprint page",
     description="Retrieve the markdown contents of the imprint page stored in the database. "
-    + "If the requested language is not available, English is returned instead, or, if that is "
-    + "not available either, the first available language.",
+    + "The requested language is matched by its primary language subtag (`de-AT` delivers `de`). "
+    + "If it is not available, English is returned instead, or, if that is not available either, "
+    + "the lexicographically first available language.",
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_404_NOT_FOUND: {"model": ImprintPageContentNotFoundResponseV1},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": UnsupportedLanguageTagResponseV1},
     },
     operation_id="get imprint v1",
 )
-async def get_imprint(language_tag: str, session: Annotated[AsyncSession, Depends(get_session)]) -> ImprintResponseV1:
+async def get_imprint(
+    language_ranges: Annotated[list[str], Depends(get_requested_language_ranges)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> ImprintResponseV1:
     statement: Final = (
         select(StaticPage).where(col(StaticPage.kind) == StaticPageKind.IMPRINT).order_by(col(StaticPage.language_tag))
     )
@@ -43,22 +50,13 @@ async def get_imprint(language_tag: str, session: Annotated[AsyncSession, Depend
             ImprintPageContentNotFoundResponseV1(),
         )
 
-    imprint_page = pages_by_language_tag.get(language_tag)
-    is_language_fallback: Final = imprint_page is None
-
-    # If the requested language is missing, we first try to fall back to
-    # English. Only if that is not available, we fall back to the first
-    # available language.
-    if imprint_page is None:
-        imprint_page = pages_by_language_tag.get(ENGLISH_LANGUAGE_TAG)
-    if imprint_page is None:
-        imprint_page = next(iter(pages_by_language_tag.values()))
+    selection: Final = select_content_language(language_ranges, pages_by_language_tag)
 
     return ImprintResponseV1(
-        content=imprint_page.content,
+        content=pages_by_language_tag[selection.language_tag].content,
         language_details=LanguageDetailsV1(
-            available_languages=list(pages_by_language_tag),
-            language_tag=imprint_page.language_tag,
-            is_language_fallback=is_language_fallback,
+            available_languages=selection.available_languages,
+            language_tag=selection.language_tag,
+            is_language_fallback=selection.is_language_fallback,
         ),
     )

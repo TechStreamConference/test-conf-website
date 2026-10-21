@@ -29,7 +29,7 @@ def _session_with_pages(pages: list[StaticPage]) -> AsyncMock:
 async def test_imprint_returns_requested_language() -> None:
     session: Final = _session_with_pages([_page("de"), _page("en")])
 
-    result: Final = await get_imprint("de", session)
+    result: Final = await get_imprint(["de"], session)
 
     assert isinstance(result, ImprintResponseV1)
     assert result.content == "Imprint (de)"
@@ -39,10 +39,21 @@ async def test_imprint_returns_requested_language() -> None:
 
 
 @pytest.mark.asyncio
+async def test_imprint_matches_regional_requests_case_insensitively() -> None:
+    session: Final = _session_with_pages([_page("de"), _page("en")])
+
+    result: Final = await get_imprint(["DE-at"], session)
+
+    assert result.content == "Imprint (de)"
+    assert result.language_details.language_tag == "de"
+    assert result.language_details.is_language_fallback is False
+
+
+@pytest.mark.asyncio
 async def test_imprint_falls_back_to_english_when_requested_language_is_missing() -> None:
     session: Final = _session_with_pages([_page("de"), _page("en"), _page("es")])
 
-    result: Final = await get_imprint("fr", session)
+    result: Final = await get_imprint(["fr"], session)
 
     assert result.content == "Imprint (en)"
     assert result.language_details.available_languages == ["de", "en", "es"]
@@ -54,7 +65,7 @@ async def test_imprint_falls_back_to_english_when_requested_language_is_missing(
 async def test_imprint_falls_back_to_first_language_when_english_is_missing() -> None:
     session: Final = _session_with_pages([_page("de"), _page("es")])
 
-    result: Final = await get_imprint("fr", session)
+    result: Final = await get_imprint(["fr"], session)
 
     assert result.content == "Imprint (de)"
     assert result.language_details.available_languages == ["de", "es"]
@@ -67,6 +78,17 @@ async def test_imprint_raises_exception_when_not_found() -> None:
     session: Final = _session_with_pages([])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_imprint("de", session)
+        _ = await get_imprint(["de"], session)
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Imprint page not found in the database."
+
+
+@pytest.mark.asyncio
+async def test_imprint_does_not_depend_on_the_order_of_pages() -> None:
+    session: Final = _session_with_pages([_page("es"), _page("de")])
+
+    result: Final = await get_imprint(["fr"], session)
+
+    assert result.content == "Imprint (de)"
+    assert result.language_details.available_languages == ["de", "es"]
+    assert result.language_details.language_tag == "de"

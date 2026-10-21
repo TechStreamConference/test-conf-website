@@ -65,7 +65,7 @@ export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Opt
 /**
  * Get the markdown contents of the imprint page
  *
- * Retrieve the markdown contents of the imprint page stored in the database. If the requested language is not available, English is returned instead, or, if that is not available either, the first available language.
+ * Retrieve the markdown contents of the imprint page stored in the database. The requested language is matched by its primary language subtag (`de-AT` delivers `de`). If it is not available, English is returned instead, or, if that is not available either, the lexicographically first available language.
  */
 export const getImprintV1 = <ThrowOnError extends boolean = false>(options: Options<GetImprintV1Data, ThrowOnError>): RequestResult<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError> => (options.client ?? client).get<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/imprint', ...options });
 

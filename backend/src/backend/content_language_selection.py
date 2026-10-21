@@ -8,8 +8,12 @@ from typing import NamedTuple
 from typing import Optional
 from typing import final
 
+from fastapi import status
+
 from backend.content_languages import ENGLISH_LANGUAGE_TAG
 from backend.models.content_language_types import ContentLanguageTag
+from backend.models.responses import UnsupportedLanguageTagResponseV1
+from backend.utils import create_http_exception
 
 # Bounds the work spent on a client-provided language range, independently of
 # the supported syntax.
@@ -76,3 +80,18 @@ def select_content_language(
         ENGLISH_LANGUAGE_TAG if ENGLISH_LANGUAGE_TAG in available_languages else sorted_languages[0]
     )
     return ContentLanguageSelection(default_language, sorted_languages, has_unsatisfied_preference)
+
+
+def get_requested_language_ranges(language_tag: str) -> list[str]:
+    """
+    Return the client’s content language preferences, most preferred first.
+
+    For now, the only preference is the language in the path, which must match the
+    supported syntax.
+    """
+    if not is_supported_language_range(language_tag):
+        raise create_http_exception(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            UnsupportedLanguageTagResponseV1(),
+        )
+    return [language_tag]

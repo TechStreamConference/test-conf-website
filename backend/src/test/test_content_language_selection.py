@@ -1,10 +1,19 @@
+from collections.abc import AsyncGenerator
 from typing import Final
+from unittest.mock import AsyncMock
 
 import pytest
+from fastapi import HTTPException
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.content_language_selection import ContentLanguageSelection
+from backend.content_language_selection import get_requested_language_ranges
 from backend.content_language_selection import is_supported_language_range
 from backend.content_language_selection import select_content_language
+from backend.database import get_session
+from backend.main import app
+from backend.models.responses import UnsupportedLanguageTagResponseV1
 
 
 @pytest.mark.parametrize(
@@ -131,3 +140,35 @@ def test_select_content_language_does_not_depend_on_the_order_of_available_langu
 def test_select_content_language_requires_an_available_language() -> None:
     with pytest.raises(ValueError, match="At least one language must be available."):
         _ = select_content_language(["de"], [])
+
+
+@pytest.mark.parametrize("language_tag", ["de", "DE-at", "zz", "und"])
+def test_requested_language_ranges_contain_the_language_of_the_path(language_tag: str) -> None:
+    assert get_requested_language_ranges(language_tag) == [language_tag]
+
+
+@pytest.mark.parametrize("language_tag", ["x-foo", ""])
+def test_requested_language_ranges_reject_unsupported_languages(language_tag: str) -> None:
+    with pytest.raises(HTTPException) as exc_info:
+        _ = get_requested_language_ranges(language_tag)
+
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail == "Unsupported language tag."
+
+
+@pytest.mark.parametrize("path", ["/v1/x-foo/imprint", "/v1/x-foo/event", "/v1/x-foo/event/2024/1"])
+def test_content_routes_answer_unsupported_languages_with_unprocessable_content(path: str) -> None:
+    session: Final = AsyncMock(spec=AsyncSession)
+
+    async def override_session() -> AsyncGenerator[AsyncSession]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    try:
+        response: Final = TestClient(app).get(path)
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+
+    assert response.status_code == 422
+    assert UnsupportedLanguageTagResponseV1.model_validate(response.json()) == UnsupportedLanguageTagResponseV1()
+    session.execute.assert_not_awaited()
