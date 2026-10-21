@@ -10,9 +10,9 @@ from typing import NamedTuple
 from typing import final
 
 from faker import Faker
-from langcodes import Language
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.models.content_language_types import ContentLanguageTag
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.models.tables import Global
@@ -27,32 +27,32 @@ _DATA_PATH = Path(__file__).parent / "data"
 
 _CONFERENCE_NAME = "Tech Stream Conference"
 
-_FAKER_LOCALES_BY_BCP_47_LANGUAGE_TAG = {
-    Language.get("de"): "de_DE",
-    Language.get("en"): "en_US",
-    Language.get("es"): "es_ES",
+_FAKER_LOCALES_BY_CONTENT_LANGUAGE: dict[ContentLanguageTag, str] = {
+    "de": "de_DE",
+    "en": "en_US",
+    "es": "es_ES",
 }
 
 
 @final
 class EventSpec(NamedTuple):
     year: int
-    languages: list[Language]
+    languages: list[ContentLanguageTag]
 
 
 # Most years have one entry (the default), but a year may appear multiple times
 # (multiple events) or not at all (no event that year).
 _EVENTS: list[EventSpec] = [
-    EventSpec(2022, [Language.get("de")]),
-    EventSpec(2023, [Language.get("de"), Language.get("en")]),
-    EventSpec(2024, [Language.get("de")]),  # Two events in 2024.
-    EventSpec(2024, [Language.get("de"), Language.get("en"), Language.get("es")]),
+    EventSpec(2022, ["de"]),
+    EventSpec(2023, ["de", "en"]),
+    EventSpec(2024, ["de"]),  # Two events in 2024.
+    EventSpec(2024, ["de", "en", "es"]),
     # 2025: no event
-    EventSpec(2026, [Language.get("de"), Language.get("en")]),
-    EventSpec(2027, [Language.get("de"), Language.get("en"), Language.get("es")]),
-    EventSpec(2028, [Language.get("de"), Language.get("en")]),  # Two events in 2028.
-    EventSpec(2028, [Language.get("de")]),
-    EventSpec(2029, [Language.get("de"), Language.get("en")]),
+    EventSpec(2026, ["de", "en"]),
+    EventSpec(2027, ["de", "en", "es"]),
+    EventSpec(2028, ["de", "en"]),  # Two events in 2028.
+    EventSpec(2028, ["de"]),
+    EventSpec(2029, ["de", "en"]),
 ]
 
 
@@ -60,7 +60,7 @@ async def seed_dev(session: AsyncSession, *, num_users: int, seed: int) -> None:
     rng: Final = random.Random(seed)
     Faker.seed(seed)
     fakers_by_language: Final = {
-        language: Faker(locale) for language, locale in _FAKER_LOCALES_BY_BCP_47_LANGUAGE_TAG.items()
+        language: Faker(locale) for language, locale in _FAKER_LOCALES_BY_CONTENT_LANGUAGE.items()
     }
 
     _seed_users_table(session, num_users)
@@ -92,13 +92,13 @@ def _seed_globals_table(session: AsyncSession) -> None:
 
 def _seed_static_pages_table(session: AsyncSession) -> None:
     for (kind, language), content_file in {
-        (StaticPageKind.IMPRINT, Language.get("de")): _DATA_PATH / "imprint.de.md",
-        (StaticPageKind.IMPRINT, Language.get("en")): _DATA_PATH / "imprint.en.md",
+        (StaticPageKind.IMPRINT, "de"): _DATA_PATH / "imprint.de.md",
+        (StaticPageKind.IMPRINT, "en"): _DATA_PATH / "imprint.en.md",
     }.items():
         session.add(
             StaticPage(
                 kind=kind,
-                language_tag=str(language),
+                language_tag=language,
                 content=content_file.read_text(
                     encoding="utf-8",
                 ),
@@ -160,7 +160,7 @@ async def _seed_events_data(
     session: AsyncSession,
     *,
     rng: random.Random,
-    fakers_by_language: dict[Language, Faker],
+    fakers_by_language: dict[ContentLanguageTag, Faker],
 ) -> None:
     # All milestone dates for event N must not precede the end of event N-1.
     # Initialize to a sentinel that imposes no constraint on the first event.
@@ -252,7 +252,7 @@ async def _seed_events_data(
             session.add(
                 EventTranslation(
                     event_id=event.id,
-                    language_tag=str(language),
+                    language_tag=language,
                     title=f"{_CONFERENCE_NAME} {year}",
                     subtitle=faker.sentence(nb_words=6).rstrip("."),
                     description_headline=faker.sentence(nb_words=4).rstrip("."),
