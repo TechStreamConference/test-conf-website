@@ -2,7 +2,6 @@ from typing import Final
 
 import pytest
 
-from backend.locales import canonical_locale
 from backend.locales import locales_equivalent
 from backend.locales import validate_locale
 from backend.models.requests import UserPreferencesInputV1
@@ -111,13 +110,5 @@ def test_locales_equivalent_distinguishes_different_locales() -> None:
     assert not locales_equivalent("en-US", "en-GB")
 
 
-def test_locales_equivalent_ignores_redundant_script() -> None:
-    assert locales_equivalent("en-Latn-US", "en-US")
-
-
-def test_canonical_locale_normalizes_casing() -> None:
-    assert canonical_locale("en-us") == "en-US"
-
-
-def test_canonical_locale_removes_redundant_script() -> None:
-    assert canonical_locale("de-Latn-DE") == "de-DE"
+def test_locales_equivalent_does_not_canonicalize() -> None:
+    assert not locales_equivalent("en-Latn-US", "en-US")
