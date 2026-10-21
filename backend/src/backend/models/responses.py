@@ -46,6 +46,11 @@ class GlobalsResponseV1(ApiResponseModel):
 
 
 @final
+class InternalServerErrorResponseV1(ApiResponseModel):
+    detail: Literal["Internal server error."] = "Internal server error."
+
+
+@final
 class ImprintResponseV1(ApiResponseModel):
     content: str
     language_details: LanguageDetailsV1

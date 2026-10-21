@@ -1,4 +1,6 @@
 {
   "extends": "../../backend/pyrightconfig.json",
-  "include": ["src"]
+  "include": ["src"],
+  "venvPath": ".",
+  "venv": ".venv"
 }

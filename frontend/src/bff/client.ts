@@ -28,14 +28,25 @@ function configureClient(): void {
  * cookies to the backend is already handled by SvelteKit's `event.fetch`; this
  * additionally replays the backend's `Set-Cookie` response headers onto the
  * real response, which does not happen automatically for a cross-service call.
+ * It also forwards the incoming request's `Accept-Language` header, which
+ * `event.fetch` omits for cross-origin requests, unless the call sets one itself.
  * @param event the request event whose `fetch` and cookies are used
- * @returns a `fetch` that forwards the backend's `Set-Cookie` headers to the response
+ * @returns a `fetch` that forwards the `Accept-Language` header to the backend and
+ * the backend's `Set-Cookie` headers to the response
  */
 export function backendFetch(event: RequestEvent): typeof fetch {
     configureClient();
 
     return async (input, init) => {
-        const response = await event.fetch(input, init);
+        const headers = new Headers(
+            init?.headers ?? (input instanceof Request ? input.headers : undefined)
+        );
+        const acceptLanguage: string | null = event.request.headers.get('accept-language');
+        if (acceptLanguage !== null && !headers.has('accept-language')) {
+            headers.set('accept-language', acceptLanguage);
+        }
+
+        const response = await event.fetch(input, { ...init, headers });
 
         for (const { name, value, ...options } of parseSetCookie(response)) {
             // `sameSite` is untyped as a plain `string` by the parser; safe to assert

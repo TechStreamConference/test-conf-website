@@ -2,7 +2,6 @@ import type { RequestEvent } from '@sveltejs/kit';
 
 import { backendFetch } from '$bff/client';
 import { GenericBackendError } from '$bff/errors';
-import { UndefinedDataError } from '$bff/errors';
 
 import type { GlobalsResponseV1 } from '$gen/types.gen';
 import { getGlobalsV1 } from '$gen/sdk.gen';
@@ -15,7 +14,6 @@ import { logger } from '$logging';
  * @param event the request event used for the backend call.
  * @returns the global data.
  * @throws GenericBackendError if the backend returns an error.
- * @throws UndefinedDataError if the backend returns no data.
  */
 export async function loadGlobals(event: RequestEvent): Promise<GlobalsResponseV1> {
     const start = performance.now();
@@ -30,10 +28,6 @@ export async function loadGlobals(event: RequestEvent): Promise<GlobalsResponseV
 
     if (error) {
         throw new GenericBackendError('loadGlobals', error);
-    }
-
-    if (data == undefined) {
-        throw new UndefinedDataError('loadGlobals');
     }
 
     return data;

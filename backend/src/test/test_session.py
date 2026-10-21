@@ -68,7 +68,7 @@ async def test_find_or_create_user_updates_existing_account() -> None:
     db: Final = _db()
     db.execute.return_value = _result_with_optional(account)
 
-    result: Final = await find_or_create_user(db, _claims())  # type: ignore[arg-type]
+    result: Final = await find_or_create_user(db, _claims())
 
     assert result == 42
     assert account.email == "new@example.com"
@@ -94,7 +94,7 @@ async def test_find_or_create_user_creates_user_and_account() -> None:
 
     db.flush.side_effect = assign_user_id
 
-    result: Final = await find_or_create_user(db, _claims())  # type: ignore[arg-type]
+    result: Final = await find_or_create_user(db, _claims())
 
     assert result == 42
     assert db.add.call_count == 2
@@ -118,7 +118,7 @@ async def test_find_or_create_user_rejects_flushed_user_without_id() -> None:
     db.execute.return_value = _result_with_optional(None)
 
     with pytest.raises(ValueError, match="always has an id"):
-        _ = await find_or_create_user(db, _claims())  # type: ignore[arg-type]
+        _ = await find_or_create_user(db, _claims())
 
     db.begin.return_value.__aexit__.assert_awaited_once()
     db.commit.assert_not_awaited()
@@ -143,7 +143,7 @@ async def test_find_or_create_user_recovers_from_concurrent_creation() -> None:
 
     db.flush.side_effect = flush_pending
 
-    result: Final = await find_or_create_user(db, _claims())  # type: ignore[arg-type]
+    result: Final = await find_or_create_user(db, _claims())
 
     assert result == 99
     assert db.begin.call_count == 2
@@ -162,7 +162,7 @@ async def test_create_session_hashes_token_and_sets_secure_cookie(monkeypatch: p
     response: Final = Response()
 
     await create_session(
-        db,  # type: ignore[arg-type]
+        db,
         response,
         user_id=42,
         zitadel_session_id="provider-session",
@@ -190,7 +190,7 @@ async def test_get_current_user_rejects_missing_cookie() -> None:
     db: Final = _db()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_current_user(Response(), db)  # type: ignore[arg-type]
+        _ = await get_current_user(Response(), db)
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "Not authenticated."
@@ -221,7 +221,7 @@ async def test_get_current_user_rejects_invalid_sessions(
     db.execute.return_value = _result_with_optional(user_session)
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_current_user(Response(), db, "session-token")  # type: ignore[arg-type]
+        _ = await get_current_user(Response(), db, "session-token")
 
     assert exc_info.value.status_code == 401
     assert db.execute.await_count == 1
@@ -238,7 +238,7 @@ async def test_get_current_user_rejects_session_without_account(monkeypatch: pyt
     ]
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_current_user(Response(), db, "session-token")  # type: ignore[arg-type]
+        _ = await get_current_user(Response(), db, "session-token")
 
     assert exc_info.value.status_code == 401
     assert db.execute.await_count == 2
@@ -262,7 +262,7 @@ async def test_get_current_user_returns_account_without_refresh(monkeypatch: pyt
     ]
     response: Final = Response()
 
-    result: Final = await get_current_user(response, db, "session-token")  # type: ignore[arg-type]
+    result: Final = await get_current_user(response, db, "session-token")
 
     assert result.account is account
     assert result.session is user_session
@@ -288,7 +288,7 @@ async def test_get_current_user_refreshes_stale_session(monkeypatch: pytest.Monk
     ]
     response: Final = Response()
 
-    result: Final = await get_current_user(response, db, "session-token")  # type: ignore[arg-type]
+    result: Final = await get_current_user(response, db, "session-token")
 
     assert result.account is account
     assert result.session is user_session

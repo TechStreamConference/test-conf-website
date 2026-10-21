@@ -143,7 +143,7 @@ async def test_login_rejects_external_redirect(monkeypatch: pytest.MonkeyPatch) 
     session: Final = _session()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await login("https://attacker.example", session)  # type: ignore[arg-type]
+        _ = await login("https://attacker.example", session)
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid redirect URL."
@@ -164,7 +164,7 @@ async def test_login_persists_transaction_and_sets_secure_cookie(monkeypatch: py
     monkeypatch.setattr(auth_module, "generate_browser_secret", Mock(return_value="browser-secret"))
     session: Final = _session()
 
-    response: Final = await login("https://frontend.example/events", session)  # type: ignore[arg-type]
+    response: Final = await login("https://frontend.example/events", session)
 
     assert response.status_code == 302
     assert response.headers["location"] == authorization_request.url
@@ -188,7 +188,7 @@ async def test_callback_rejects_identity_provider_error() -> None:
     session: Final = _session()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, error="access_denied")  # type: ignore[arg-type]
+        _ = await callback(Response(), session, error="access_denied")
 
     assert exc_info.value.status_code == 401
     assert exc_info.value.detail == "The identity provider did not authenticate the user."
@@ -212,7 +212,7 @@ async def test_callback_rejects_missing_transaction_inputs(
     session: Final = _session()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, login_secret, state, code)  # type: ignore[arg-type]
+        _ = await callback(Response(), session, login_secret, state, code)
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid or expired login transaction."
@@ -225,7 +225,7 @@ async def test_callback_rejects_unknown_transaction() -> None:
     session.get.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, "browser-secret", "state", "code")  # type: ignore[arg-type]
+        _ = await callback(Response(), session, "browser-secret", "state", "code")
 
     assert exc_info.value.status_code == 400
     session.get.assert_awaited_once_with(OidcLoginTransaction, hash_token("state"))
@@ -247,7 +247,7 @@ async def test_callback_consumes_invalid_transaction(
     session.get.return_value = transaction
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, login_secret, "state", "code")  # type: ignore[arg-type]
+        _ = await callback(Response(), session, login_secret, "state", "code")
 
     assert exc_info.value.status_code == 400
     session.delete.assert_awaited_once_with(transaction)
@@ -265,7 +265,7 @@ async def test_callback_rejects_unverified_email_after_consuming_transaction(
     monkeypatch.setattr(auth_module, "exchange_code", exchange)
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, "browser-secret", "state", "code")  # type: ignore[arg-type]
+        _ = await callback(Response(), session, "browser-secret", "state", "code")
 
     assert exc_info.value.status_code == 403
     assert exc_info.value.detail == "The email address of this account is not verified."
@@ -289,7 +289,7 @@ async def test_callback_creates_user_and_session_and_clears_login_cookie(
     monkeypatch.setattr(auth_module, "create_session", create_user_session)
     response: Final = Response()
 
-    result: Final = await callback(response, session, "browser-secret", "state", "code")  # type: ignore[arg-type]
+    result: Final = await callback(response, session, "browser-secret", "state", "code")
 
     assert result.redirect_url == "https://frontend.example/events"
     session.delete.assert_awaited_once_with(transaction)
@@ -313,7 +313,7 @@ async def test_me_maps_current_account() -> None:
     session: Final = _session()
     session.get.return_value = None
 
-    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
+    result: Final = await me(_authenticated(), session)
 
     assert result.model_dump() == {
         "id": 42,
@@ -329,7 +329,7 @@ async def test_me_exposes_stored_preferences() -> None:
     session: Final = _session()
     session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Istanbul", locale="tr-TR")
 
-    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
+    result: Final = await me(_authenticated(), session)
 
     assert result.regional_settings is not None
     assert result.regional_settings.timezone == "Europe/Istanbul"
@@ -344,9 +344,23 @@ async def test_me_exposes_pending_regional_settings_change() -> None:
     pending: Final = RegionalSettingsSuggestion(session_id=1, timezone="America/New_York", locale=None)
     session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=pending))
 
-    result: Final = await me(_authenticated(), session)  # type: ignore[arg-type]
+    result: Final = await me(_authenticated(), session)
 
     assert result.regional_settings_change is not None
     assert result.regional_settings_change.id == pending.id
     assert result.regional_settings_change.timezone == "America/New_York"
     assert result.regional_settings_change.locale is None
+
+
+@pytest.mark.asyncio
+async def test_me_exposes_pending_locale_change() -> None:
+    session: Final = _session()
+    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE")
+    pending: Final = RegionalSettingsSuggestion(session_id=1, timezone=None, locale="en-US")
+    session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=pending))
+
+    result: Final = await me(_authenticated(), session)
+
+    assert result.regional_settings_change is not None
+    assert result.regional_settings_change.timezone is None
+    assert result.regional_settings_change.locale == "en-US"

@@ -96,8 +96,16 @@ def test_locales_equivalent_distinguishes_different_locales() -> None:
     assert not locales_equivalent("en-US", "en-GB")
 
 
+def test_locales_equivalent_ignores_redundant_script() -> None:
+    assert locales_equivalent("en-Latn-US", "en-US")
+
+
 def test_canonical_locale_normalizes_casing() -> None:
     assert canonical_locale("en-us") == "en-US"
+
+
+def test_canonical_locale_removes_redundant_script() -> None:
+    assert canonical_locale("de-Latn-DE") == "de-DE"
 
 
 def _report_outcome(
