@@ -154,11 +154,30 @@ class StaticPageKind(StrEnum):
 
 
 @final
+class ContentLanguage(SQLModel, table=True):
+    """A language that translated content may be stored in. Content is stored
+    per language only, without regional or script variants. The rows are a
+    reviewed snapshot inserted by a data migration, not maintained by the
+    application.
+    """
+
+    __tablename__ = "content_languages"  # type: ignore[reportAssignmentType]
+    __table_args__ = (
+        sa.CheckConstraint(
+            "tag ~ '^[a-z]{2,3}$'",
+            name="ck_content_languages_tag_format",
+        ),
+    )
+
+    tag: str = Field(primary_key=True)  # Primary language subtag of BCP 47.
+
+
+@final
 class StaticPage(SQLModel, table=True):
     __tablename__ = "static_pages"  # type: ignore[reportAssignmentType]
 
     kind: StaticPageKind = Field(primary_key=True)
-    language_tag: str = Field(primary_key=True)
+    language_tag: str = Field(foreign_key="content_languages.tag", primary_key=True, ondelete="RESTRICT")
     content: str
 
 
@@ -188,7 +207,7 @@ class EventTranslation(_AuditMixin, table=True):
     __tablename__ = "event_translations"  # type: ignore[reportAssignmentType]
 
     event_id: int = Field(foreign_key="events.id", primary_key=True)
-    language_tag: str = Field(primary_key=True)  # Following BCP 47.
+    language_tag: str = Field(foreign_key="content_languages.tag", primary_key=True, ondelete="RESTRICT")
     title: str
     subtitle: str
     presskit_url: Optional[str]
