@@ -182,6 +182,66 @@ function getMaxLength(): number {
 }
 ```
 
+## Translation Keys
+
+The keys of the translation files (`messages/*.json`) become function names (`m.global_save()`), so they have to be valid identifiers: no dots, no hyphens.
+
+A key consists of exactly one scope and one name, separated by an underscore: `scope_name`.
+
+| part        | convention | example                       |
+| ----------- | ---------- | ----------------------------- |
+| scope       | camelCase  | global, login, themeSelect    |
+| separator   | `_`        | `global_save`                 |
+| name        | camelCase  | saveChanges, errorInvalidCode |
+| placeholder | camelCase  | `{userName}`                  |
+
+The scope `global` is for texts that are used in the same way in several places. For everything else, the scope is the name of the page or component that uses the text.
+
+The key of the base language is the source of truth. Every language uses exactly the same keys and the same placeholders.
+
+### Example
+
+```json
+{
+    "global_save": "Save",
+    "global_saveChanges": "Save changes",
+    "login_errorInvalidCode": "The code {code} is not valid.",
+    "footer_copyright": "© {year} TestConf"
+}
+```
+
+### How to use
+
+Adding a message:
+
+1. Add the key to **every** file in `messages/`. All files have the same keys in the same order and the same placeholders. `en` is the base language and the fallback.
+2. Run `just frontend-build`. It generates the functions in `src/paraglide`.
+3. Commit `messages/*.json` **and** `src/paraglide`. The generated folder is checked in, and CI fails if it does not match the messages. Never edit it by hand.
+
+Rendering a message:
+
+Always use `i18n` from `$lib/helper/translate`. Do not call `m.scope_name_postfix()` directly. A direct call uses the global language of Paraglide, but the language of a page comes from the backend (`language_tag` of its response). `i18n` takes that tag and falls back to the base language if it is not supported.
+
+```svelte
+<script lang="ts">
+    import { i18n } from '$lib/helper/translate';
+
+    import { m } from '$paraglide/messages';
+
+    interface Props {
+        languageTag: string; // the `language_tag` of the backend response
+    }
+    const { languageTag }: Props = $props();
+</script>
+
+<button type="button">{i18n(m.global_save, languageTag)}</button>
+<p>{i18n(m.footer_copyright, languageTag, { year: 2026 })}</p>
+```
+
+The values of the placeholders are required if the message has any, and TypeScript reports a missing one.
+
+`just frontend-test` checks the message files (keys, order, placeholders, naming).
+
 ## HTML
 
 ### Casing

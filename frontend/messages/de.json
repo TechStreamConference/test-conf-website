@@ -1,0 +1,6 @@
+{
+    "$schema": "https://inlang.com/schema/inlang-message-format",
+    "test_plain": "Gültiger Test-Text",
+    "test_plain2": "Zweiter gültiger Test-Text",
+    "test_withPlaceholder": "Gültiger Testtext mit Lücke '{placeholder1}' : '{placeholder2}'"
+}

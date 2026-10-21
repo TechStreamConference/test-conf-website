@@ -13,7 +13,7 @@ export default defineConfig(
     includeIgnoreFile(GITIGNORE_PATH),
 
     {
-        ignores: ['src/generated/**']
+        ignores: ['src/generated/**', 'src/paraglide/**']
     },
 
     js.configs.recommended,
