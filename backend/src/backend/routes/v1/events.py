@@ -6,18 +6,21 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
-from langcodes import Language
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import extract
 from sqlmodel import select
 
+from backend.content_language_selection import get_requested_language_ranges
+from backend.content_language_selection import select_content_language
 from backend.database import get_session
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
 from backend.models.responses import LanguageDetailsV1
+from backend.models.responses import RequestValidationErrorResponseV1
+from backend.models.responses import UnsupportedLanguageTagResponseV1
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.utils import create_http_exception
@@ -33,12 +36,13 @@ ROUTER = APIRouter()
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_404_NOT_FOUND: {"model": EventNotFoundResponseV1},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": UnsupportedLanguageTagResponseV1},
     },
     operation_id="get current event v1",
 )
 async def get_current_event(
     session: Annotated[AsyncSession, Depends(get_session)],
-    language_tag: str,
+    language_ranges: Annotated[list[str], Depends(get_requested_language_ranges)],
 ) -> EventResponseV1:
     now: Final = utc_now()
     current_event_id: Final = (
@@ -66,7 +70,7 @@ async def get_current_event(
     )
     rows: Final = list((await session.execute(statement)).all())
 
-    return _event_response_v1_from_rows(rows, language_tag)
+    return _event_response_v1_from_rows(rows, language_ranges)
 
 
 @ROUTER.get(
@@ -77,12 +81,16 @@ async def get_current_event(
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": InvalidSequenceNumberResponseV1},
         status.HTTP_404_NOT_FOUND: {"model": EventNotFoundResponseV1},
+        # FastAPI rejects a `year` or `sequence_number` that doesn’t match its type.
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "model": UnsupportedLanguageTagResponseV1 | RequestValidationErrorResponseV1,
+        },
     },
     operation_id="get event by year and sequence number v1",
 )
 async def get_event_by_year_and_sequence_number(
     session: Annotated[AsyncSession, Depends(get_session)],
-    language_tag: str,
+    language_ranges: Annotated[list[str], Depends(get_requested_language_ranges)],
     year: int,
     sequence_number: int | Literal["latest"],
 ) -> EventResponseV1:
@@ -117,7 +125,7 @@ async def get_event_by_year_and_sequence_number(
             if current_sequence_number == sequence_number:
                 return _event_response_v1_from_rows(
                     current_rows,
-                    language_tag,
+                    language_ranges,
                 )
             current_sequence_number += 1
             current_rows.clear()
@@ -127,7 +135,7 @@ async def get_event_by_year_and_sequence_number(
     if sequence_number == current_sequence_number or sequence_number == "latest":
         return _event_response_v1_from_rows(
             current_rows,
-            language_tag,
+            language_ranges,
         )
 
     raise create_http_exception(
@@ -138,7 +146,7 @@ async def get_event_by_year_and_sequence_number(
 
 def _event_response_v1_from_rows(
     rows: list[Row[tuple[tuple[Event, EventTranslation]]]],
-    language_tag: str,
+    language_ranges: list[str],
 ) -> EventResponseV1:
     if not rows:
         raise create_http_exception(
@@ -152,23 +160,15 @@ def _event_response_v1_from_rows(
     event: Final = rows[0].Event
     translations_by_language_tag: Final = {row.EventTranslation.language_tag: row.EventTranslation for row in rows}
 
-    translation = translations_by_language_tag.get(language_tag)
-    is_language_fallback: Final = translation is None
-
-    # If the translation is missing, we first try to fall back to English.
-    # Only if that is not available, we fall back to the first available
-    # translation.
-    if translation is None:
-        translation = translations_by_language_tag.get(str(Language.get("en")))
-    if translation is None:
-        translation = next(iter(translations_by_language_tag.values()))
+    selection: Final = select_content_language(language_ranges, translations_by_language_tag)
+    translation: Final = translations_by_language_tag[selection.language_tag]
 
     return EventResponseV1(
         id=event.id,
         language_details=LanguageDetailsV1(
-            available_languages=list(translations_by_language_tag),
-            language_tag=translation.language_tag,
-            is_language_fallback=is_language_fallback,
+            available_languages=selection.available_languages,
+            language_tag=selection.language_tag,
+            is_language_fallback=selection.is_language_fallback,
         ),
         title=translation.title,
         subtitle=translation.subtitle,
