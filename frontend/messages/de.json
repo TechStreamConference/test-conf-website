@@ -1,5 +1,17 @@
 {
     "$schema": "https://inlang.com/schema/inlang-message-format",
+    "footer_copyright": "© Tech Stream Conference {year}",
+    "footer_eventsHeadline": "Alle Events",
+    "footer_menuHeadline": "Menü",
+    "global_logoBig_alt": "Tech Stream Conference Logo",
+    "global_logoSmall_alt": "Tech Stream Conference Logo",
+    "global_themeSelect_aria": "Farbschema-Auswahl",
+    "global_themeSelectDark": "Dunkel",
+    "global_themeSelectLight": "Hell",
+    "global_themeSelectSystem": "System",
+    "header_menu_aria": "Hauptmenü",
+    "menu_homepage": "Startseite",
+    "menu_homepage_aria": "Zur Startseite",
     "test_plain": "Gültiger Test-Text",
     "test_plain2": "Zweiter gültiger Test-Text",
     "test_withPlaceholder": "Gültiger Testtext mit Lücke '{placeholder1}' : '{placeholder2}'"

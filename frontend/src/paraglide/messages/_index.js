@@ -1,5 +1,17 @@
 /* eslint-disable */
 /** @typedef {import('../runtime.js').LocalizedString} LocalizedString */
+export * from './footer_copyright.js'
+export * from './footer_eventsheadline1.js'
+export * from './footer_menuheadline1.js'
+export * from './global_logobig_alt1.js'
+export * from './global_logosmall_alt1.js'
+export * from './global_themeselectdark2.js'
+export * from './global_themeselectlight2.js'
+export * from './global_themeselectsystem2.js'
+export * from './global_themeselect_aria1.js'
+export * from './header_menu_aria.js'
+export * from './menu_homepage.js'
+export * from './menu_homepage_aria.js'
 export * from './test_plain.js'
 export * from './test_plain2.js'
 export * from './test_withplaceholder1.js'
