@@ -5,7 +5,6 @@ import re
 from typing import Annotated
 from typing import Final
 
-from langcodes import standardize_tag
 from pydantic import AfterValidator
 
 # RFC 5646 recommends supporting tags of at least 35 characters, more leaves room for extensions and private use.
@@ -84,16 +83,14 @@ def _is_structurally_valid(value: str) -> bool:
     return True
 
 
-def canonical_locale(value: str) -> str:
-    """Resolve a BCP 47 language tag to its canonical form (casing, redundant
-    script/region subtags, deprecated subtag replacements).
-    """
-    return standardize_tag(value)
-
-
 def locales_equivalent(a: str, b: str) -> bool:
-    """Compare two BCP 47 language tags by canonical form, not raw spelling."""
-    return canonical_locale(a) == canonical_locale(b)
+    """Compare two BCP 47 language tags case-insensitively.
+
+    Tags are not canonicalized, so tags that only differ in other ways (e.g.
+    `en-Latn-US` and `en-US`) are different. The frontend reports canonical
+    locales (#414).
+    """
+    return a.lower() == b.lower()
 
 
 def validate_locale(value: str) -> str:
