@@ -6,13 +6,13 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
-from langcodes import Language
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import extract
 from sqlmodel import select
 
+from backend.content_languages import ENGLISH_LANGUAGE_TAG
 from backend.database import get_session
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
@@ -159,7 +159,7 @@ def _event_response_v1_from_rows(
     # Only if that is not available, we fall back to the first available
     # translation.
     if translation is None:
-        translation = translations_by_language_tag.get(str(Language.get("en")))
+        translation = translations_by_language_tag.get(ENGLISH_LANGUAGE_TAG)
     if translation is None:
         translation = next(iter(translations_by_language_tag.values()))
 

@@ -4,11 +4,11 @@ from typing import Final
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
-from langcodes import Language
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import select
 
+from backend.content_languages import ENGLISH_LANGUAGE_TAG
 from backend.database import get_session
 from backend.models.responses import ImprintPageContentNotFoundResponseV1
 from backend.models.responses import ImprintResponseV1
@@ -50,7 +50,7 @@ async def get_imprint(language_tag: str, session: Annotated[AsyncSession, Depend
     # English. Only if that is not available, we fall back to the first
     # available language.
     if imprint_page is None:
-        imprint_page = pages_by_language_tag.get(str(Language.get("en")))
+        imprint_page = pages_by_language_tag.get(ENGLISH_LANGUAGE_TAG)
     if imprint_page is None:
         imprint_page = next(iter(pages_by_language_tag.values()))
 
