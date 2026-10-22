@@ -9,6 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 from fastapi import HTTPException
+from fastapi import Response
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -87,7 +88,7 @@ async def test_current_event_returns_spotlighted_event_and_requested_translation
         _row(event, _translation(2, "en")),
     ])
 
-    result: Final = await get_current_event(session, ["en"])
+    result: Final = await get_current_event(session, ["en"], Response())
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
@@ -102,7 +103,7 @@ async def test_current_event_returns_not_found_when_no_event_is_applicable() -> 
     session: Final = _session_with_rows([])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_current_event(session, ["de"])
+        _ = await get_current_event(session, ["de"], Response())
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Event not found in the database."
@@ -118,7 +119,13 @@ async def test_event_returns_requested_numbered_event_and_translation() -> None:
         _row(second_event, _translation(2, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, ["en"], 2024, 2)
+    result: Final = await get_event_by_year_and_sequence_number(
+        session,
+        ["en"],
+        Response(),
+        2024,
+        2,
+    )
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
@@ -136,7 +143,13 @@ async def test_event_returns_before_processing_later_events() -> None:
         _row(second_event, _translation(2, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, ["en"], 2024, 1)
+    result: Final = await get_event_by_year_and_sequence_number(
+        session,
+        ["en"],
+        Response(),
+        2024,
+        1,
+    )
 
     assert result.id == 1
     assert result.title == "Title 1 (en)"
@@ -153,7 +166,13 @@ async def test_event_latest_falls_back_to_english() -> None:
         _row(event, _translation(1, "en")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, ["fr"], 2024, "latest")
+    result: Final = await get_event_by_year_and_sequence_number(
+        session,
+        ["fr"],
+        Response(),
+        2024,
+        "latest",
+    )
 
     assert result.language_details.language_tag == "en"
     assert result.language_details.is_language_fallback is True
@@ -164,7 +183,13 @@ async def test_event_falls_back_to_first_available_translation() -> None:
     event: Final = _event(1, date(2024, 5, 1))
     session: Final = _session_with_rows([_row(event, _translation(1, "de"))])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, ["fr"], 2024, 1)
+    result: Final = await get_event_by_year_and_sequence_number(
+        session,
+        ["fr"],
+        Response(),
+        2024,
+        1,
+    )
 
     assert result.language_details.language_tag == "de"
     assert result.language_details.is_language_fallback is True
@@ -179,7 +204,13 @@ async def test_event_matches_regional_requests_and_does_not_depend_on_the_order_
         _row(event, _translation(1, "de")),
     ])
 
-    result: Final = await get_event_by_year_and_sequence_number(session, ["de-CH"], 2024, 1)
+    result: Final = await get_event_by_year_and_sequence_number(
+        session,
+        ["de-CH"],
+        Response(),
+        2024,
+        1,
+    )
 
     assert result.title == "Title 1 (de)"
     assert result.language_details.available_languages == ["de", "en", "es"]
@@ -192,7 +223,13 @@ async def test_event_rejects_invalid_sequence_number() -> None:
     session: Final = AsyncMock()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_event_by_year_and_sequence_number(session, ["de"], 2024, 0)
+        _ = await get_event_by_year_and_sequence_number(
+            session,
+            ["de"],
+            Response(),
+            2024,
+            0,
+        )
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid sequence number."
@@ -205,7 +242,13 @@ async def test_event_returns_not_found_when_no_event_exists(sequence_number: int
     session: Final = _session_with_rows([])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_event_by_year_and_sequence_number(session, ["de"], 2025, sequence_number)
+        _ = await get_event_by_year_and_sequence_number(
+            session,
+            ["de"],
+            Response(),
+            2025,
+            sequence_number,
+        )
 
     assert exc_info.value.status_code == 404
     assert exc_info.value.detail == "Event not found in the database."
@@ -229,3 +272,40 @@ def test_event_documents_fastapis_validation_errors(path: str) -> None:
     body: Final = RequestValidationErrorResponseV1.model_validate(response.json())
     assert body.model_dump(mode="json", exclude_unset=True) == response.json()
     session.execute.assert_not_awaited()
+
+
+@pytest.mark.parametrize("path", ["/v1/event", "/v1/event/2024/1"])
+@pytest.mark.parametrize(
+    ("params", "headers", "expected_language", "varies_by_accept_language"),
+    [
+        pytest.param({}, {"Accept-Language": "fr, de;q=0.5"}, "de", True, id="Accept-Language"),
+        pytest.param({}, {}, "en", True, id="no preference"),
+        pytest.param({"language": "de-AT"}, {"Accept-Language": "en"}, "de", False, id="language parameter"),
+    ],
+)
+def test_event_routes_send_content_language_and_vary(
+    path: str,
+    params: dict[str, str],
+    headers: dict[str, str],
+    expected_language: str,
+    varies_by_accept_language: bool,
+) -> None:
+    event: Final = _event(1, date(2024, 5, 1), frontpage_spotlight_date=datetime(2024, 4, 1, tzinfo=UTC))
+    session: Final = _session_with_rows([
+        _row(event, _translation(1, "de")),
+        _row(event, _translation(1, "en")),
+    ])
+
+    async def override_session() -> AsyncGenerator[AsyncSession]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    try:
+        response: Final = TestClient(app).get(path, params=params, headers=headers)
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+
+    assert response.status_code == 200
+    assert EventResponseV1.model_validate(response.json()).language_details.language_tag == expected_language
+    assert response.headers["Content-Language"] == expected_language
+    assert ("Accept-Language" in response.headers.get("Vary", "")) is varies_by_accept_language

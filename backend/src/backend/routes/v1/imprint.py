@@ -3,11 +3,13 @@ from typing import Final
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Response
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import select
 
+from backend.content_language_selection import CONTENT_LANGUAGE_RESPONSE_HEADERS
 from backend.content_language_selection import get_requested_language_ranges
 from backend.content_language_selection import select_content_language
 from backend.database import get_session
@@ -31,6 +33,7 @@ ROUTER = APIRouter()
     + "the lexicographically first available language.",
     status_code=status.HTTP_200_OK,
     responses={
+        status.HTTP_200_OK: {"model": ImprintResponseV1, "headers": CONTENT_LANGUAGE_RESPONSE_HEADERS},
         status.HTTP_404_NOT_FOUND: {"model": ImprintPageContentNotFoundResponseV1},
         status.HTTP_422_UNPROCESSABLE_CONTENT: {"model": UnsupportedLanguageTagResponseV1},
     },
@@ -38,6 +41,7 @@ ROUTER = APIRouter()
 )
 async def get_imprint(
     language_ranges: Annotated[list[str], Depends(get_requested_language_ranges)],
+    response: Response,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ImprintResponseV1:
     statement: Final = (
@@ -51,6 +55,7 @@ async def get_imprint(
         )
 
     selection: Final = select_content_language(language_ranges, pages_by_language_tag)
+    response.headers["Content-Language"] = selection.language_tag
 
     return ImprintResponseV1(
         content=pages_by_language_tag[selection.language_tag].content,

@@ -37,6 +37,19 @@ _MAX_ACCEPT_LANGUAGE_ENTRIES = 32
 _LANGUAGE_RANGE_PATTERN = re.compile(r"([A-Za-z]{2,3})(?:-[A-Za-z]{4})?(?:-(?:[A-Za-z]{2}|[0-9]{3}))?")
 
 
+# OpenAPI description of the headers on a successful response with translated content.
+CONTENT_LANGUAGE_RESPONSE_HEADERS = {
+    "Content-Language": {
+        "description": "The language of the delivered content.",
+        "schema": {"type": "string"},
+    },
+    "Vary": {
+        "description": "Contains `Accept-Language` if no `language` query parameter was given.",
+        "schema": {"type": "string"},
+    },
+}
+
+
 @final
 class ContentLanguageSelection(NamedTuple):
     language_tag: ContentLanguageTag
