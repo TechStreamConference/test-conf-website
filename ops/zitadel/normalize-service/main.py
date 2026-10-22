@@ -232,7 +232,7 @@ def _normalize_add_human_user(
 
     v4.17.1 normally exposes createUser for Login V2, but
     RetrieveIdentityProviderIntentResponse still contains addHumanUser for
-    backwards compatibility.
+    backward compatibility.
     """
     profile = add_human_user.get("profile")
     if not isinstance(profile, dict):

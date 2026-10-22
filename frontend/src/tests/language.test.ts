@@ -67,7 +67,7 @@ async function runLayoutLoad(event: RequestEvent): Promise<LayoutData> {
 
 /**
  * @brief Handles a request. The `load` functions run before the page is rendered, so `runLoads` runs
- * first and the html is transformed afterwards, the same order SvelteKit uses.
+ * first and the html is transformed afterward, the same order SvelteKit uses.
  *
  * @param event the request event
  * @param runLoads the `load` functions of the request

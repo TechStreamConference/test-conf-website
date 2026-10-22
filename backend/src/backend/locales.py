@@ -11,7 +11,7 @@ from pydantic import AfterValidator
 _MAX_LOCALE_LENGTH = 64
 
 # Browsers only accept tags that are structurally valid according to ECMA-402 (`IsStructurallyValidLanguageTag`),
-# i.e. Unicode BCP 47 locale identifiers (UTS #35) without their backwards compatibility syntax. This excludes
+# i.e. Unicode BCP 47 locale identifiers (UTS #35) without their backward compatibility syntax. This excludes
 # POSIX-style underscores, grandfathered tags (`i-klingon`, `en-GB-oed`), extended language subtags (`zh-yue`), `root`,
 # and tags consisting of private-use subtags only (`x-foo`), all of which make `Intl` APIs throw. The check is purely
 # syntactic, so subtags don't have to be registered.

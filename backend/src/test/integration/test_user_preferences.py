@@ -262,7 +262,7 @@ async def test_deleting_a_session_cascades_to_its_suggestion(migrate_and_seed_da
 async def test_traveling_device_does_not_repeatedly_prompt_and_resyncs_silently_on_return(
     migrate_and_seed_database: str,
 ) -> None:
-    """A single session's timezone changes like a travelling laptop: home,
+    """A single session's timezone changes like a traveling laptop: home,
     then a differing location that gets dismissed, then back home again.
     Regression test for the two-device/travel concern in the design
     discussion: a dismissed suggestion must not reappear for a repeated
