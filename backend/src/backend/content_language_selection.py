@@ -3,11 +3,13 @@
 import re
 from collections.abc import Collection
 from collections.abc import Iterable
+from typing import Annotated
 from typing import Final
 from typing import NamedTuple
 from typing import Optional
 from typing import final
 
+from fastapi import Query
 from fastapi import status
 
 from backend.content_languages import ENGLISH_LANGUAGE_TAG
@@ -82,16 +84,26 @@ def select_content_language(
     return ContentLanguageSelection(default_language, sorted_languages, has_unsatisfied_preference)
 
 
-def get_requested_language_ranges(language_tag: str) -> list[str]:
+def get_requested_language_ranges(
+    language: Annotated[
+        Optional[str],
+        Query(
+            description="The preferred content language, e.g. `de` or `de-AT`. "
+            + "It is matched by its primary language subtag.",
+        ),
+    ] = None,
+) -> list[str]:
     """
     Return the client’s content language preferences, most preferred first.
 
-    For now, the only preference is the language in the path, which must match the
-    supported syntax.
+    For now, the only preference is the `language` query parameter. If it is given,
+    it must match the supported syntax.
     """
-    if not is_supported_language_range(language_tag):
+    if language is None:
+        return []
+    if not is_supported_language_range(language):
         raise create_http_exception(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             UnsupportedLanguageTagResponseV1(),
         )
-    return [language_tag]
+    return [language]

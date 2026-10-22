@@ -30,7 +30,7 @@ ROUTER = APIRouter()
 
 
 @ROUTER.get(
-    "/{language_tag}/event",
+    "/event",
     summary="Get the current event",
     description="Retrieve the event that is currently featured on the front page.",
     status_code=status.HTTP_200_OK,
@@ -74,7 +74,7 @@ async def get_current_event(
 
 
 @ROUTER.get(
-    "/{language_tag}/event/{year}/{sequence_number}",
+    "/event/{year}/{sequence_number}",
     summary="Get event by year and sequence number",
     description="Retrieve a specific event based on the provided year and sequence number.",
     status_code=status.HTTP_200_OK,

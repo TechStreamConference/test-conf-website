@@ -211,7 +211,7 @@ async def test_event_returns_not_found_when_no_event_exists(sequence_number: int
     assert exc_info.value.detail == "Event not found in the database."
 
 
-@pytest.mark.parametrize("path", ["/v1/de/event/abc/1", "/v1/de/event/2024/abc"])
+@pytest.mark.parametrize("path", ["/v1/event/abc/1?language=de", "/v1/event/2024/abc?language=de"])
 def test_event_documents_fastapis_validation_errors(path: str) -> None:
     session: Final = AsyncMock(spec=AsyncSession)
 

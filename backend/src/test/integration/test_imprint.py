@@ -18,7 +18,10 @@ _DATA_PATH = Path(__file__).resolve().parents[2] / "backend" / "seed" / "data"
 @pytest.mark.asyncio
 @pytest.mark.parametrize("language_tag", ["de", "en"])
 async def test_imprint_route_returns_requested_language(language_tag: str) -> None:
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/{language_tag}/imprint").raise_for_status()
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/imprint",
+        params={"language": language_tag},
+    ).raise_for_status()
     imprint: Final = ImprintResponseV1.model_validate(response.json())
 
     assert response.status_code == 200
@@ -30,7 +33,10 @@ async def test_imprint_route_returns_requested_language(language_tag: str) -> No
 
 @pytest.mark.asyncio
 async def test_imprint_route_falls_back_to_english() -> None:
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/es/imprint").raise_for_status()
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/imprint",
+        params={"language": "es"},
+    ).raise_for_status()
     imprint: Final = ImprintResponseV1.model_validate(response.json())
 
     assert imprint.content == (_DATA_PATH / "imprint.en.md").read_text(encoding="utf-8")
