@@ -10,9 +10,9 @@ from pydantic import ConfigDict
 from pydantic import model_validator
 from pydantic.alias_generators import to_camel
 
+from backend.locales import Bcp47Locale
 from backend.models.content_language_types import ContentLanguageTag
-from backend.models.preference_types import Bcp47Locale
-from backend.models.preference_types import IanaTimezone
+from backend.timezones import IanaTimezone
 
 # class name should include the api version since the typescript generator uses the same name.
 # This could lead to confusion within the frontend once a second api version gets introduced.
