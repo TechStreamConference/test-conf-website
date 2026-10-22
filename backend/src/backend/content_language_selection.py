@@ -10,7 +10,11 @@ from typing import Optional
 from typing import final
 
 from fastapi import Query
+from fastapi import Request
+from fastapi import Response
 from fastapi import status
+from werkzeug.datastructures import LanguageAccept
+from werkzeug.http import parse_accept_header
 
 from backend.content_languages import ENGLISH_LANGUAGE_TAG
 from backend.models.content_language_types import ContentLanguageTag
@@ -20,6 +24,11 @@ from backend.utils import create_http_exception
 # Bounds the work spent on a client-provided language range, independently of
 # the supported syntax.
 _MAX_LANGUAGE_RANGE_LENGTH = 64
+
+# Bound the work spent on a client-provided `Accept-Language` header. A longer
+# header is ignored entirely, and only the most preferred entries are considered.
+_MAX_ACCEPT_LANGUAGE_LENGTH = 2048
+_MAX_ACCEPT_LANGUAGE_ENTRIES = 32
 
 # The supported subset of BCP 47: a primary language subtag, optionally followed
 # by a script and a region subtag. Extended language, variant, extension and
@@ -84,26 +93,56 @@ def select_content_language(
     return ContentLanguageSelection(default_language, sorted_languages, has_unsatisfied_preference)
 
 
+def parse_accept_language(accept_language: str) -> list[str]:
+    """
+    Return the language ranges of an `Accept-Language` header, most preferred first.
+
+    Entries are sorted by descending quality, keeping the client’s order on ties.
+    Entries with an invalid quality and entries with `q=0` are dropped. A header
+    longer than 2 KiB is ignored entirely, and at most 32 entries are returned.
+    The ranges themselves aren’t validated; the selection skips unsupported ones.
+    """
+    # Starlette decodes header values as Latin-1, so every character stands for exactly
+    # one byte of the header, even if it isn’t ASCII.
+    if len(accept_language) > _MAX_ACCEPT_LANGUAGE_LENGTH:
+        return []
+    # werkzeug already sorts the entries by descending quality, keeping the client’s
+    # order on ties. It sorts `*` last, which the selection skips anyway.
+    entries: Final = parse_accept_header(accept_language, LanguageAccept)
+    language_ranges: Final = [language_range for language_range, quality in entries if quality > 0.0]
+    return language_ranges[:_MAX_ACCEPT_LANGUAGE_ENTRIES]
+
+
 def get_requested_language_ranges(
+    request: Request,
+    response: Response,
     language: Annotated[
         Optional[str],
         Query(
-            description="The preferred content language, e.g. `de` or `de-AT`. "
-            + "It is matched by its primary language subtag.",
+            description=(
+                "The preferred content language, e.g. `de` or `de-AT`. "
+                + "It is matched by its primary language subtag. "
+                + "Without it, the language is negotiated from the `Accept-Language` header."
+            ),
         ),
     ] = None,
 ) -> list[str]:
     """
     Return the client’s content language preferences, most preferred first.
 
-    For now, the only preference is the `language` query parameter. If it is given,
-    it must match the supported syntax.
+    An explicit `language` query parameter takes precedence and must match the
+    supported syntax. Otherwise, the preferences come from the `Accept-Language`
+    header, and the response varies by it, even if the request has none. The
+    header’s value is never logged.
     """
-    if language is None:
-        return []
-    if not is_supported_language_range(language):
-        raise create_http_exception(
-            status.HTTP_422_UNPROCESSABLE_CONTENT,
-            UnsupportedLanguageTagResponseV1(),
-        )
-    return [language]
+    if language is not None:
+        if not is_supported_language_range(language):
+            raise create_http_exception(
+                status.HTTP_422_UNPROCESSABLE_CONTENT,
+                UnsupportedLanguageTagResponseV1(),
+            )
+        return [language]
+
+    response.headers.add_vary_header("Accept-Language")
+    # A header may be split across several field lines, which are combined with commas.
+    return parse_accept_language(", ".join(request.headers.getlist("Accept-Language")))
