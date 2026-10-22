@@ -11,6 +11,7 @@ from pydantic import model_validator
 from pydantic.alias_generators import to_camel
 
 from backend.locales import Bcp47Locale
+from backend.models.content_language_types import ContentLanguageTag
 from backend.timezones import IanaTimezone
 
 # class name should include the api version since the typescript generator uses the same name.
@@ -35,8 +36,8 @@ class ApiResponseModel(BaseModel):
 
 @final
 class LanguageDetailsV1(ApiResponseModel):
-    available_languages: list[str]
-    language_tag: str
+    available_languages: list[ContentLanguageTag]
+    language_tag: ContentLanguageTag
     is_language_fallback: bool
 
 
