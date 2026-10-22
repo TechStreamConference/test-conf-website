@@ -22,7 +22,7 @@ async def test_create_authorization_request_uses_registered_client(
             "state": "state",
             "nonce": "nonce",
             "code_verifier": "verifier",
-        }
+        },
     )
     create_client: Final = Mock(return_value=client)
     monkeypatch.setattr(oidc_module.OAUTH, "create_client", create_client)

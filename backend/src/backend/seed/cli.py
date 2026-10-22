@@ -34,7 +34,7 @@ def run(
             environment=environment,
             num_users=num_users,
             seed=seed,
-        )
+        ),
     )
 
 

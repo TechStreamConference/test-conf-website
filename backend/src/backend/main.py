@@ -58,7 +58,7 @@ async def _log_requests(
                 path=request.url.path,
                 exception_type=_qualified_type_name(exception),
                 exception_stack=_code_locations(exception),
-            )
+            ),
         )
         _log_request_completed(request, status.HTTP_500_INTERNAL_SERVER_ERROR, start)
         return JSONResponse(
@@ -95,7 +95,7 @@ def _code_locations(exception: BaseException) -> str:
         for frame, line_number in traceback.walk_tb(current.__traceback__):
             module: object = frame.f_globals.get("__name__")
             locations.append(
-                f"{module if isinstance(module, str) else '?'}:{line_number} in {frame.f_code.co_qualname}"
+                f"{module if isinstance(module, str) else '?'}:{line_number} in {frame.f_code.co_qualname}",
             )
         if current.__cause__ is not None:
             current, relation = current.__cause__, "caused by"
@@ -117,7 +117,7 @@ def _log_request_completed(request: Request, status_code: int, start: float) -> 
             path=request.url.path,
             status_code=status_code,
             duration_ms=round((time.monotonic() - start) * 1000.0, 2),
-        )
+        ),
     )
 
 
