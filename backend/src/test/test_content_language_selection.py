@@ -142,22 +142,27 @@ def test_select_content_language_requires_an_available_language() -> None:
         _ = select_content_language(["de"], [])
 
 
-@pytest.mark.parametrize("language_tag", ["de", "DE-at", "zz", "und"])
-def test_requested_language_ranges_contain_the_language_of_the_path(language_tag: str) -> None:
-    assert get_requested_language_ranges(language_tag) == [language_tag]
+@pytest.mark.parametrize("language", ["de", "DE-at", "zz", "und"])
+def test_requested_language_ranges_contain_the_language_parameter(language: str) -> None:
+    assert get_requested_language_ranges(language) == [language]
 
 
-@pytest.mark.parametrize("language_tag", ["x-foo", ""])
-def test_requested_language_ranges_reject_unsupported_languages(language_tag: str) -> None:
+def test_requested_language_ranges_are_empty_without_a_language_parameter() -> None:
+    assert get_requested_language_ranges() == []
+
+
+@pytest.mark.parametrize("language", ["x-foo", ""])
+def test_requested_language_ranges_reject_unsupported_languages(language: str) -> None:
     with pytest.raises(HTTPException) as exc_info:
-        _ = get_requested_language_ranges(language_tag)
+        _ = get_requested_language_ranges(language)
 
     assert exc_info.value.status_code == 422
     assert exc_info.value.detail == "Unsupported language tag."
 
 
-@pytest.mark.parametrize("path", ["/v1/x-foo/imprint", "/v1/x-foo/event", "/v1/x-foo/event/2024/1"])
-def test_content_routes_answer_unsupported_languages_with_unprocessable_content(path: str) -> None:
+@pytest.mark.parametrize("path", ["/v1/imprint", "/v1/event", "/v1/event/2024/1"])
+@pytest.mark.parametrize("language", ["x-foo", ""])
+def test_content_routes_answer_unsupported_languages_with_unprocessable_content(path: str, language: str) -> None:
     session: Final = AsyncMock(spec=AsyncSession)
 
     async def override_session() -> AsyncGenerator[AsyncSession]:
@@ -165,7 +170,7 @@ def test_content_routes_answer_unsupported_languages_with_unprocessable_content(
 
     app.dependency_overrides[get_session] = override_session
     try:
-        response: Final = TestClient(app).get(path)
+        response: Final = TestClient(app).get(path, params={"language": language})
     finally:
         _ = app.dependency_overrides.pop(get_session)
 

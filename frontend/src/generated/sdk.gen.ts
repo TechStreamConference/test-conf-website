@@ -46,14 +46,14 @@ export const getCurrentUserV1 = <ThrowOnError extends boolean = false>(options?:
  *
  * Retrieve the event that is currently featured on the front page.
  */
-export const getCurrentEventV1 = <ThrowOnError extends boolean = false>(options: Options<GetCurrentEventV1Data, ThrowOnError>): RequestResult<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError> => (options.client ?? client).get<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/event', ...options });
+export const getCurrentEventV1 = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentEventV1Data, ThrowOnError>): RequestResult<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError> => (options?.client ?? client).get<GetCurrentEventV1Responses, GetCurrentEventV1Errors, ThrowOnError>({ url: '/v1/event', ...options });
 
 /**
  * Get event by year and sequence number
  *
  * Retrieve a specific event based on the provided year and sequence number.
  */
-export const getEventByYearAndSequenceNumberV1 = <ThrowOnError extends boolean = false>(options: Options<GetEventByYearAndSequenceNumberV1Data, ThrowOnError>): RequestResult<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError> => (options.client ?? client).get<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/event/{year}/{sequence_number}', ...options });
+export const getEventByYearAndSequenceNumberV1 = <ThrowOnError extends boolean = false>(options: Options<GetEventByYearAndSequenceNumberV1Data, ThrowOnError>): RequestResult<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError> => (options.client ?? client).get<GetEventByYearAndSequenceNumberV1Responses, GetEventByYearAndSequenceNumberV1Errors, ThrowOnError>({ url: '/v1/event/{year}/{sequence_number}', ...options });
 
 /**
  * Get global configuration values
@@ -65,9 +65,9 @@ export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Opt
 /**
  * Get the markdown contents of the imprint page
  *
- * Retrieve the markdown contents of the imprint page stored in the database. The requested language is matched by its primary language subtag (`de-AT` delivers `de`). If it is not available, English is returned instead, or, if that is not available either, the lexicographically first available language.
+ * Retrieve the markdown contents of the imprint page stored in the database. The requested `language` is matched by its primary language subtag (`de-AT` delivers `de`). If it is not available, English is returned instead, or, if that is not available either, the lexicographically first available language.
  */
-export const getImprintV1 = <ThrowOnError extends boolean = false>(options: Options<GetImprintV1Data, ThrowOnError>): RequestResult<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError> => (options.client ?? client).get<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError>({ url: '/v1/{language_tag}/imprint', ...options });
+export const getImprintV1 = <ThrowOnError extends boolean = false>(options?: Options<GetImprintV1Data, ThrowOnError>): RequestResult<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError> => (options?.client ?? client).get<GetImprintV1Responses, GetImprintV1Errors, ThrowOnError>({ url: '/v1/imprint', ...options });
 
 /**
  * Update current-user preferences

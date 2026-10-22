@@ -568,14 +568,16 @@ export type GetCurrentUserV1Response = GetCurrentUserV1Responses[keyof GetCurren
 
 export type GetCurrentEventV1Data = {
     body?: never;
-    path: {
+    path?: never;
+    query?: {
         /**
-         * Language Tag
+         * Language
+         *
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag.
          */
-        language_tag: string;
+        language?: string | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/event';
+    url: '/v1/event';
 };
 
 export type GetCurrentEventV1Errors = {
@@ -615,13 +617,16 @@ export type GetEventByYearAndSequenceNumberV1Data = {
          * Sequence Number
          */
         sequence_number: number | 'latest';
-        /**
-         * Language Tag
-         */
-        language_tag: string;
     };
-    query?: never;
-    url: '/v1/{language_tag}/event/{year}/{sequence_number}';
+    query?: {
+        /**
+         * Language
+         *
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag.
+         */
+        language?: string | null;
+    };
+    url: '/v1/event/{year}/{sequence_number}';
 };
 
 export type GetEventByYearAndSequenceNumberV1Errors = {
@@ -683,14 +688,16 @@ export type GetGlobalsV1Response = GetGlobalsV1Responses[keyof GetGlobalsV1Respo
 
 export type GetImprintV1Data = {
     body?: never;
-    path: {
+    path?: never;
+    query?: {
         /**
-         * Language Tag
+         * Language
+         *
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag.
          */
-        language_tag: string;
+        language?: string | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/imprint';
+    url: '/v1/imprint';
 };
 
 export type GetImprintV1Errors = {
