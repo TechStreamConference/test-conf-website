@@ -143,12 +143,12 @@ def _colorize_json(value: object, indent: int = 0) -> str:
                 f'{inner}{_BOLD}{_CYAN}"{k}"{_R}: {_colorize_json(v, indent + 1)}'
                 for k, v in cast(dict[str, object], value).items()
             ]
-            return "{\n" + ",\n".join(lines) + "\n" + pad + "}"
+            return f"{{\n{',\n'.join(lines)}\n{pad}}}"
         case list():
             if not value:
                 return "[]"
             lines = [f"{inner}{_colorize_json(v, indent + 1)}" for v in cast(list[object], value)]
-            return "[\n" + ",\n".join(lines) + "\n" + pad + "]"
+            return f"[\n{',\n'.join(lines)}\n{pad}]"
         case _:
             return repr(value)
 
@@ -160,12 +160,12 @@ def _format_pretty(record: _LogRecord) -> str:
         f"{_BOLD}{_BLUE}[{_SERVICE_NAME}]{_R} {sev_color}{_BOLD}{sev_text}{_R} {_BOLD}{record.event_name}{_R}"
     )
     data: Final = json.loads(record.model_dump_json(by_alias=True))
-    return header + "\n" + _colorize_json(data)
+    return f"{header}\n{_colorize_json(data)}"
 
 
 def _emit(event: LogEvent, severity_text: _SeverityText) -> None:
     record: Final = _build_record(event, severity_text)
-    line: Final = record.model_dump_json(by_alias=True) + "\n"
+    line: Final = f"{record.model_dump_json(by_alias=True)}\n"
     if SETTINGS.environment == "dev":
         print(_format_pretty(record), file=sys.stdout, flush=True)
     else:
