@@ -31,6 +31,7 @@ Use American English everywhere: in identifiers, comments, docstrings, test IDs 
 - Don't treat `Optional[T]` as being semantically equal to `T | None`: `Optional[T]` means that the value might be *missing* while `T | None` means that `None` is a meaningful value of its own.
 - Assign intentionally ignored non-`None` return values to `_`; Pyright's `reportUnusedCallResult` is enabled.
 - Keep type-ignore comments as narrow as possible and include the specific Pyright diagnostic. Do not use blanket file-level ignores to work around untyped dependencies.
+- Give names that are only used inside their own module and its tests a leading underscore. Tests import or access them with `# type: ignore[reportPrivateUsage]`, which also documents that only tests use them outside the module (e.g. `_is_valid_redirect_url` in `src/test/test_auth.py`).
 - Do not rely on type-checking-time-only checks. Guard them with real runtime type checks where possible. Therefore, avoid `cast`s unless absolutely necessary. Wrap untyped external code using typesafe wrappers where possible.
 
 ## API models
