@@ -198,6 +198,21 @@ async def test_event_route_returns_numbered_and_latest_events() -> None:
     assert second.language_details.language_tag == "es"
     assert second.language_details.is_language_fallback is False
     assert latest == second
+    assert second_response.headers["Content-Language"] == "es"
+
+
+@pytest.mark.asyncio
+async def test_event_route_negotiates_the_language_from_accept_language() -> None:
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2024/2",
+        headers={"Accept-Language": "fr, es;q=0.8, en;q=0.5"},
+    ).raise_for_status()
+    event: Final = EventResponseV1.model_validate(response.json())
+
+    assert event.language_details.language_tag == "es"
+    assert event.language_details.is_language_fallback is True
+    assert response.headers["Content-Language"] == "es"
+    assert "Accept-Language" in response.headers["Vary"]
 
 
 @pytest.mark.asyncio
