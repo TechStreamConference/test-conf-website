@@ -96,10 +96,10 @@ async def test_request_middleware_returns_unexpected_exceptions_as_internal_serv
     monkeypatch.setattr(main_module.logging, "error", log_error)
     monkeypatch.setattr(main_module, "time", Mock(monotonic=Mock(side_effect=[10.0, 10.5])))
 
-    async def _call_next(_request: Request) -> Response:
+    async def call_next(_request: Request) -> Response:
         raise RuntimeError("Key (email)=(jane@example.com) already exists.")
 
-    response: Final = await _log_requests(request, _call_next)
+    response: Final = await _log_requests(request, call_next)
 
     assert response.status_code == 500
     assert json.loads(bytes(response.body)) == {"detail": "Internal server error."}
@@ -113,7 +113,7 @@ async def test_request_middleware_returns_unexpected_exceptions_as_internal_serv
     locations: Final = failed.exception_stack.splitlines()
     assert len(locations) == 2
     assert re.fullmatch(r"backend\.main:\d+ in _log_requests", locations[0])
-    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + re.escape(_call_next.__qualname__), locations[1])
+    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + re.escape(call_next.__qualname__), locations[1])
     assert log_info.call_count == 2
     completed: Final = log_info.call_args_list[1].args[0]
     assert isinstance(completed, HttpRequestCompleted)
@@ -188,13 +188,13 @@ def test_code_locations_terminate_for_cyclic_chains() -> None:
 def test_unexpected_exception_is_returned_as_documented_internal_server_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    async def _failing_session() -> AsyncGenerator[AsyncSession]:
+    async def failing_session() -> AsyncGenerator[AsyncSession]:
         raise RuntimeError("unexpected")
         yield  # pyright: ignore[reportUnreachable]
 
     log_info: Final = Mock()
     monkeypatch.setattr(main_module.logging, "info", log_info)
-    app.dependency_overrides[get_session] = _failing_session
+    app.dependency_overrides[get_session] = failing_session
     try:
         # Raises if the exception reaches the server, which would log it with its message as an unstructured traceback.
         response: Final = TestClient(app).get("/v1/globals")
@@ -210,7 +210,7 @@ def test_unexpected_exception_is_returned_as_documented_internal_server_error(
 
 
 def test_request_middleware_logs_the_path_without_the_query_string(monkeypatch: pytest.MonkeyPatch) -> None:
-    async def _failing_session() -> AsyncGenerator[AsyncSession]:
+    async def failing_session() -> AsyncGenerator[AsyncSession]:
         raise RuntimeError("unexpected")
         yield  # pyright: ignore[reportUnreachable]
 
@@ -218,7 +218,7 @@ def test_request_middleware_logs_the_path_without_the_query_string(monkeypatch: 
     log_error: Final = Mock()
     monkeypatch.setattr(main_module.logging, "info", log_info)
     monkeypatch.setattr(main_module.logging, "error", log_error)
-    app.dependency_overrides[get_session] = _failing_session
+    app.dependency_overrides[get_session] = failing_session
     try:
         # Query strings may contain personal data.
         _ = TestClient(app).get("/v1/globals", params={"language": "de"})
