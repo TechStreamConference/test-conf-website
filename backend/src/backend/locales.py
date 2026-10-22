@@ -76,7 +76,7 @@ def _is_structurally_valid(value: str) -> bool:
                 itertools.takewhile(
                     lambda subtag: _TRANSFORMED_FIELD_KEY_PATTERN.fullmatch(subtag) is None,
                     subtags[start + 1 : end],
-                )
+                ),
             )
             if _has_duplicates(_variants(transformed_language_id)):
                 return False
