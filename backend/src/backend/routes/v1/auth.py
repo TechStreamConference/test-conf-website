@@ -94,7 +94,7 @@ async def login(
             pkce_code_verifier=authorization_request.code_verifier,
             return_to=redirect_url,
             expires_at=utc_now() + LOGIN_TRANSACTION_LIFETIME,
-        )
+        ),
     )
     await session.commit()
 
@@ -224,7 +224,7 @@ async def me(
 
     pending_suggestion: Final = (
         await session.execute(
-            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == authenticated.session.id)
+            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == authenticated.session.id),
         )
     ).scalar_one_or_none()
 

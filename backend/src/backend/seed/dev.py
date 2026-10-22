@@ -102,7 +102,7 @@ def _seed_static_pages_table(session: AsyncSession) -> None:
                 content=content_file.read_text(
                     encoding="utf-8",
                 ),
-            )
+            ),
         )
 
 
@@ -151,7 +151,11 @@ def _optional_datetime_before(
     if not condition:
         return None
     d = _random_date_before(
-        rng, before, window_start=window_start, prefer_min_days=prefer_min_days, prefer_max_days=prefer_max_days
+        rng,
+        before,
+        window_start=window_start,
+        prefer_min_days=prefer_min_days,
+        prefer_max_days=prefer_max_days,
     )
     return _date_to_datetime(d) if d else None
 
@@ -265,7 +269,7 @@ async def _seed_events_data(
                     trailer_subtitles_url=(
                         f"https://example.com/trailer/{year}/{language}/subtitles.vtt" if has_subtitles else None
                     ),
-                )
+                ),
             )
 
         prev_end_date = end_date

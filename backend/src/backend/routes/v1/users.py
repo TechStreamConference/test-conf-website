@@ -65,7 +65,7 @@ async def update_preferences(
     # re-proposed by the next report.
     existing_suggestion: Final = (
         await session.execute(
-            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == authenticated.session.id)
+            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == authenticated.session.id),
         )
     ).scalar_one_or_none()
     if existing_suggestion is not None:
@@ -115,7 +115,7 @@ async def report_regional_settings(
 
     existing_suggestion: Final = (
         await session.execute(
-            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == session_id)
+            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == session_id),
         )
     ).scalar_one_or_none()
 
@@ -174,7 +174,7 @@ async def report_regional_settings(
                 "locale": report_upsert.excluded.locale,
                 "reported_at": report_upsert.excluded.reported_at,
             },
-        )
+        ),
     )
 
     new_suggestion_content: Final = (outcome.timezone.suggestion, outcome.locale.suggestion)
@@ -196,7 +196,7 @@ async def report_regional_settings(
                     session_id=session_id,
                     timezone=outcome.timezone.suggestion,
                     locale=outcome.locale.suggestion,
-                )
+                ),
             )
 
     await session.commit()
@@ -206,7 +206,7 @@ async def report_regional_settings(
             is_no_op=False,
             timezone_outcome=timezone_category,
             locale_outcome=locale_category,
-        )
+        ),
     )
 
 

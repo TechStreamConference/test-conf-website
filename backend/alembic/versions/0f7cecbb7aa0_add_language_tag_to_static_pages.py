@@ -46,8 +46,8 @@ def downgrade() -> None:
     # Only one page per kind can survive once `kind` is the sole primary key again.
     op.execute(
         sa.text("DELETE FROM static_pages WHERE language_tag <> :language_tag").bindparams(
-            language_tag=DEFAULT_LANGUAGE_TAG
-        )
+            language_tag=DEFAULT_LANGUAGE_TAG,
+        ),
     )
     op.drop_constraint(PRIMARY_KEY_NAME, "static_pages", type_="primary")
     op.drop_column("static_pages", "language_tag")
