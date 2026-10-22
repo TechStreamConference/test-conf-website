@@ -3,6 +3,7 @@ from typing import Final
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Response
 from fastapi import status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
@@ -23,10 +24,10 @@ ROUTER = APIRouter()
 
 
 @ROUTER.get(
-    "/{language_tag}/imprint",
+    "/imprint",
     summary="Get the markdown contents of the imprint page",
     description="Retrieve the markdown contents of the imprint page stored in the database. "
-    + "The requested language is matched by its primary language subtag (`de-AT` delivers `de`). "
+    + "The requested `language` is matched by its primary language subtag (`de-AT` delivers `de`). "
     + "If it is not available, English is returned instead, or, if that is not available either, "
     + "the lexicographically first available language.",
     status_code=status.HTTP_200_OK,
@@ -38,6 +39,7 @@ ROUTER = APIRouter()
 )
 async def get_imprint(
     language_ranges: Annotated[list[str], Depends(get_requested_language_ranges)],
+    response: Response,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ImprintResponseV1:
     statement: Final = (
@@ -51,6 +53,7 @@ async def get_imprint(
         )
 
     selection: Final = select_content_language(language_ranges, pages_by_language_tag)
+    response.headers["Content-Language"] = selection.language_tag
 
     return ImprintResponseV1(
         content=pages_by_language_tag[selection.language_tag].content,

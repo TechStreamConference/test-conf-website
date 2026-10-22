@@ -5,6 +5,7 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import Response
 from fastapi import status
 from sqlalchemy import Row
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -30,7 +31,7 @@ ROUTER = APIRouter()
 
 
 @ROUTER.get(
-    "/{language_tag}/event",
+    "/event",
     summary="Get the current event",
     description="Retrieve the event that is currently featured on the front page.",
     status_code=status.HTTP_200_OK,
@@ -43,6 +44,7 @@ ROUTER = APIRouter()
 async def get_current_event(
     session: Annotated[AsyncSession, Depends(get_session)],
     language_ranges: Annotated[list[str], Depends(get_requested_language_ranges)],
+    response: Response,
 ) -> EventResponseV1:
     now: Final = utc_now()
     current_event_id: Final = (
@@ -70,11 +72,11 @@ async def get_current_event(
     )
     rows: Final = list((await session.execute(statement)).all())
 
-    return _event_response_v1_from_rows(rows, language_ranges)
+    return _event_response_v1_from_rows(rows, language_ranges, response)
 
 
 @ROUTER.get(
-    "/{language_tag}/event/{year}/{sequence_number}",
+    "/event/{year}/{sequence_number}",
     summary="Get event by year and sequence number",
     description="Retrieve a specific event based on the provided year and sequence number.",
     status_code=status.HTTP_200_OK,
@@ -91,6 +93,7 @@ async def get_current_event(
 async def get_event_by_year_and_sequence_number(
     session: Annotated[AsyncSession, Depends(get_session)],
     language_ranges: Annotated[list[str], Depends(get_requested_language_ranges)],
+    response: Response,
     year: int,
     sequence_number: int | Literal["latest"],
 ) -> EventResponseV1:
@@ -126,6 +129,7 @@ async def get_event_by_year_and_sequence_number(
                 return _event_response_v1_from_rows(
                     current_rows,
                     language_ranges,
+                    response,
                 )
             current_sequence_number += 1
             current_rows.clear()
@@ -136,6 +140,7 @@ async def get_event_by_year_and_sequence_number(
         return _event_response_v1_from_rows(
             current_rows,
             language_ranges,
+            response,
         )
 
     raise create_http_exception(
@@ -147,6 +152,7 @@ async def get_event_by_year_and_sequence_number(
 def _event_response_v1_from_rows(
     rows: list[Row[tuple[tuple[Event, EventTranslation]]]],
     language_ranges: list[str],
+    response: Response,
 ) -> EventResponseV1:
     if not rows:
         raise create_http_exception(
@@ -162,6 +168,7 @@ def _event_response_v1_from_rows(
 
     selection: Final = select_content_language(language_ranges, translations_by_language_tag)
     translation: Final = translations_by_language_tag[selection.language_tag]
+    response.headers["Content-Language"] = selection.language_tag
 
     return EventResponseV1(
         id=event.id,
