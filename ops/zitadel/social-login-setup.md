@@ -287,7 +287,7 @@ When Zitadel calls `/normalize`, the service:
 
 ---
 
-## 5. Expected behaviour
+## 5. Expected behavior
 
 ### New user — no existing Zitadel account
 
