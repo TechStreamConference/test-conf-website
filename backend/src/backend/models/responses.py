@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
+from pydantic import Field
 from pydantic import model_validator
 from pydantic.alias_generators import to_camel
 
@@ -39,6 +40,33 @@ class LanguageDetailsV1(ApiResponseModel):
     available_languages: list[ContentLanguageTag]
     language_tag: ContentLanguageTag
     is_language_fallback: bool
+
+
+@final
+class UnsupportedLanguageTagResponseV1(ApiResponseModel):
+    detail: Literal["Unsupported language tag."] = "Unsupported language tag."
+
+
+@final
+class RequestValidationErrorV1(ApiResponseModel):
+    loc: list[str | int]
+    msg: str
+    type: str
+    # Only present for some errors.
+    input: Optional[object] = None
+    ctx: dict[str, object] = Field(default_factory=dict)
+
+
+@final
+class RequestValidationErrorResponseV1(ApiResponseModel):
+    """
+    FastAPI’s response to a request whose parameters don’t match their types.
+
+    Mirrors FastAPI’s `HTTPValidationError`, which has no public Pydantic model. Routes
+    that document their own `422` response list it alongside theirs.
+    """
+
+    detail: list[RequestValidationErrorV1]
 
 
 @final

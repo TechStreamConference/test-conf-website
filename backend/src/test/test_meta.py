@@ -1,6 +1,7 @@
 import inspect
 import re
 import sys
+import types
 import typing
 from collections import defaultdict
 from pathlib import Path
@@ -49,6 +50,13 @@ def _response_models() -> list[type]:
     ]
 
 
+def _union_members(model_type: type) -> tuple[type, ...]:
+    # A response documented as a union of models is versioned if each of its members is.
+    if typing.get_origin(model_type) in {typing.Union, types.UnionType}:
+        return typing.get_args(model_type)
+    return (model_type,)
+
+
 @pytest.fixture(scope="module")
 def api_routes() -> list[APIRoute]:
     # If another API version is added, we can also collect those here.
@@ -92,7 +100,7 @@ def test_all_response_model_types_are_versioned(api_routes: list[APIRoute]) -> N
         for response_info in route.responses.values():
             model = response_info.get("model")
             assert model is not None, f"Endpoint '{route.path}' has a response without a model defined"
-            collected.append((route.path, model))
+            collected.extend((route.path, member) for member in _union_members(model))
 
     for path, model_type in collected:
         if any(model_type is exempt for exempt in _EXEMPT_RESPONSE_TYPES):
