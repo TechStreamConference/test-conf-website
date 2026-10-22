@@ -215,6 +215,10 @@ db-reset:
 # CI
 #
 
+# CI: Starts only the services the tests need (postgres and nginx, not the observability stack) and waits for them to be healthy.
+up-ci:
+    docker compose up -d --wait postgres nginx
+
 # CI: Initializes the ci enviroment
 init-ci:
     pnpm --dir {{ frontend_dir }} install --frozen-lockfile
