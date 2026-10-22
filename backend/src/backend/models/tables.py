@@ -11,6 +11,7 @@ import sqlalchemy as sa
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
+from backend.models.content_language_types import CONTENT_LANGUAGE_TAG_PATTERN
 from backend.utils import utc_now
 
 
@@ -164,7 +165,7 @@ class ContentLanguage(SQLModel, table=True):
     __tablename__ = "content_languages"  # type: ignore[reportAssignmentType]
     __table_args__ = (
         sa.CheckConstraint(
-            "tag ~ '^[a-z]{2,3}$'",
+            f"tag ~ '{CONTENT_LANGUAGE_TAG_PATTERN}'",
             name="ck_content_languages_tag_format",
         ),
     )
