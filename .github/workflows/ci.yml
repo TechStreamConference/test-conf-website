@@ -22,6 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Only the frontend build reads a layer cache: `pnpm install` takes most of its time.
+      # The backend build is faster without one. The fill-caches workflow writes the cache on
+      # `main`. The default `docker` driver can't use a gha build cache, so the frontend build
+      # needs Buildx.
+      - name: Set up Docker Buildx
+        if: matrix.project-part == 'frontend'
+        uses: docker/setup-buildx-action@v4
+
       - name: Build ${{ matrix.project-part }} container image
         uses: docker/build-push-action@v6
         with:
@@ -29,6 +37,7 @@ jobs:
           push: false
           load: true
           tags: test-conf-${{ matrix.project-part }}:ci
+          cache-from: ${{ matrix.project-part == 'frontend' && 'type=gha,scope=frontend' || '' }}
 
       - name: Smoke-test frontend container
         if: matrix.project-part == 'frontend'
