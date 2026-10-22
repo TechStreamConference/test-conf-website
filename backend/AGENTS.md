@@ -2,6 +2,8 @@
 
 Follow the existing architecture and conventions before introducing new patterns.
 
+Use American English everywhere: in identifiers, comments, docstrings, test IDs and documentation (e.g. `behavior`, not `behaviour`).
+
 ## Architecture and dependencies
 
 - Keep straightforward database access in the route or existing domain module. Do not introduce repository, service, or unit-of-work layers merely to wrap SQLAlchemy calls.
@@ -21,6 +23,11 @@ Follow the existing architecture and conventions before introducing new patterns
 - Use `Final` for local variables that are not re-assigned. Note that this is not possible inside loops.
 - When trying to write long string literals that exceed the allowed maximum line length, split them across multiple lines, but *do not* use implicit concatenation. Instead, use the `+` operator.
 - Only use `f`-strings if they actually use string interpolation.
+- Prefer `f`-strings over concatenating strings with `+` when text is combined with computed values, even if it looks unusual, e.g. `f"de, {'x' * 2044}"` instead of `"de, " + "x" * 2044`. Splitting long literals with `+` stays as described above.
+- Split function calls with many and/or long arguments across several lines, with one argument per line.
+- End argument lists, parameter lists and collection literals that span several lines with a trailing comma, so that the formatter keeps one element per line instead of joining them.
+- Don't give nested functions a name with a leading underscore. They can't be accessed from outside their enclosing function anyway, so the underscore would suggest a distinction that doesn't exist. Existing violations are tracked in #443.
+- Put imports at the top of the module. Avoid local imports inside functions or methods unless they are really needed, e.g. to break an import cycle or to defer an expensive or optional import. Existing violations are tracked in #453.
 - Don't treat `Optional[T]` as being semantically equal to `T | None`: `Optional[T]` means that the value might be *missing* while `T | None` means that `None` is a meaningful value of its own.
 - Assign intentionally ignored non-`None` return values to `_`; Pyright's `reportUnusedCallResult` is enabled.
 - Keep type-ignore comments as narrow as possible and include the specific Pyright diagnostic. Do not use blanket file-level ignores to work around untyped dependencies.
