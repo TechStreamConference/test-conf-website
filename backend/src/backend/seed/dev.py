@@ -220,12 +220,54 @@ async def _seed_events_data(
         )
         call_for_papers_end_datetime = _date_to_datetime(call_for_papers_end_date) if call_for_papers_end_date else None
 
-        spotlight = _optional_datetime_before(rng, start_date, prev_end_date, rng.random() > 0.4, 14, 30)
-        speakers_visible = _optional_datetime_before(rng, start_date, prev_end_date, rng.random() > 0.3, 30, 60)
-        sponsors_visible = _optional_datetime_before(rng, start_date, prev_end_date, rng.random() > 0.3, 60, 90)
-        media_partners_visible = _optional_datetime_before(rng, start_date, prev_end_date, rng.random() > 0.5, 60, 90)
-        team_members_visible = _optional_datetime_before(rng, start_date, prev_end_date, rng.random() > 0.5, 30, 60)
-        schedule_visible = _optional_datetime_before(rng, start_date, prev_end_date, rng.random() > 0.3, 7, 21)
+        spotlight = _optional_datetime_before(
+            rng,
+            start_date,
+            window_start=prev_end_date,
+            condition=rng.random() > 0.4,
+            prefer_min_days=14,
+            prefer_max_days=30,
+        )
+        speakers_visible = _optional_datetime_before(
+            rng,
+            start_date,
+            window_start=prev_end_date,
+            condition=rng.random() > 0.3,
+            prefer_min_days=30,
+            prefer_max_days=60,
+        )
+        sponsors_visible = _optional_datetime_before(
+            rng,
+            start_date,
+            window_start=prev_end_date,
+            condition=rng.random() > 0.3,
+            prefer_min_days=60,
+            prefer_max_days=90,
+        )
+        media_partners_visible = _optional_datetime_before(
+            rng,
+            start_date,
+            window_start=prev_end_date,
+            condition=rng.random() > 0.5,
+            prefer_min_days=60,
+            prefer_max_days=90,
+        )
+        team_members_visible = _optional_datetime_before(
+            rng,
+            start_date,
+            window_start=prev_end_date,
+            condition=rng.random() > 0.5,
+            prefer_min_days=30,
+            prefer_max_days=60,
+        )
+        schedule_visible = _optional_datetime_before(
+            rng,
+            start_date,
+            window_start=prev_end_date,
+            condition=rng.random() > 0.3,
+            prefer_min_days=7,
+            prefer_max_days=21,
+        )
 
         event = Event(
             start_date=start_date,

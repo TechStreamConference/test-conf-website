@@ -160,7 +160,11 @@ async def test_login_persists_transaction_and_sets_secure_cookie(monkeypatch: py
         nonce="nonce",
         code_verifier="verifier",
     )
-    monkeypatch.setattr(auth_module, "create_authorization_request", AsyncMock(return_value=authorization_request))
+    monkeypatch.setattr(
+        auth_module,
+        "create_authorization_request",
+        AsyncMock(return_value=authorization_request),
+    )
     monkeypatch.setattr(auth_module, "generate_browser_secret", Mock(return_value="browser-secret"))
     session: Final = _session()
 
@@ -212,7 +216,13 @@ async def test_callback_rejects_missing_transaction_inputs(
     session: Final = _session()
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, login_secret, state, code)
+        _ = await callback(
+            Response(),
+            session,
+            login_secret,
+            state,
+            code,
+        )
 
     assert exc_info.value.status_code == 400
     assert exc_info.value.detail == "Invalid or expired login transaction."
@@ -225,7 +235,13 @@ async def test_callback_rejects_unknown_transaction() -> None:
     session.get.return_value = None
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, "browser-secret", "state", "code")
+        _ = await callback(
+            Response(),
+            session,
+            "browser-secret",
+            "state",
+            "code",
+        )
 
     assert exc_info.value.status_code == 400
     session.get.assert_awaited_once_with(OidcLoginTransaction, hash_token("state"))
@@ -247,7 +263,13 @@ async def test_callback_consumes_invalid_transaction(
     session.get.return_value = transaction
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, login_secret, "state", "code")
+        _ = await callback(
+            Response(),
+            session,
+            login_secret,
+            "state",
+            "code",
+        )
 
     assert exc_info.value.status_code == 400
     session.delete.assert_awaited_once_with(transaction)
@@ -265,7 +287,13 @@ async def test_callback_rejects_unverified_email_after_consuming_transaction(
     monkeypatch.setattr(auth_module, "exchange_code", exchange)
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await callback(Response(), session, "browser-secret", "state", "code")
+        _ = await callback(
+            Response(),
+            session,
+            "browser-secret",
+            "state",
+            "code",
+        )
 
     assert exc_info.value.status_code == 403
     assert exc_info.value.detail == "The email address of this account is not verified."
@@ -289,7 +317,13 @@ async def test_callback_creates_user_and_session_and_clears_login_cookie(
     monkeypatch.setattr(auth_module, "create_session", create_user_session)
     response: Final = Response()
 
-    result: Final = await callback(response, session, "browser-secret", "state", "code")
+    result: Final = await callback(
+        response,
+        session,
+        "browser-secret",
+        "state",
+        "code",
+    )
 
     assert result.redirect_url == "https://frontend.example/events"
     session.delete.assert_awaited_once_with(transaction)

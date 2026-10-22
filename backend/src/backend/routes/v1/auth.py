@@ -185,12 +185,23 @@ async def callback(
         )
 
     user_id: Final = await find_or_create_user(session, claims)
-    await create_session(session, response, user_id=user_id, zitadel_session_id=claims.session_id)
+    await create_session(
+        session,
+        response,
+        user_id=user_id,
+        zitadel_session_id=claims.session_id,
+    )
 
     # `secure`/`httponly`/`samesite` are required here too: the `__Host-` prefix
     # mandates `Secure` on every Set-Cookie for the name, including deletions,
     # or the browser silently rejects the header and never clears the cookie.
-    response.delete_cookie(_LOGIN_COOKIE_NAME, path="/", secure=True, httponly=True, samesite="lax")
+    response.delete_cookie(
+        _LOGIN_COOKIE_NAME,
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="lax",
+    )
 
     return LoginCallbackResponseV1(redirect_url=return_to)
 
