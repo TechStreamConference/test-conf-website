@@ -32,16 +32,12 @@ _LOCALE_ID_PATTERN = re.compile(
     re.ASCII,
 )
 _TRANSFORMED_FIELD_KEY_PATTERN = re.compile(r"[a-z][0-9]", re.ASCII)
+_VARIANT_SUBTAG_PATTERN = re.compile(_VARIANT_SUBTAG, re.ASCII)
 
 
 def _variants(language_id_subtags: list[str]) -> list[str]:
-    # Variants are the only subtags of a language ID after the language subtag with five or more characters or a
-    # leading digit (scripts have four letters, regions two letters or three digits).
-    return [
-        subtag
-        for subtag in language_id_subtags[1:]
-        if len(subtag) >= 5 or (len(subtag) == 4 and subtag[0].isdigit())  # noqa: PLR2004
-    ]
+    # Scripts and regions never match the variant syntax, so after the language subtag only variants do.
+    return [subtag for subtag in language_id_subtags[1:] if _VARIANT_SUBTAG_PATTERN.fullmatch(subtag) is not None]
 
 
 def _has_duplicates(subtags: list[str]) -> bool:
