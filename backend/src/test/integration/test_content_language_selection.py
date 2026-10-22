@@ -5,6 +5,7 @@ from typing import Final
 import pytest
 import pytest_asyncio
 from fastapi import HTTPException
+from fastapi import Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
@@ -92,7 +93,7 @@ async def test_imprint_without_pages_is_not_found(session: AsyncSession) -> None
     await _delete_imprint_pages(session, ["de", "en"])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_imprint(["de"], session)
+        _ = await get_imprint(["de"], Response(), session)
 
     assert exc_info.value.status_code == 404
 
@@ -101,7 +102,7 @@ async def test_imprint_without_pages_is_not_found(session: AsyncSession) -> None
 async def test_imprint_with_one_page_delivers_it(session: AsyncSession) -> None:
     await _delete_imprint_pages(session, ["en"])
 
-    imprint: Final = await get_imprint(["en-GB"], session)
+    imprint: Final = await get_imprint(["en-GB"], Response(), session)
 
     assert imprint.language_details.available_languages == ["de"]
     assert imprint.language_details.language_tag == "de"
@@ -127,8 +128,10 @@ async def test_imprint_with_several_pages_selects_by_lookup(
     session.add(StaticPage(kind=StaticPageKind.IMPRINT, language_tag="ja", content="Imprint (ja)"))
     await session.flush()
 
-    imprint: Final = await get_imprint(language_ranges, session)
+    response: Final = Response()
+    imprint: Final = await get_imprint(language_ranges, response, session)
 
+    assert response.headers["Content-Language"] == expected_language
     assert imprint.language_details.available_languages == ["de", "en", "ja"]
     assert imprint.language_details.language_tag == expected_language
     assert imprint.language_details.is_language_fallback is expected_fallback
@@ -139,7 +142,13 @@ async def test_event_without_translations_is_not_found(session: AsyncSession) ->
     await _add_event(session, [])
 
     with pytest.raises(HTTPException) as exc_info:
-        _ = await get_event_by_year_and_sequence_number(session, ["de"], _EVENT_YEAR, 1)
+        _ = await get_event_by_year_and_sequence_number(
+            session,
+            ["de"],
+            Response(),
+            _EVENT_YEAR,
+            1,
+        )
 
     assert exc_info.value.status_code == 404
 
@@ -148,7 +157,13 @@ async def test_event_without_translations_is_not_found(session: AsyncSession) ->
 async def test_event_with_one_translation_delivers_it(session: AsyncSession) -> None:
     await _add_event(session, ["ja"])
 
-    event: Final = await get_event_by_year_and_sequence_number(session, ["de"], _EVENT_YEAR, 1)
+    event: Final = await get_event_by_year_and_sequence_number(
+        session,
+        ["de"],
+        Response(),
+        _EVENT_YEAR,
+        1,
+    )
 
     assert event.title == "Title (ja)"
     assert event.language_details.available_languages == ["ja"]
@@ -173,8 +188,16 @@ async def test_event_with_several_translations_selects_by_lookup(
 ) -> None:
     await _add_event(session, ["ja", "es", "de"])
 
-    event: Final = await get_event_by_year_and_sequence_number(session, language_ranges, _EVENT_YEAR, 1)
+    response: Final = Response()
+    event: Final = await get_event_by_year_and_sequence_number(
+        session,
+        language_ranges,
+        response,
+        _EVENT_YEAR,
+        1,
+    )
 
+    assert response.headers["Content-Language"] == expected_language
     assert event.title == f"Title ({expected_language})"
     assert event.language_details.available_languages == ["de", "es", "ja"]
     assert event.language_details.language_tag == expected_language

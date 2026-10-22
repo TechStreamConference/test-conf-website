@@ -291,6 +291,7 @@ def test_content_language_negotiation_follows_the_behavior_table(
     assert imprint.content == f"Imprint ({expected_language})"
     assert imprint.language_details.language_tag == expected_language
     assert imprint.language_details.is_language_fallback is expected_fallback
+    assert response.headers["Content-Language"] == expected_language
     # The selection depends on the header exactly if no language is given.
     assert _varies_by_accept_language(response) is (language is None)
 
@@ -323,6 +324,7 @@ def test_content_routes_answer_missing_content_with_not_found() -> None:
     assert ImprintPageContentNotFoundResponseV1.model_validate(response.body) == (
         ImprintPageContentNotFoundResponseV1()
     )
+    assert "Content-Language" not in response.headers
 
 
 @pytest.mark.parametrize("path", ["/v1/imprint", "/v1/event", "/v1/event/2024/1"])
@@ -337,4 +339,5 @@ def test_content_routes_answer_unsupported_languages_with_unprocessable_content(
 
     assert response.status_code == 422
     assert UnsupportedLanguageTagResponseV1.model_validate(response.body) == UnsupportedLanguageTagResponseV1()
+    assert "Content-Language" not in response.headers
     response.session.execute.assert_not_awaited()
