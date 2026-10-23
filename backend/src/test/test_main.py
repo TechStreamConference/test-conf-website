@@ -113,7 +113,7 @@ async def test_request_middleware_returns_unexpected_exceptions_as_internal_serv
     locations: Final = failed.exception_stack.splitlines()
     assert len(locations) == 2
     assert re.fullmatch(r"backend\.main:\d+ in _log_requests", locations[0])
-    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + re.escape(call_next.__qualname__), locations[1])
+    assert re.fullmatch(rf"{re.escape(__name__)}:\d+ in {re.escape(call_next.__qualname__)}", locations[1])
     assert log_info.call_count == 2
     completed: Final = log_info.call_args_list[1].args[0]
     assert isinstance(completed, HttpRequestCompleted)
@@ -160,10 +160,10 @@ def test_code_locations_include_chained_exceptions(raise_exception: Callable[[],
 
     function: Final = re.escape(raise_exception.__qualname__)
     assert len(locations) == 4
-    assert re.fullmatch(re.escape(__name__) + r":\d+ in _code_locations_of", locations[0])
-    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + function, locations[1])
+    assert re.fullmatch(rf"{re.escape(__name__)}:\d+ in _code_locations_of", locations[0])
+    assert re.fullmatch(rf"{re.escape(__name__)}:\d+ in {function}", locations[1])
     assert locations[2] == f"{relation} builtins.KeyError"
-    assert re.fullmatch(re.escape(__name__) + r":\d+ in " + function, locations[3])
+    assert re.fullmatch(rf"{re.escape(__name__)}:\d+ in {function}", locations[3])
     # The locations of the cause are those of its own traceback, which ends where it was caught.
     assert locations[3] != locations[1]
     assert "jane@example.com" not in "\n".join(locations)

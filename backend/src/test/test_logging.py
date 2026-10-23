@@ -9,6 +9,7 @@ from typing import final
 
 import pytest
 
+import backend.logging._core as logging_core_module
 from backend.logging._base import LogEventBase
 from backend.logging.events_gen import ApplicationStarted
 from backend.logging.events_gen import ApplicationStopping
@@ -130,6 +131,21 @@ class TestLogRecordFormat:
             parsed = json.loads(line)
             assert isinstance(parsed, dict)
 
+    def test_record_is_written_as_a_single_line(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        log_path: Final = tmp_path / "single-line.jsonl"
+        original_file: Final = logging_core_module._LOG_FILE  # type: ignore[reportPrivateUsage]
+        try:
+            with log_path.open("a", encoding="utf-8") as file_handle:
+                logging_core_module._LOG_FILE = file_handle  # type: ignore[reportPrivateUsage]
+                logging_core_module.info(ApplicationStopping())
+        finally:
+            logging_core_module._LOG_FILE = original_file  # type: ignore[reportPrivateUsage]
+
+        output: Final = capsys.readouterr().out
+        assert output.endswith("}\n")
+        assert output.count("\n") == 1
+        assert log_path.read_text(encoding="utf-8") == output
+
     def test_optional_field_omitted_when_none(self) -> None:
         record: Final = _capture_log(HttpRequestReceived(method="GET", path="/"))
         attributes: Final = record["attributes"]
@@ -185,6 +201,40 @@ def test_dev_environment_pretty_prints_log(
     assert "application.started" in output
     assert '"localhost"' in output
     assert "\033[" in output
+
+
+def test_dev_environment_prints_header_line_before_record(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    settings: Final = logging_core_module.SETTINGS.model_copy(update={"environment": "dev"})
+    monkeypatch.setattr(logging_core_module, "SETTINGS", settings)
+
+    logging_core_module.info(ApplicationStopping())
+
+    header, record = capsys.readouterr().out.split("\n", 1)
+    assert header == (
+        "\033[1m\033[34m[backend]\033[0m \033[32m\033[1mINFO    \033[0m \033[1mapplication.stopping\033[0m"
+    )
+    assert record.startswith("{\n")
+    assert record.endswith("\n}\n")
+
+
+def test_colorize_json_indents_nested_containers() -> None:
+    value: Final = {"items": [1, None], "nested": {"key": "value"}, "empty": {}}
+
+    assert logging_core_module._colorize_json(value) == (  # type: ignore[reportPrivateUsage]
+        "{\n"
+        + '  \033[1m\033[36m"items"\033[0m: [\n'
+        + "    \033[33m1\033[0m,\n"
+        + "    \033[2mnull\033[0m\n"
+        + "  ],\n"
+        + '  \033[1m\033[36m"nested"\033[0m: {\n'
+        + '    \033[1m\033[36m"key"\033[0m: \033[32m"value"\033[0m\n'
+        + "  },\n"
+        + '  \033[1m\033[36m"empty"\033[0m: {}\n'
+        + "}"
+    )
 
 
 @pytest.mark.parametrize(
