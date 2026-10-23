@@ -30,7 +30,8 @@ def upgrade() -> None:
         sa.Column("locale", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.CheckConstraint(
-            "timezone IS NOT NULL OR locale IS NOT NULL", name="ck_regional_settings_suggestions_non_empty"
+            "timezone IS NOT NULL OR locale IS NOT NULL",
+            name="ck_regional_settings_suggestions_non_empty",
         ),
         sa.ForeignKeyConstraint(["session_id"], ["sessions.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),

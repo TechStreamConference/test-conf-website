@@ -94,7 +94,7 @@ async def login(
             pkce_code_verifier=authorization_request.code_verifier,
             return_to=redirect_url,
             expires_at=utc_now() + LOGIN_TRANSACTION_LIFETIME,
-        )
+        ),
     )
     await session.commit()
 
@@ -185,12 +185,23 @@ async def callback(
         )
 
     user_id: Final = await find_or_create_user(session, claims)
-    await create_session(session, response, user_id=user_id, zitadel_session_id=claims.session_id)
+    await create_session(
+        session,
+        response,
+        user_id=user_id,
+        zitadel_session_id=claims.session_id,
+    )
 
     # `secure`/`httponly`/`samesite` are required here too: the `__Host-` prefix
     # mandates `Secure` on every Set-Cookie for the name, including deletions,
     # or the browser silently rejects the header and never clears the cookie.
-    response.delete_cookie(_LOGIN_COOKIE_NAME, path="/", secure=True, httponly=True, samesite="lax")
+    response.delete_cookie(
+        _LOGIN_COOKIE_NAME,
+        path="/",
+        secure=True,
+        httponly=True,
+        samesite="lax",
+    )
 
     return LoginCallbackResponseV1(redirect_url=return_to)
 
@@ -224,7 +235,7 @@ async def me(
 
     pending_suggestion: Final = (
         await session.execute(
-            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == authenticated.session.id)
+            select(RegionalSettingsSuggestion).where(RegionalSettingsSuggestion.session_id == authenticated.session.id),
         )
     ).scalar_one_or_none()
 

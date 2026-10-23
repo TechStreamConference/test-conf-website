@@ -42,7 +42,7 @@ async def events_for_current_event_test() -> AsyncGenerator[tuple[AsyncSession, 
     try:
         async with session_factory() as session:
             events: Final = list(
-                (await session.execute(select(Event).order_by(col(Event.start_date), col(Event.id)))).scalars()
+                (await session.execute(select(Event).order_by(col(Event.start_date), col(Event.id)))).scalars(),
             )
             assert len(events) >= 3
             original_spotlight_dates: Final = [event.frontpage_spotlight_date for event in events]

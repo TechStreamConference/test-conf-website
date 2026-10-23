@@ -52,7 +52,7 @@ async def create_authorization_request() -> AuthorizationRequest:
     """
     client: Final[StarletteOAuth2App] = OAUTH.create_client(_ZITADEL_CLIENT_NAME)  # type: ignore[reportUnknownMemberType]
     result: Final = await client.create_authorization_url(  # type: ignore[reportUnknownMemberType, reportUnknownVariableType]
-        redirect_uri=SETTINGS.zitadel_redirect_uri
+        redirect_uri=SETTINGS.zitadel_redirect_uri,
     )
 
     return AuthorizationRequest.model_validate(result)

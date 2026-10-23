@@ -77,7 +77,7 @@ async def find_or_create_user(db: AsyncSession, claims: UserClaims) -> int:
                     zitadel_user_id=claims.subject,
                     email=claims.email,
                     username=claims.preferred_username,
-                )
+                ),
             )
             # Surface a uniqueness conflict while the transaction context is
             # active, so it rolls the speculative user and account back.
@@ -110,7 +110,7 @@ async def create_session(
             zitadel_session_id=zitadel_session_id,
             expires_at=now + idle_timeout,
             absolute_expires_at=now + timedelta(days=SETTINGS.session_absolute_lifetime_days),
-        )
+        ),
     )
     await db.commit()
 

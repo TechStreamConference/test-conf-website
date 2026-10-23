@@ -111,7 +111,12 @@ class RegionalSettingsSuggestion(SQLModel, table=True):
     )
 
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    session_id: int = Field(foreign_key="sessions.id", unique=True, nullable=False, ondelete="CASCADE")
+    session_id: int = Field(
+        foreign_key="sessions.id",
+        unique=True,
+        nullable=False,
+        ondelete="CASCADE",
+    )
     # A null field means there is no pending decision for that setting.
     timezone: Optional[str] = Field(default=None, nullable=True)
     locale: Optional[str] = Field(default=None, nullable=True)
