@@ -1,0 +1,20 @@
+name: Playwright cache key
+description: >
+  Computes the cache key for the Playwright browsers in `~/.cache/ms-playwright`. The browsers that
+  Playwright downloads depend on its version, so the key contains the installed version. Requires
+  the frontend dependencies to be installed.
+
+outputs:
+  key:
+    description: The cache key.
+    value: ${{ steps.key.outputs.key }}
+
+runs:
+  using: composite
+  steps:
+    - name: Compute Playwright cache key
+      id: key
+      shell: bash
+      run: |
+        version="$(jq -r .version frontend/node_modules/playwright/package.json)"
+        echo "key=playwright-${RUNNER_OS}-${version}" >> "$GITHUB_OUTPUT"

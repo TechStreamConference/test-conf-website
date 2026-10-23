@@ -1,0 +1,76 @@
+name: fill-caches
+
+# GitHub scopes caches by branch. Pull requests can read the caches of `main`, but not those of
+# other pull requests. This workflow fills the caches on `main`, and the CI workflow only reads them.
+on:
+  push:
+    branches: [main]
+  # GitHub removes cache entries that weren't accessed for 7 days. The daily run restores the
+  # entries, which counts as an access, so they stay even without pull requests.
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Runs for the same branch would save the same keys, so they wait for each other.
+concurrency:
+  group: fill-caches-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  playwright-browsers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+
+      - name: Install frontend project dependencies
+        run: nix develop --command pnpm --dir frontend install --frozen-lockfile
+
+      - name: Compute Playwright cache key
+        id: playwright-cache-key
+        uses: ./.github/actions/playwright-cache-key
+
+      - name: Restore Playwright browsers
+        id: restore
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.playwright-cache-key.outputs.key }}
+
+      # The same recipe as in the CI workflow, so that the cache contains the same browsers.
+      - name: Install Playwright browsers
+        if: steps.restore.outputs.cache-hit != 'true'
+        run: nix develop --command just e2e-init
+
+      - name: Save Playwright browsers
+        if: steps.restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.playwright-cache-key.outputs.key }}
+
+  frontend-container-layers:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The default `docker` driver can't export a build cache.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      # `mode=max` also exports the layers of the `builder` stage, including `pnpm install`.
+      - name: Build frontend container image
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: false
+          outputs: type=cacheonly
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
