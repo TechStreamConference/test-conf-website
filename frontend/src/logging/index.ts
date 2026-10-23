@@ -40,7 +40,7 @@ type LogRecord = {
 };
 
 // ---------------------------------------------------------------------------
-// File sink (initialised once at module load)
+// File sink (initialized once at module load)
 // ---------------------------------------------------------------------------
 
 const LOG_FILE_PATH: string | undefined = env['LOG_FILE'];
