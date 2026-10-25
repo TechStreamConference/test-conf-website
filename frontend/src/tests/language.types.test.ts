@@ -1,8 +1,11 @@
+import type { LoadEvent } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
+import type { ServerLoadEvent } from '@sveltejs/kit';
 
 import { expect } from 'vitest';
 import { it } from 'vitest';
 
+import { withDefaultLanguage } from '$lib/helper/language';
 import { withLanguage } from '$lib/helper/language';
 
 import type { PageServerLoad } from '../routes/auth/callback/$types';
@@ -33,4 +36,26 @@ it('rejects a language tag in the data of withLanguage', () => {
     const withTag = (event: RequestEvent) => withLanguage(event, 'de', { languageTag: 'en' });
 
     expect(withTag).toBeTypeOf('function');
+});
+
+it('accepts the event of a server load function', () => {
+    const fromServerLoad = (event: ServerLoadEvent) => withLanguage(event, 'de');
+    const defaultFromServerLoad = (event: ServerLoadEvent) => withDefaultLanguage(event);
+
+    expect(fromServerLoad).toBeTypeOf('function');
+    expect(defaultFromServerLoad).toBeTypeOf('function');
+});
+
+it('rejects the event of a universal load function in withLanguage', () => {
+    // @ts-expect-error A universal `load` has no `locals`, so it cannot set the language of the request.
+    const fromUniversalLoad = (event: LoadEvent) => withLanguage(event, 'de');
+
+    expect(fromUniversalLoad).toBeTypeOf('function');
+});
+
+it('rejects the event of a universal load function in withDefaultLanguage', () => {
+    // @ts-expect-error A universal `load` has no `locals`, so it cannot set the language of the request.
+    const fromUniversalLoad = (event: LoadEvent) => withDefaultLanguage(event);
+
+    expect(fromUniversalLoad).toBeTypeOf('function');
 });

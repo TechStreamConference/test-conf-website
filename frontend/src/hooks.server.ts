@@ -35,10 +35,11 @@ process.on('SIGTERM', () => {
 export const handle: Handle = async ({ event, resolve }) => {
     const start = performance.now();
     logger.info(httpRequestReceived({ method: event.request.method, path: event.url.pathname }));
-    event.locals.languageTag = DEFAULT_LANGUAGE_TAG;
-    // The `load` functions run before the page is rendered, so a page can change the language until then.
+    // The `load` functions have run when the html is rendered. Without a language there (e.g. an error
+    // page after a failed `load`) the default applies.
     const response = await resolve(event, {
-        transformPageChunk: ({ html }) => html.replace(LANG_PLACEHOLDER, event.locals.languageTag)
+        transformPageChunk: ({ html }) =>
+            html.replace(LANG_PLACEHOLDER, event.locals.languageTag ?? DEFAULT_LANGUAGE_TAG)
     });
     logger.info(
         httpRequestCompleted({

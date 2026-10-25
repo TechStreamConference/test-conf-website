@@ -2,8 +2,7 @@ import { getCurrentUser } from '$bff/v1/auth.server';
 import { loadGlobals } from '$bff/v1/globals.server';
 import { GenericBackendError } from '$bff/errors';
 
-import { DEFAULT_LANGUAGE_TAG } from '$lib/helper/language';
-import { withLanguage } from '$lib/helper/language';
+import { withDefaultLanguage } from '$lib/helper/language';
 import { UserState } from '$lib/helper/menus';
 
 import type { LayoutServerLoad } from './$types';
@@ -18,8 +17,9 @@ export const load: LayoutServerLoad = async (event) => {
         throw new GenericBackendError('getCurrentUser', user.status);
     }
 
-    // The default language, until the language comes from the backend. A page can override it with `withLanguage`.
-    return withLanguage(event, DEFAULT_LANGUAGE_TAG, {
+    // The language of the user, or the default. A page overrides it with `withLanguage`.
+    const userLanguageTag = user.ok ? user.data.regionalSettings?.locale : undefined;
+    return withDefaultLanguage(event, userLanguageTag, {
         userState: user.ok ? UserState.LoggedIn : UserState.LoggedOut,
         user: user.ok ? user.data : null,
         footerText: globals.footerText
