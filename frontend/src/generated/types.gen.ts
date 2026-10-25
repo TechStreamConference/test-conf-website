@@ -8,6 +8,8 @@ export type ClientOptions = {
 
 export type Bcp47Locale = string;
 
+export type ContentLanguageTag = string;
+
 /**
  * EmailNotVerifiedResponseV1
  */
@@ -225,11 +227,11 @@ export type LanguageDetailsV1 = {
     /**
      * Available Languages
      */
-    availableLanguages: Array<string>;
+    availableLanguages: Array<ContentLanguageTag>;
     /**
      * Language Tag
      */
-    languageTag: string;
+    languageTag: ContentLanguageTag;
     /**
      * Is Language Fallback
      */
