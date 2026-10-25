@@ -4,6 +4,7 @@ import { it } from 'vitest';
 
 import { i18n } from '$lib/helper/translate';
 import { normalizeLanguageTag } from '$lib/helper/translate';
+import { toLanguageTag } from '$lib/helper/language';
 
 import { m } from '$paraglide/messages';
 
@@ -83,5 +84,31 @@ describe('i18n', () => {
         expect(i18n(m.test_withPlaceholder, 'fr', inputs)).toBe(
             m.test_withPlaceholder(inputs, { locale: 'en' })
         );
+    });
+});
+
+// The language of a page goes through `toLanguageTag` first, so `i18n` has to handle what it returns.
+describe('i18n with a checked language tag', () => {
+    it('should render the text for the canonical form of a tag with a region', () => {
+        expect(i18n(m.test_plain, toLanguageTag('de-de'))).toBe(GERMAN_TEXT);
+        expect(i18n(m.test_plain, toLanguageTag('en-us'))).toBe(ENGLISH_TEXT);
+    });
+
+    it('should use the language of a tag with a script and a region', () => {
+        expect(i18n(m.test_plain, toLanguageTag('de-Latn-DE'))).toBe(GERMAN_TEXT);
+    });
+
+    it('should fall back to the base language for a valid tag of an unsupported language', () => {
+        expect(i18n(m.test_plain, toLanguageTag('zh-Hant'))).toBe(ENGLISH_TEXT);
+        expect(i18n(m.test_plain, toLanguageTag('es-419'))).toBe(ENGLISH_TEXT);
+    });
+
+    it('should render the text for a locale written with an underscore', () => {
+        expect(i18n(m.test_plain, toLanguageTag('de_DE'))).toBe(GERMAN_TEXT);
+    });
+
+    it('should fall back to the base language for a tag that is not valid', () => {
+        expect(i18n(m.test_plain, toLanguageTag('"><script>'))).toBe(ENGLISH_TEXT);
+        expect(i18n(m.test_plain, toLanguageTag(''))).toBe(ENGLISH_TEXT);
     });
 });

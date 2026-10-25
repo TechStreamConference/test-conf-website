@@ -1,13 +1,23 @@
 <script lang="ts">
     import type { HTMLImgAttributes } from 'svelte/elements';
 
+    import { i18n } from '$lib/helper/translate';
     import Image from '$lib/elements/img/Image.svelte';
 
+    import { m } from '$paraglide/messages';
+
     interface Props extends Omit<HTMLImgAttributes, 'src' | 'alt'> {
+        languageTag: string;
         height?: string | undefined;
         width?: string | undefined;
     }
-    const { height, width, ...rest }: Props = $props();
+    const { languageTag, height, width, ...rest }: Props = $props();
 </script>
 
-<Image {...rest} src="/img/logo_big.png" alt="Tech Stream Conference Logo" {height} {width} />
+<Image
+    {...rest}
+    src="/img/logo_big.png"
+    alt={i18n(m.global_logoBig_alt, languageTag)}
+    {height}
+    {width}
+/>

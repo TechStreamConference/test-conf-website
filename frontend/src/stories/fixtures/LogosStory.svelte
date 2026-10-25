@@ -2,6 +2,8 @@
     import LogoBig from '$lib/elements/img/LogoBig.svelte';
     import LogoSmall from '$lib/elements/img/LogoSmall.svelte';
 
+    const LANGUAGE_TAG = 'en';
+
     interface Props {
         variant: 'big' | 'small';
         width: string;
@@ -11,7 +13,7 @@
 </script>
 
 {#if variant === 'big'}
-    <LogoBig {width} />
+    <LogoBig languageTag={LANGUAGE_TAG} {width} />
 {:else}
-    <LogoSmall {width} />
+    <LogoSmall languageTag={LANGUAGE_TAG} {width} />
 {/if}
