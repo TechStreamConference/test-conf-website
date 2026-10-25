@@ -2,7 +2,7 @@
 
 Follow the existing architecture and conventions before introducing new patterns.
 
-Use American English everywhere: in identifiers, comments, docstrings, test IDs and documentation (e.g. `behavior`, not `behaviour`).
+Use American English everywhere: in identifiers, comments, docstrings, test IDs, documentation, commit messages, issues, pull request descriptions and review comments (e.g. `behavior`, not `behaviour`).
 
 ## Architecture and dependencies
 
@@ -28,9 +28,11 @@ Use American English everywhere: in identifiers, comments, docstrings, test IDs 
 - End argument lists, parameter lists and collection literals that span several lines with a trailing comma, so that the formatter keeps one element per line instead of joining them.
 - Don't give nested functions a name with a leading underscore. They can't be accessed from outside their enclosing function anyway, so the underscore would suggest a distinction that doesn't exist. Existing violations are tracked in #443.
 - Put imports at the top of the module. Avoid local imports inside functions or methods unless they are really needed, e.g. to break an import cycle or to defer an expensive or optional import. Existing violations are tracked in #453.
+- Comments on definitions such as constants, functions or classes explain what the defined thing is or means. Don't describe where or how it is used, or what else must change along with it: such notes go stale when the code that uses it changes.
 - Don't treat `Optional[T]` as being semantically equal to `T | None`: `Optional[T]` means that the value might be *missing* while `T | None` means that `None` is a meaningful value of its own.
 - Assign intentionally ignored non-`None` return values to `_`; Pyright's `reportUnusedCallResult` is enabled.
 - Keep type-ignore comments as narrow as possible and include the specific Pyright diagnostic. Do not use blanket file-level ignores to work around untyped dependencies.
+- Give names that are only used inside their own module and its tests a leading underscore. Tests import or access them with `# type: ignore[reportPrivateUsage]`, which also documents that only tests use them outside the module (e.g. `_is_valid_redirect_url` in `src/test/test_auth.py`).
 - Do not rely on type-checking-time-only checks. Guard them with real runtime type checks where possible. Therefore, avoid `cast`s unless absolutely necessary. Wrap untyped external code using typesafe wrappers where possible.
 
 ## API models
