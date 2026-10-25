@@ -27,7 +27,7 @@ jobs:
 
       - name: Start stack
         run: |
-          nix develop --command just up
+          nix develop --command just up-ci
           nix develop --command just backend-migrate
           nix develop --command just backend-seed-dev
 
