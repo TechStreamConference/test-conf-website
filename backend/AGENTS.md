@@ -2,7 +2,7 @@
 
 Follow the existing architecture and conventions before introducing new patterns.
 
-Use American English everywhere: in identifiers, comments, docstrings, test IDs and documentation (e.g. `behavior`, not `behaviour`).
+Use American English everywhere: in identifiers, comments, docstrings, test IDs, documentation, commit messages, issues, pull request descriptions and review comments (e.g. `behavior`, not `behaviour`).
 
 ## Architecture and dependencies
 
