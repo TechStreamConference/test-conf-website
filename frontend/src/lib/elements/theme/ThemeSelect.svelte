@@ -17,6 +17,8 @@
     }
     const { languageTag }: Props = $props();
 
+    const SUMMARY_ICON_SIZE = 35;
+
     onMount(() => {
         currentTheme = getTheme();
     });
@@ -42,13 +44,13 @@
 <details bind:open={isOpen} ontoggle={handleToggle}>
     <summary aria-label={i18n(m.global_themeSelect_aria, languageTag)}>
         {#if currentTheme === Theme.Dark}
-            <Moon aria-hidden="true" />
+            <Moon size={SUMMARY_ICON_SIZE} aria-hidden="true" />
         {:else if currentTheme === Theme.Light}
-            <Sun aria-hidden="true" />
+            <Sun size={SUMMARY_ICON_SIZE} aria-hidden="true" />
         {:else if currentTheme === Theme.System}
-            <SunMoon aria-hidden="true" />
+            <SunMoon size={SUMMARY_ICON_SIZE} aria-hidden="true" />
         {:else}
-            <Hourglass aria-hidden="true" />
+            <Hourglass size={SUMMARY_ICON_SIZE} aria-hidden="true" />
         {/if}
     </summary>
 

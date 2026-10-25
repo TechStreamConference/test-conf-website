@@ -52,7 +52,7 @@
         target={LinkTarget.SameTab}
         variant={LinkVariant.Plain}
     >
-        <LogoSmall {languageTag} height="3.2rem" />
+        <LogoSmall {languageTag} height="5rem" />
     </Link>
 
     <button
@@ -71,7 +71,7 @@
     </button>
 
     <div id={MENU_ID} class:menu={true} class:open={isOpen}>
-        <nav aria-label={i18n(m.header_menu_aria, languageTag)}>
+        <nav aria-label={i18n(m.header_menu_aria, languageTag)} class:sub-headline-font={true}>
             <ul>
                 {#each getEntries(menu, userState) as entry (entry.url)}
                     <li>
@@ -168,6 +168,10 @@
     }
     .menu.open {
         display: flex;
+    }
+
+    nav {
+        font-size: 1.5rem;
     }
 
     ul {

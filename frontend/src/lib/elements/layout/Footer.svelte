@@ -29,7 +29,9 @@
 <footer>
     <div class:columns={true}>
         <nav aria-labelledby={MENU_HEADLINE_ID}>
-            <h2 id={MENU_HEADLINE_ID}>{i18n(m.footer_menuHeadline, languageTag)}</h2>
+            <h2 id={MENU_HEADLINE_ID} class:sub-headline-font={true}>
+                {i18n(m.footer_menuHeadline, languageTag)}
+            </h2>
             <ul>
                 {#each getEntries(menu, userState) as entry (entry.url)}
                     <li>
@@ -47,7 +49,9 @@
         </nav>
 
         <nav aria-labelledby={EVENTS_HEADLINE_ID}>
-            <h2 id={EVENTS_HEADLINE_ID}>{i18n(m.footer_eventsHeadline, languageTag)}</h2>
+            <h2 id={EVENTS_HEADLINE_ID} class:sub-headline-font={true}>
+                {i18n(m.footer_eventsHeadline, languageTag)}
+            </h2>
             <ul class:events={true}>
                 {#each events as event (event.url)}
                     <li>
@@ -111,8 +115,8 @@
     h2 {
         margin-bottom: 0.5rem;
 
+        color: var(--white-color);
         font-size: 1.25rem;
-        font-weight: 700;
         text-align: center;
     }
 

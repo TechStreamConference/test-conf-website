@@ -10,7 +10,7 @@ export enum UserState {
 }
 
 /**
- * @brief The texts are message functions, so the caller translates them with `i18n` 
+ * @brief The texts are message functions, so the caller translates them with `i18n`
  * and supplies the placeholder values.
  *
  * @see i18n
@@ -22,7 +22,7 @@ export interface MenuEntry<TInputs extends Inputs = NoInputs> {
 }
 
 /**
- * @brief `TInputs` is the combined set of placeholders of all entries. 
+ * @brief `TInputs` is the combined set of placeholders of all entries.
  * An entry may need fewer, but not other placeholders.
  */
 export type Menu<TInputs extends Inputs = NoInputs> = Record<UserState, MenuEntry<TInputs>[]>;
