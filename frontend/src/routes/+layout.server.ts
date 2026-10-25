@@ -14,7 +14,7 @@ export const load: LayoutServerLoad = async (event) => {
 
     // A 401 only means that nobody is logged in. Every other failure is a real backend error.
     if (!user.ok && user.status !== HTTP_UNAUTHORIZED) {
-        throw new GenericBackendError('getCurrentUser', user.status);
+        throw new GenericBackendError('getCurrentUser', user);
     }
 
     // The language of the user, or the default. A page overrides it with `withLanguage`.
