@@ -10,8 +10,8 @@ export enum UserState {
 }
 
 /**
- * @brief A single link of a menu. Does not know in which state of the user it is shown.
- * The texts are message functions, so the caller translates them with `i18n` and supplies the placeholder values.
+ * @brief The texts are message functions, so the caller translates them with `i18n` 
+ * and supplies the placeholder values.
  *
  * @see i18n
  */
@@ -22,8 +22,8 @@ export interface MenuEntry<TInputs extends Inputs = NoInputs> {
 }
 
 /**
- * @brief The entries of a menu for every state of the user.
- * `TInputs` is the combined set of placeholders of all entries. An entry may need fewer, but not other placeholders.
+ * @brief `TInputs` is the combined set of placeholders of all entries. 
+ * An entry may need fewer, but not other placeholders.
  */
 export type Menu<TInputs extends Inputs = NoInputs> = Record<UserState, MenuEntry<TInputs>[]>;
 
