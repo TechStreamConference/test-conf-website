@@ -13,6 +13,7 @@ import { GenericBackendError } from '$bff/errors';
 import type { MeResponseV1 } from '$gen/types.gen';
 
 import { DEFAULT_LANGUAGE_TAG } from '$lib/helper/language';
+import { toLanguageTag } from '$lib/helper/language';
 import { withDefaultLanguage } from '$lib/helper/language';
 import { withLanguage } from '$lib/helper/language';
 import { UserState } from '$lib/helper/menus';
@@ -87,7 +88,49 @@ async function renderHtml(event: RequestEvent, runLoads: () => Promise<void>): P
     return await response.text();
 }
 
+// Strings that are not valid language tags and must never end up in the `lang` attribute of the html.
+const INVALID_TAGS = ['"><script>alert(1)</script>', '$&', 'de DE', ''];
+
+describe('toLanguageTag', () => {
+    it('brings a valid tag into its canonical form', () => {
+        expect(toLanguageTag('de-de')).toBe('de-DE');
+        expect(toLanguageTag('zh-hant')).toBe('zh-Hant');
+    });
+
+    it('accepts an underscore instead of the hyphen', () => {
+        expect(toLanguageTag('de_DE')).toBe('de-DE');
+        expect(toLanguageTag('DE_de')).toBe('de-DE');
+    });
+
+    it('keeps valid tags that a short pattern would reject', () => {
+        expect(toLanguageTag('fil')).toBe('fil');
+        expect(toLanguageTag('es-419')).toBe('es-419');
+        expect(toLanguageTag('zh-Hant-TW')).toBe('zh-Hant-TW');
+    });
+
+    it('does not check whether the language exists', () => {
+        expect(toLanguageTag('xx')).toBe('xx');
+    });
+
+    it('returns the default for a tag that is not valid', () => {
+        for (const invalidTag of INVALID_TAGS) {
+            expect(toLanguageTag(invalidTag)).toBe(DEFAULT_LANGUAGE_TAG);
+        }
+    });
+});
+
 describe('withLanguage', () => {
+    it('does not accept a tag that is not valid', () => {
+        for (const invalidTag of INVALID_TAGS) {
+            const event = createEvent();
+
+            const data = withLanguage(event, invalidTag);
+
+            expect(event.locals.languageTag).toBe(DEFAULT_LANGUAGE_TAG);
+            expect(data.languageTag).toBe(DEFAULT_LANGUAGE_TAG);
+        }
+    });
+
     it('sets the language of the request and returns it with the data', () => {
         const event = createEvent();
 
@@ -194,6 +237,19 @@ describe('lang attribute of the html', () => {
         });
 
         expect(html).toBe('<html lang="de">');
+    });
+
+    it('is safe even when something writes an invalid tag into locals directly', async () => {
+        for (const invalidTag of INVALID_TAGS) {
+            const event = createEvent();
+
+            const html = await renderHtml(event, () => {
+                event.locals.languageTag = invalidTag;
+                return Promise.resolve();
+            });
+
+            expect(html).toBe(`<html lang="${DEFAULT_LANGUAGE_TAG}">`);
+        }
     });
 
     it('is the default language when no load function sets one', async () => {

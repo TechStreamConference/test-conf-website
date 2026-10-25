@@ -6,6 +6,7 @@ import '$bff/client';
 import { env } from '$env/dynamic/private';
 
 import { DEFAULT_LANGUAGE_TAG } from '$lib/helper/language';
+import { toLanguageTag } from '$lib/helper/language';
 
 import { applicationStarted } from '$logging/events.gen';
 import { applicationStopping } from '$logging/events.gen';
@@ -39,7 +40,9 @@ export const handle: Handle = async ({ event, resolve }) => {
     // page after a failed `load`) the default applies.
     const response = await resolve(event, {
         transformPageChunk: ({ html }) =>
-            html.replace(LANG_PLACEHOLDER, event.locals.languageTag ?? DEFAULT_LANGUAGE_TAG)
+            html.replace(LANG_PLACEHOLDER, () =>
+                toLanguageTag(event.locals.languageTag ?? DEFAULT_LANGUAGE_TAG)
+            )
     });
     logger.info(
         httpRequestCompleted({

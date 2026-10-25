@@ -9,6 +9,25 @@ export type LanguageTag = string & { readonly __brand: 'LanguageTag' };
 export const DEFAULT_LANGUAGE_TAG = 'en';
 
 /**
+ * @brief Brings a language tag into its canonical form (`de-de` becomes `de-DE`). The result only
+ * contains letters, digits and hyphens, so it is safe to put into the `lang` attribute of the html.
+ * An underscore is accepted instead of the hyphen (`de_DE`), because that is a common way to write a locale.
+ * Only the structure of the tag is checked, not whether the language exists. That is up to the backend.
+ *
+ * @param languageTag the language tag to check
+ * @returns the canonical language tag, or the default if the structure is not valid
+ */
+export function toLanguageTag(languageTag: string): string {
+    try {
+        return (
+            Intl.getCanonicalLocales(languageTag.replaceAll('_', '-'))[0] ?? DEFAULT_LANGUAGE_TAG
+        );
+    } catch {
+        return DEFAULT_LANGUAGE_TAG;
+    }
+}
+
+/**
  * @brief Sets the language of the current request and adds it to the page data. The server renders the
  * `lang` attribute from the request, the layout reads the page data, and this keeps both the same.
  *
@@ -22,8 +41,11 @@ export function withLanguage<T extends object>(
     languageTag: string,
     data?: T & { languageTag?: never }
 ): T & { languageTag: LanguageTag } {
-    event.locals.languageTag = languageTag;
-    return { ...data, languageTag: languageTag as LanguageTag } as T & { languageTag: LanguageTag };
+    const checkedLanguageTag = toLanguageTag(languageTag);
+    event.locals.languageTag = checkedLanguageTag;
+    return { ...data, languageTag: checkedLanguageTag as LanguageTag } as T & {
+        languageTag: LanguageTag;
+    };
 }
 
 /**
@@ -44,7 +66,7 @@ export function withDefaultLanguage<T extends object>(
     languageTag?: string,
     data?: T & { languageTag?: never }
 ): T & { languageTag: LanguageTag } {
-    event.locals.languageTag ??= languageTag ?? DEFAULT_LANGUAGE_TAG;
+    event.locals.languageTag ??= toLanguageTag(languageTag ?? DEFAULT_LANGUAGE_TAG);
     return { ...data, languageTag: event.locals.languageTag as LanguageTag } as T & {
         languageTag: LanguageTag;
     };
