@@ -9,6 +9,7 @@ from typing import final
 
 import pytest
 
+import backend.logging as logging_module
 import backend.logging._core as logging_core_module
 from backend.logging._base import LogEventBase
 from backend.logging.events_gen import ApplicationStarted
@@ -26,16 +27,12 @@ def switch_to_staging_environment(monkeypatch: pytest.MonkeyPatch) -> None:
     # We cannot simply change the environment variable because the `SETTINGS` object is instantiated
     # at import time, so we must patch the `environment` attribute directly. For this, we have to
     # patch the object from the module that imports it.
-    import backend.logging._core as log_core_module
-
-    mock_settings: Final = log_core_module.SETTINGS.model_copy(update={"environment": "staging"})
-    monkeypatch.setattr(log_core_module, "SETTINGS", mock_settings)
+    mock_settings: Final = logging_core_module.SETTINGS.model_copy(update={"environment": "staging"})
+    monkeypatch.setattr(logging_core_module, "SETTINGS", mock_settings)
 
 
 def _capture_log(event: LogEventBase, level: str = "info") -> dict[str, object]:
     """Call the named logging level with `event` and return the parsed JSONL record."""
-    import backend.logging as log_module
-
     captured: Final = StringIO()
     original: Final = sys.stdout
     try:
@@ -43,7 +40,7 @@ def _capture_log(event: LogEventBase, level: str = "info") -> dict[str, object]:
         # Fetch the appropriate logging function by name from the logging module and
         # call it with the event. During this call, `stdout` is redirected to the
         # `StringIO` buffer so that we can capture the output for inspection.
-        getattr(log_module, level)(event)
+        getattr(logging_module, level)(event)
     finally:
         sys.stdout = original
 
@@ -114,14 +111,12 @@ class TestLogRecordFormat:
 
     def test_output_is_valid_json_line(self) -> None:
         """Each call should produce exactly one JSON object per line."""
-        import backend.logging as log_module
-
         captured: Final = StringIO()
         original: Final = sys.stdout
         try:
             sys.stdout = captured
-            log_module.info(ApplicationStarted(host="h", port=1))
-            log_module.info(ApplicationStopping())
+            logging_module.info(ApplicationStarted(host="h", port=1))
+            logging_module.info(ApplicationStopping())
         finally:
             sys.stdout = original
 
@@ -160,9 +155,6 @@ class TestFileLogging:
         log_path: Final = tmp_path / "test.jsonl"
         monkeypatch.setenv("LOG_FILE", str(log_path))
 
-        # Force module reload to pick up the new env var.
-        import backend.logging._core as logging_core_module
-
         original_file: Final = logging_core_module._LOG_FILE  # type: ignore[reportPrivateUsage]
         try:
             log_path.parent.mkdir(parents=True, exist_ok=True)
@@ -188,8 +180,6 @@ def test_dev_environment_pretty_prints_log(
     monkeypatch: pytest.MonkeyPatch,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    import backend.logging._core as logging_core_module
-
     settings: Final = logging_core_module.SETTINGS.model_copy(update={"environment": "dev"})
     monkeypatch.setattr(logging_core_module, "SETTINGS", settings)
 
@@ -253,30 +243,22 @@ def test_colorize_json_indents_nested_containers() -> None:
     ],
 )
 def test_colorize_json_handles_json_value_types(value: object, expected_fragment: str) -> None:
-    import backend.logging._core as logging_core_module
-
     result: Final = logging_core_module._colorize_json(value)  # type: ignore[reportPrivateUsage]
 
     assert expected_fragment in result
 
 
 def test_colorize_json_falls_back_to_repr() -> None:
-    import backend.logging._core as logging_core_module
-
     value: Final = object()
 
     assert logging_core_module._colorize_json(value) == repr(value)  # type: ignore[reportPrivateUsage]
 
 
 def test_try_open_log_file_returns_none_without_path() -> None:
-    import backend.logging._core as logging_core_module
-
     assert logging_core_module._try_open_log_file(None) is None  # type: ignore[reportPrivateUsage]
 
 
 def test_try_open_log_file_creates_parent_and_appends(tmp_path: Path) -> None:
-    import backend.logging._core as logging_core_module
-
     path: Final = tmp_path / "nested" / "backend.jsonl"
     handle: Final = logging_core_module._try_open_log_file(path)  # type: ignore[reportPrivateUsage]
     assert handle is not None
@@ -292,8 +274,6 @@ def test_try_open_log_file_reports_failure(
     tmp_path: Path,
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    import backend.logging._core as logging_core_module
-
     parent_file: Final = tmp_path / "not-a-directory"
     _ = parent_file.write_text("content", encoding="utf-8")
 
@@ -306,8 +286,6 @@ def test_try_open_log_file_reports_failure(
 def test_log_file_appends(tmp_path: Path) -> None:
     """Records are appended, not overwritten."""
     log_path: Final = tmp_path / "append.jsonl"
-    import backend.logging._core as logging_core_module
-
     original_file: Final = logging_core_module._LOG_FILE  # type: ignore[reportPrivateUsage]
     try:
         with log_path.open("a", encoding="utf-8") as file_handle:
