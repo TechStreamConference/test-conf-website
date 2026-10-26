@@ -8,24 +8,20 @@ const META = {
     title: 'Helper/Translate',
     component: TranslateStory,
     args: {
-        message: 'test_plain',
+        message: 'global_themeSelectDark',
         languageTag: 'de',
-        placeholder1: 'Placeholder 1',
-        placeholder2: 'Placeholder 2'
+        year: '2026'
     },
     argTypes: {
         message: {
             control: 'select',
-            options: ['test_plain', 'test_plain2', 'test_withPlaceholder']
+            options: ['global_themeSelectDark', 'global_themeSelectLight', 'footer_copyright']
         },
         languageTag: {
             control: 'select',
             options: ['de', 'en', 'DE', 'en-US', 'en-GB', 'fr']
         },
-        placeholder1: {
-            control: 'text'
-        },
-        placeholder2: {
+        year: {
             control: 'text'
         }
     }

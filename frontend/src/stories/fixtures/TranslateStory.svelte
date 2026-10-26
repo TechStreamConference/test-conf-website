@@ -4,25 +4,23 @@
     import { m } from '$paraglide/messages';
 
     const MESSAGES = {
-        test_plain: m.test_plain,
-        test_plain2: m.test_plain2,
-        test_withPlaceholder: m.test_withPlaceholder
+        global_themeSelectDark: m.global_themeSelectDark,
+        global_themeSelectLight: m.global_themeSelectLight,
+        footer_copyright: m.footer_copyright
     } as const;
 
     interface Props {
         languageTag: string;
         message: keyof typeof MESSAGES;
-        placeholder1: string;
-        placeholder2: string;
+        year: string;
     }
-    const { languageTag, message, placeholder1, placeholder2 }: Props = $props();
+    const { languageTag, message, year }: Props = $props();
 </script>
 
-{#if message === 'test_withPlaceholder'}
+{#if message === 'footer_copyright'}
     <button type="button"
         >{i18n(MESSAGES[message], languageTag, {
-            placeholder1: placeholder1,
-            placeholder2: placeholder2
+            year
         })}</button
     >
 {:else}
