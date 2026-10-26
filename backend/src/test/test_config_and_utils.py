@@ -29,13 +29,11 @@ class _MultiFieldBody(BaseModel):
 
 def test_settings_build_oidc_and_database_urls() -> None:
     assert SETTINGS.zitadel_redirect_uri == f"{SETTINGS.frontend_root_uri.rstrip('/')}/auth/callback"
-    assert SETTINGS.async_database_url.startswith("postgresql+psycopg://")
-    assert SETTINGS.sync_database_url.startswith("postgresql+psycopg://")
-    for url in (SETTINGS.async_database_url, SETTINGS.sync_database_url):
-        assert SETTINGS.database_user in url
-        assert SETTINGS.database_host in url
-        assert str(SETTINGS.database_port) in url
-        assert url.endswith(f"/{SETTINGS.database_name}")
+    assert SETTINGS.database_url.startswith("postgresql+psycopg://")
+    assert SETTINGS.database_user in SETTINGS.database_url
+    assert SETTINGS.database_host in SETTINGS.database_url
+    assert str(SETTINGS.database_port) in SETTINGS.database_url
+    assert SETTINGS.database_url.endswith(f"/{SETTINGS.database_name}")
 
 
 @pytest.mark.parametrize("locale", ["en_US", "not a locale"])

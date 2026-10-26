@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from backend.config import SETTINGS
 
 _ENGINE = create_async_engine(
-    SETTINGS.async_database_url,
+    SETTINGS.database_url,
     echo=SETTINGS.database_echo,
     pool_pre_ping=True,
 )

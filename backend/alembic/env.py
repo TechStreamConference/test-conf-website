@@ -18,7 +18,7 @@ target_metadata = SQLModel.metadata
 
 def run_migrations_offline() -> None:
     context.configure(
-        url=SETTINGS.sync_database_url,
+        url=SETTINGS.database_url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
@@ -34,7 +34,7 @@ def run_migrations_online() -> None:
     # Preserve URLs supplied programmatically, such as the Testcontainers URL used
     # by integration tests. The blank URL in `alembic.ini` falls back to app settings.
     if "sqlalchemy.url" not in configuration or not configuration["sqlalchemy.url"].strip():
-        configuration["sqlalchemy.url"] = SETTINGS.sync_database_url
+        configuration["sqlalchemy.url"] = SETTINGS.database_url
 
     connectable = engine_from_config(
         configuration,
