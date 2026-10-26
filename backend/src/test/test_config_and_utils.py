@@ -29,7 +29,7 @@ class _MultiFieldBody(BaseModel):
 
 def test_settings_build_oidc_and_database_urls() -> None:
     assert SETTINGS.zitadel_redirect_uri == f"{SETTINGS.frontend_root_uri.rstrip('/')}/auth/callback"
-    assert SETTINGS.async_database_url.startswith("postgresql+asyncpg://")
+    assert SETTINGS.async_database_url.startswith("postgresql+psycopg://")
     assert SETTINGS.sync_database_url.startswith("postgresql+psycopg://")
     for url in (SETTINGS.async_database_url, SETTINGS.sync_database_url):
         assert SETTINGS.database_user in url

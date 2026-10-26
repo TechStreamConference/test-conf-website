@@ -57,7 +57,7 @@ class Settings(BaseSettings):
     @cached_property
     def async_database_url(self) -> str:
         return (
-            f"postgresql+asyncpg://{self.database_user}:{self.database_password.get_secret_value()}"
+            f"postgresql+psycopg://{self.database_user}:{self.database_password.get_secret_value()}"
             + f"@{self.database_host}:{self.database_port}/{self.database_name}"
         )
 
