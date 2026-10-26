@@ -56,9 +56,12 @@ def timezones_equivalent(a: str, b: str) -> bool:
 
 def validate_timezone(value: str) -> str:
     """Validate an IANA timezone identifier while preserving its spelling."""
-    # Some system zoneinfo installations expose host-specific convenience files
-    # that are not timezone identifiers from the IANA database.
-    if value in {"localtime", "posixrules"} or value.startswith(("posix/", "right/")) or value not in _iana_timezones():
+    # Some system zoneinfo directories contain a host-specific `localtime` file,
+    # which is not an IANA timezone identifier but is valid TZif data and thus
+    # listed by `available_timezones()`. The other special files of the system
+    # zoneinfo (`posixrules` and the `posix/` and `right/` directories) are
+    # already left out by `available_timezones()`.
+    if value == "localtime" or value not in _iana_timezones():
         raise ValueError("Timezone must be a valid IANA timezone identifier.")
     try:
         _ = ZoneInfo(value)
