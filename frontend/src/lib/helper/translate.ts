@@ -21,6 +21,26 @@ export type NoInputs = Inputs;
 export type Message<TInputs> = (inputs: TInputs, options: { locale: Locale }) => string;
 
 /**
+ * @brief The placeholder values a message function needs, read from the function itself.
+ *
+ * @template TMessage a message function from Paraglide (e.g. `typeof m.save`)
+ */
+type InputsOf<TMessage> = TMessage extends (inputs: infer TInputs, ...rest: never[]) => string
+    ? NonNullable<TInputs>
+    : never;
+
+/**
+ * @brief The inputs a caller passes to a message: all placeholders of the message and nothing else.
+ * Every property that the message does not have becomes `never`, so TypeScript reports it. Without this, a message without
+ * placeholders (`{}`) accepts any object, because TypeScript does not check extra properties against `{}`.
+ *
+ * @template TInputs the placeholder values the message needs
+ * @template TGiven the inputs as the caller wrote them
+ */
+type ExactInputs<TInputs, TGiven extends TInputs> = TGiven &
+    Record<Exclude<keyof TGiven, keyof TInputs>, never>;
+
+/**
  * @brief Prepares a language tag from the backend for Paraglide.
  * A tag with a region (`en-US`) is reduced to its language (`en`), unless the region itself is a supported language.
  * The result is not checked against the supported languages. Paraglide falls back to the base language for unknown ones.
@@ -47,13 +67,18 @@ export function normalizeLanguageTag(languageTag: string): string {
  * @param inputs the placeholder values of the message, only required if the message has placeholders
  * @returns the translated text
  */
-export function i18n<TInputs extends Record<string, unknown>>(
-    message: Message<TInputs>,
+export function i18n<
+    TMessage extends Message<never>,
+    TGiven extends InputsOf<TMessage> = InputsOf<TMessage>
+>(
+    message: TMessage,
     languageTag: string,
-    ...[inputs]: Record<string, never> extends TInputs ? [inputs?: TInputs] : [inputs: TInputs]
+    ...[inputs]: Record<string, never> extends InputsOf<TMessage>
+        ? [inputs?: ExactInputs<InputsOf<TMessage>, TGiven>]
+        : [inputs: ExactInputs<InputsOf<TMessage>, TGiven>]
 ): string {
     // Paraglide types `locale` as the union of its languages, but falls back to the base language for any other value.
-    return message((inputs ?? {}) as TInputs, {
+    return (message as unknown as Message<unknown>)(inputs ?? {}, {
         locale: normalizeLanguageTag(languageTag) as Locale
     });
 }
