@@ -13,6 +13,8 @@ const BERLIN_DE: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'de-DE' 
 const BERLIN_EN: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'en-US' };
 const NEW_YORK_DE: DateTimeContext = { timeZone: 'America/New_York', locale: 'de-DE' };
 const NEW_YORK_EN: DateTimeContext = { timeZone: 'America/New_York', locale: 'en-US' };
+// Structurally valid, so the backend accepts it, but the browser has no data for it.
+const BERLIN_UNKNOWN_LOCALE: DateTimeContext = { timeZone: 'Europe/Berlin', locale: 'abc-123' };
 
 function catchError(fn: () => unknown): unknown {
     try {
@@ -172,6 +174,13 @@ describe('format', () => {
             'June 13, 2026 at 9:05 AM GMT+2'
         );
     });
+
+    it('does not throw for a locale without data', () => {
+        const instant = ZonedDateTime.fromHtmlDateTime('2026-06-13T09:05', BERLIN_UNKNOWN_LOCALE);
+        for (const format of Object.values(DateTimeFormat)) {
+            expect(instant.format(format)).not.toBe('');
+        }
+    });
 });
 
 describe('formatRange', () => {
@@ -197,6 +206,14 @@ describe('formatRange', () => {
         expect(() =>
             ZonedDateTime.formatRange(start, end, DateTimeFormat.FullDateShort)
         ).not.toThrow();
+    });
+
+    it('does not throw for a locale without data', () => {
+        const start = ZonedDateTime.fromHtmlDate('2026-06-13', BERLIN_UNKNOWN_LOCALE);
+        const end = ZonedDateTime.fromHtmlDate('2026-06-14', BERLIN_UNKNOWN_LOCALE);
+        for (const format of Object.values(DateTimeFormat)) {
+            expect(ZonedDateTime.formatRange(start, end, format)).not.toBe('');
+        }
     });
 
     it('does not throw when start and end are the same value', () => {
