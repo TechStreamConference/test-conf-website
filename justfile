@@ -111,6 +111,10 @@ frontend-fix:
 frontend-test:
     pnpm --dir {{ frontend_dir }} run test
 
+# Installs the headless Chromium for the frontend browser tests and its system dependencies.
+frontend-test-init:
+    PATH="$(dirname "$(command -v node)"):/usr/bin:/bin:$PATH" pnpm --dir {{ frontend_dir }} exec playwright install --with-deps --only-shell chromium
+
 # Runs all the test parts of the frontend.
 frontend-suite: frontend-build frontend-fix frontend-check frontend-test
 
