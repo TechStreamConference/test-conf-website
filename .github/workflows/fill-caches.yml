@@ -46,7 +46,7 @@ jobs:
       # The same recipe as in the CI workflow, so that the cache contains the same browsers.
       - name: Install Playwright browsers
         if: steps.restore.outputs.cache-hit != 'true'
-        run: nix develop --command just e2e-init
+        run: nix develop --command just frontend-test-init
 
       - name: Save Playwright browsers
         if: steps.restore.outputs.cache-hit != 'true'

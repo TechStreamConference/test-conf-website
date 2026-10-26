@@ -44,7 +44,7 @@ jobs:
             --volume "$GITHUB_WORKSPACE:/work" \
             --workdir /work/frontend \
             --env CI=true \
-            mcr.microsoft.com/playwright:v1.62.0-noble \
+            mcr.microsoft.com/playwright:v1.62.1-noble \
             node node_modules/playwright/cli.js test
 
       - name: Upload test report and application log
