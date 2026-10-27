@@ -27,7 +27,7 @@ Use American English everywhere: in identifiers, comments, docstrings, test IDs,
 - Split function calls with many and/or long arguments across several lines, with one argument per line.
 - End argument lists, parameter lists and collection literals that span several lines with a trailing comma, so that the formatter keeps one element per line instead of joining them.
 - Don't give nested functions a name with a leading underscore. They can't be accessed from outside their enclosing function anyway, so the underscore would suggest a distinction that doesn't exist. Existing violations are tracked in #443.
-- Put imports at the top of the module. Avoid local imports inside functions or methods unless they are really needed, e.g. to break an import cycle or to defer an expensive or optional import. Existing violations are tracked in #453.
+- Put imports at the top of the module. Avoid local imports inside functions or methods unless they are really needed, e.g. to break an import cycle or to defer an expensive or optional import.
 - Comments on definitions such as constants, functions or classes explain what the defined thing is or means. Don't describe where or how it is used, or what else must change along with it: such notes go stale when the code that uses it changes.
 - Don't treat `Optional[T]` as being semantically equal to `T | None`: `Optional[T]` means that the value might be *missing* while `T | None` means that `None` is a meaningful value of its own.
 - Assign intentionally ignored non-`None` return values to `_`; Pyright's `reportUnusedCallResult` is enabled.
