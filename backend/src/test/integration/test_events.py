@@ -139,7 +139,10 @@ async def test_current_event_route_returns_most_recently_spotlighted_event(
     events[2].frontpage_spotlight_date = now + timedelta(days=1)
     await session.commit()
 
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/en/event").raise_for_status()
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event",
+        params={"language": "en"},
+    ).raise_for_status()
     current_event: Final = EventResponseV1.model_validate(response.json())
 
     assert current_event.id == events[1].id
@@ -157,7 +160,10 @@ async def test_current_event_route_returns_not_found_when_no_event_is_applicable
         event.frontpage_spotlight_date = None if index % 2 == 0 else future
     await session.commit()
 
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/de/event")
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event",
+        params={"language": "de"},
+    )
 
     assert response.status_code == 404
     assert EventNotFoundResponseV1.model_validate(response.json()) == EventNotFoundResponseV1()
@@ -165,9 +171,18 @@ async def test_current_event_route_returns_not_found_when_no_event_is_applicable
 
 @pytest.mark.asyncio
 async def test_event_route_returns_numbered_and_latest_events() -> None:
-    first_response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/en/event/2024/1").raise_for_status()
-    second_response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/es/event/2024/2").raise_for_status()
-    latest_response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/es/event/2024/latest").raise_for_status()
+    first_response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2024/1",
+        params={"language": "en"},
+    ).raise_for_status()
+    second_response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2024/2",
+        params={"language": "es"},
+    ).raise_for_status()
+    latest_response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2024/latest",
+        params={"language": "es"},
+    ).raise_for_status()
 
     first: Final = EventResponseV1.model_validate(first_response.json())
     second: Final = EventResponseV1.model_validate(second_response.json())
@@ -183,6 +198,21 @@ async def test_event_route_returns_numbered_and_latest_events() -> None:
     assert second.language_details.language_tag == "es"
     assert second.language_details.is_language_fallback is False
     assert latest == second
+    assert second_response.headers["Content-Language"] == "es"
+
+
+@pytest.mark.asyncio
+async def test_event_route_negotiates_the_language_from_accept_language() -> None:
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2024/2",
+        headers={"Accept-Language": "fr, es;q=0.8, en;q=0.5"},
+    ).raise_for_status()
+    event: Final = EventResponseV1.model_validate(response.json())
+
+    assert event.language_details.language_tag == "es"
+    assert event.language_details.is_language_fallback is True
+    assert response.headers["Content-Language"] == "es"
+    assert "Accept-Language" in response.headers["Vary"]
 
 
 @pytest.mark.asyncio
@@ -190,7 +220,10 @@ async def test_event_route_keeps_events_starting_on_the_same_day_apart(
     events_starting_on_the_same_day: list[Event],
 ) -> None:
     responses: Final = [
-        httpx.get(f"{SETTINGS.backend_root_uri}/v1/en/event/{_SAME_DAY_EVENTS_YEAR}/{sequence_number}")
+        httpx.get(
+            f"{SETTINGS.backend_root_uri}/v1/event/{_SAME_DAY_EVENTS_YEAR}/{sequence_number}",
+            params={"language": "en"},
+        )
         for sequence_number in [1, 2, 3]
     ]
 
@@ -205,7 +238,10 @@ async def test_event_route_keeps_events_starting_on_the_same_day_apart(
 
 @pytest.mark.asyncio
 async def test_event_route_falls_back_to_english() -> None:
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/fr/event/2023/1").raise_for_status()
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2023/1",
+        params={"language": "fr"},
+    ).raise_for_status()
     event: Final = EventResponseV1.model_validate(response.json())
 
     assert event.language_details.available_languages == ["de", "en"]
@@ -222,7 +258,10 @@ async def test_event_route_falls_back_to_english() -> None:
     ],
 )
 async def test_event_route_rejects_invalid_sequence_numbers(sequence_number: int) -> None:
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/de/event/2024/{sequence_number}")
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/2024/{sequence_number}",
+        params={"language": "de"},
+    )
 
     assert response.status_code == 400
     assert InvalidSequenceNumberResponseV1.model_validate(response.json()) == InvalidSequenceNumberResponseV1()
@@ -237,7 +276,10 @@ async def test_event_route_rejects_invalid_sequence_numbers(sequence_number: int
     ],
 )
 async def test_event_route_returns_not_found_for_missing_events(year: int, sequence_number: int) -> None:
-    response: Final = httpx.get(f"{SETTINGS.backend_root_uri}/v1/de/event/{year}/{sequence_number}")
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/event/{year}/{sequence_number}",
+        params={"language": "de"},
+    )
 
     assert response.status_code == 404
     assert EventNotFoundResponseV1.model_validate(response.json()) == EventNotFoundResponseV1()

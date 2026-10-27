@@ -348,6 +348,59 @@ export type ReportedRegionalSettingsInputV1 = {
 };
 
 /**
+ * RequestValidationErrorResponseV1
+ *
+ * FastAPI’s response to a request whose parameters don’t match their types.
+ *
+ * Mirrors FastAPI’s `HTTPValidationError`, which has no public Pydantic model. Routes
+ * that document their own `422` response list it alongside theirs.
+ */
+export type RequestValidationErrorResponseV1 = {
+    /**
+     * Detail
+     */
+    detail: Array<RequestValidationErrorV1>;
+};
+
+/**
+ * RequestValidationErrorV1
+ */
+export type RequestValidationErrorV1 = {
+    /**
+     * Loc
+     */
+    loc: Array<string | number>;
+    /**
+     * Msg
+     */
+    msg: string;
+    /**
+     * Type
+     */
+    type: string;
+    /**
+     * Input
+     */
+    input?: unknown | null;
+    /**
+     * Ctx
+     */
+    ctx?: {
+        [key: string]: unknown;
+    };
+};
+
+/**
+ * UnsupportedLanguageTagResponseV1
+ */
+export type UnsupportedLanguageTagResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Unsupported language tag.';
+};
+
+/**
  * UserPreferencesInputV1
  */
 export type UserPreferencesInputV1 = {
@@ -515,14 +568,16 @@ export type GetCurrentUserV1Response = GetCurrentUserV1Responses[keyof GetCurren
 
 export type GetCurrentEventV1Data = {
     body?: never;
-    path: {
+    path?: never;
+    query?: {
         /**
-         * Language Tag
+         * Language
+         *
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
          */
-        language_tag: string;
+        language?: string | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/event';
+    url: '/v1/event';
 };
 
 export type GetCurrentEventV1Errors = {
@@ -531,9 +586,9 @@ export type GetCurrentEventV1Errors = {
      */
     404: EventNotFoundResponseV1;
     /**
-     * Validation Error
+     * Unprocessable Content
      */
-    422: HttpValidationError;
+    422: UnsupportedLanguageTagResponseV1;
     /**
      * Internal Server Error
      */
@@ -555,10 +610,6 @@ export type GetEventByYearAndSequenceNumberV1Data = {
     body?: never;
     path: {
         /**
-         * Language Tag
-         */
-        language_tag: string;
-        /**
          * Year
          */
         year: number;
@@ -567,8 +618,15 @@ export type GetEventByYearAndSequenceNumberV1Data = {
          */
         sequence_number: number | 'latest';
     };
-    query?: never;
-    url: '/v1/{language_tag}/event/{year}/{sequence_number}';
+    query?: {
+        /**
+         * Language
+         *
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
+         */
+        language?: string | null;
+    };
+    url: '/v1/event/{year}/{sequence_number}';
 };
 
 export type GetEventByYearAndSequenceNumberV1Errors = {
@@ -581,9 +639,11 @@ export type GetEventByYearAndSequenceNumberV1Errors = {
      */
     404: EventNotFoundResponseV1;
     /**
-     * Validation Error
+     * Response 422 Get Event By Year And Sequence Number V1
+     *
+     * Unprocessable Content
      */
-    422: HttpValidationError;
+    422: UnsupportedLanguageTagResponseV1 | RequestValidationErrorResponseV1;
     /**
      * Internal Server Error
      */
@@ -628,14 +688,16 @@ export type GetGlobalsV1Response = GetGlobalsV1Responses[keyof GetGlobalsV1Respo
 
 export type GetImprintV1Data = {
     body?: never;
-    path: {
+    path?: never;
+    query?: {
         /**
-         * Language Tag
+         * Language
+         *
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
          */
-        language_tag: string;
+        language?: string | null;
     };
-    query?: never;
-    url: '/v1/{language_tag}/imprint';
+    url: '/v1/imprint';
 };
 
 export type GetImprintV1Errors = {
@@ -644,9 +706,9 @@ export type GetImprintV1Errors = {
      */
     404: ImprintPageContentNotFoundResponseV1;
     /**
-     * Validation Error
+     * Unprocessable Content
      */
-    422: HttpValidationError;
+    422: UnsupportedLanguageTagResponseV1;
     /**
      * Internal Server Error
      */
