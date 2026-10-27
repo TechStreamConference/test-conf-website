@@ -128,7 +128,7 @@ docker compose up -d --wait
 ```
 
 The `--wait` flag blocks until all services pass their health checks.
-Initial startup (`start-from-init`) may take ~60 seconds while Zitadel initialises
+Initial startup (`start-from-init`) may take ~60 seconds while Zitadel initializes
 the database schema.
 
 ---

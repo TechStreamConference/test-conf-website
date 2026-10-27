@@ -50,7 +50,7 @@ def test_non_ascii_locales_are_rejected() -> None:
     [
         # POSIX-style separator.
         "en_US",
-        # Backwards compatibility syntax.
+        # Backward compatibility syntax.
         "root",
         "Latn-DE",
         # Irregular grandfathered tags.

@@ -105,7 +105,7 @@ describe('clampNumberToInt', () => {
         expect(clampNumberToInt(0)).toBe(0);
     });
 
-    it('should round halves towards positive infinity', () => {
+    it('should round halves toward positive infinity', () => {
         expect(clampNumberToInt(0.5)).toBe(1);
         expect(clampNumberToInt(1.5)).toBe(2);
         expect(clampNumberToInt(2.5)).toBe(3);
