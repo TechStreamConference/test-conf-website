@@ -147,7 +147,7 @@ async def test_report_then_decision_flow_against_postgres(migrate_and_seed_datab
             pending: Final = (
                 await verification_session.execute(
                     text(
-                        "SELECT id, timezone, locale FROM regional_settings_suggestions WHERE session_id = :session_id"
+                        "SELECT id, timezone, locale FROM regional_settings_suggestions WHERE session_id = :session_id",
                     ),
                     {"session_id": user_session.id},
                 )
@@ -298,8 +298,8 @@ async def test_traveling_device_does_not_repeatedly_prompt_and_resyncs_silently_
                 return (
                     await verification_session.execute(
                         select(RegionalSettingsSuggestion).where(
-                            RegionalSettingsSuggestion.session_id == user_session.id
-                        )
+                            RegionalSettingsSuggestion.session_id == user_session.id,
+                        ),
                     )
                 ).scalar_one_or_none()
 

@@ -113,7 +113,10 @@ async def test_request_middleware_returns_unexpected_exceptions_as_internal_serv
     locations: Final = failed.exception_stack.splitlines()
     assert len(locations) == 2
     assert re.fullmatch(r"backend\.main:\d+ in _log_requests", locations[0])
-    assert re.fullmatch(rf"{re.escape(__name__)}:\d+ in {re.escape(call_next.__qualname__)}", locations[1])
+    assert re.fullmatch(
+        rf"{re.escape(__name__)}:\d+ in {re.escape(call_next.__qualname__)}",
+        locations[1],
+    )
     assert log_info.call_count == 2
     completed: Final = log_info.call_args_list[1].args[0]
     assert isinstance(completed, HttpRequestCompleted)
