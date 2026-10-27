@@ -31,7 +31,7 @@ pytestmark: Final = [
 @pytest_asyncio.fixture
 async def events_for_current_event_test() -> AsyncGenerator[tuple[AsyncSession, list[Event]]]:
     engine: Final = create_async_engine(
-        SETTINGS.async_database_url,
+        SETTINGS.database_url,
         pool_pre_ping=True,
     )
     session_factory: Final = async_sessionmaker(
@@ -63,7 +63,7 @@ _SAME_DAY_EVENTS_YEAR = 2099
 @pytest_asyncio.fixture
 async def events_starting_on_the_same_day() -> AsyncGenerator[list[Event]]:
     engine: Final = create_async_engine(
-        SETTINGS.async_database_url,
+        SETTINGS.database_url,
         pool_pre_ping=True,
     )
     session_factory: Final = async_sessionmaker(

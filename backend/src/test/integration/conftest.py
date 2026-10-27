@@ -55,13 +55,14 @@ async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerato
 
     _ = _POSTGRES.start()
     try:
+        database_url: Final = _POSTGRES.get_connection_url(driver="psycopg")
         alembic_config: Final = Config()
         alembic_config.set_main_option("script_location", str(_MIGRATIONS_PATH))
-        alembic_config.set_main_option("sqlalchemy.url", _POSTGRES.get_connection_url(driver="psycopg"))
+        alembic_config.set_main_option("sqlalchemy.url", database_url)
         command.upgrade(alembic_config, "head")
 
         engine: Final = create_async_engine(
-            _POSTGRES.get_connection_url(driver="asyncpg"),
+            database_url,
             echo=True,
             pool_pre_ping=True,
         )
@@ -79,6 +80,6 @@ async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerato
         )
 
         await engine.dispose()
-        yield _POSTGRES.get_connection_url(driver="asyncpg")
+        yield database_url
     finally:
         _POSTGRES.stop()

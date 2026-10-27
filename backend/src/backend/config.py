@@ -54,15 +54,10 @@ class Settings(BaseSettings):
         # errors can be rendered as pages. Must match the ZITADEL registration byte for byte.
         return f"{self.frontend_root_uri.rstrip('/')}/auth/callback"
 
+    # Serves both synchronous and asynchronous engines: SQLAlchemy selects the
+    # asynchronous variant of the psycopg dialect for `create_async_engine()`.
     @cached_property
-    def async_database_url(self) -> str:
-        return (
-            f"postgresql+asyncpg://{self.database_user}:{self.database_password.get_secret_value()}"
-            + f"@{self.database_host}:{self.database_port}/{self.database_name}"
-        )
-
-    @cached_property
-    def sync_database_url(self) -> str:
+    def database_url(self) -> str:
         return (
             f"postgresql+psycopg://{self.database_user}:{self.database_password.get_secret_value()}"
             + f"@{self.database_host}:{self.database_port}/{self.database_name}"
