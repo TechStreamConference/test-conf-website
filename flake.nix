@@ -51,6 +51,13 @@
           ] ++ pre-commit-check.enabledPackages;
 
           shellHook = pre-commit-check.shellHook + ''
+            # Stable tool paths for IDEs (e.g. WebStorm), which cannot follow changing Nix store paths.
+            repo_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+            mkdir -p "$repo_root/.direnv/bin"
+            ln -sfn ${pkgs.nodejs_22}/bin/node "$repo_root/.direnv/bin/node"
+            ln -sfn ${pkgs.pnpm}/bin/pnpm "$repo_root/.direnv/bin/pnpm"
+            ln -sfn ${pkgs.just}/bin/just "$repo_root/.direnv/bin/just"
+
             echo ""
             echo "==========| Dev Shell |=========="
             echo "Development environment ready"
