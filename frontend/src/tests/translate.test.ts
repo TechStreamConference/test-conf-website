@@ -9,8 +9,8 @@ import { toLanguageTag } from '$lib/helper/language';
 import { m } from '$paraglide/messages';
 
 // The expected texts come from Paraglide itself, so these tests do not depend on the wording of the messages.
-const GERMAN_TEXT = m.test_plain({}, { locale: 'de' });
-const ENGLISH_TEXT = m.test_plain({}, { locale: 'en' });
+const GERMAN_TEXT = m.global_themeSelectDark({}, { locale: 'de' });
+const ENGLISH_TEXT = m.global_themeSelectDark({}, { locale: 'en' });
 
 describe('normalizeLanguageTag', () => {
     it('should keep a supported language', () => {
@@ -45,44 +45,43 @@ describe('i18n', () => {
     });
 
     it('should render the text of a supported language', () => {
-        expect(i18n(m.test_plain, 'de')).toBe(GERMAN_TEXT);
-        expect(i18n(m.test_plain, 'en')).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, 'de')).toBe(GERMAN_TEXT);
+        expect(i18n(m.global_themeSelectDark, 'en')).toBe(ENGLISH_TEXT);
     });
 
     it('should ignore the case of the language tag', () => {
-        expect(i18n(m.test_plain, 'DE')).toBe(GERMAN_TEXT);
+        expect(i18n(m.global_themeSelectDark, 'DE')).toBe(GERMAN_TEXT);
     });
 
     it('should use the language of a tag with a region', () => {
-        expect(i18n(m.test_plain, 'de-AT')).toBe(GERMAN_TEXT);
-        expect(i18n(m.test_plain, 'en-US')).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, 'de-AT')).toBe(GERMAN_TEXT);
+        expect(i18n(m.global_themeSelectDark, 'en-US')).toBe(ENGLISH_TEXT);
     });
 
     it('should fall back to the base language for an unsupported language', () => {
-        expect(i18n(m.test_plain, 'fr')).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, 'fr')).toBe(ENGLISH_TEXT);
     });
 
     it('should fall back to the base language for an empty tag', () => {
-        expect(i18n(m.test_plain, '')).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, '')).toBe(ENGLISH_TEXT);
     });
 
     it('should fill in the placeholders in every language', () => {
-        const inputs = { placeholder1: 'first', placeholder2: 'second' };
+        const inputs = { year: 2026 };
 
         for (const languageTag of ['de', 'en']) {
-            const text = i18n(m.test_withPlaceholder, languageTag, inputs);
+            const text = i18n(m.footer_copyright, languageTag, inputs);
 
-            expect(text).toContain('first');
-            expect(text).toContain('second');
+            expect(text).toContain('2026');
             expect(text).not.toContain('undefined');
         }
     });
 
     it('should fill in the placeholders of the fallback language', () => {
-        const inputs = { placeholder1: 'first', placeholder2: 'second' };
+        const inputs = { year: 2026 };
 
-        expect(i18n(m.test_withPlaceholder, 'fr', inputs)).toBe(
-            m.test_withPlaceholder(inputs, { locale: 'en' })
+        expect(i18n(m.footer_copyright, 'fr', inputs)).toBe(
+            m.footer_copyright(inputs, { locale: 'en' })
         );
     });
 });
@@ -90,25 +89,25 @@ describe('i18n', () => {
 // The language of a page goes through `toLanguageTag` first, so `i18n` has to handle what it returns.
 describe('i18n with a checked language tag', () => {
     it('should render the text for the canonical form of a tag with a region', () => {
-        expect(i18n(m.test_plain, toLanguageTag('de-de'))).toBe(GERMAN_TEXT);
-        expect(i18n(m.test_plain, toLanguageTag('en-us'))).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag('de-de'))).toBe(GERMAN_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag('en-us'))).toBe(ENGLISH_TEXT);
     });
 
     it('should use the language of a tag with a script and a region', () => {
-        expect(i18n(m.test_plain, toLanguageTag('de-Latn-DE'))).toBe(GERMAN_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag('de-Latn-DE'))).toBe(GERMAN_TEXT);
     });
 
     it('should fall back to the base language for a valid tag of an unsupported language', () => {
-        expect(i18n(m.test_plain, toLanguageTag('zh-Hant'))).toBe(ENGLISH_TEXT);
-        expect(i18n(m.test_plain, toLanguageTag('es-419'))).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag('zh-Hant'))).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag('es-419'))).toBe(ENGLISH_TEXT);
     });
 
     it('should render the text for a locale written with an underscore', () => {
-        expect(i18n(m.test_plain, toLanguageTag('de_DE'))).toBe(GERMAN_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag('de_DE'))).toBe(GERMAN_TEXT);
     });
 
     it('should fall back to the base language for a tag that is not valid', () => {
-        expect(i18n(m.test_plain, toLanguageTag('"><script>'))).toBe(ENGLISH_TEXT);
-        expect(i18n(m.test_plain, toLanguageTag(''))).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag('"><script>'))).toBe(ENGLISH_TEXT);
+        expect(i18n(m.global_themeSelectDark, toLanguageTag(''))).toBe(ENGLISH_TEXT);
     });
 });

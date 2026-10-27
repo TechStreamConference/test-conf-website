@@ -11,8 +11,5 @@
     "global_themeSelectSystem": "System",
     "header_menu_aria": "Main menu",
     "menu_homepage": "Home",
-    "menu_homepage_aria": "Go to the homepage",
-    "test_plain": "Valid test text",
-    "test_plain2": "second valid test text",
-    "test_withPlaceholder": "Valid test text with placeholder: '{placeholder2}' : '{placeholder1}'"
+    "menu_homepage_aria": "Go to the homepage"
 }
