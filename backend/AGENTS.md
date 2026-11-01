@@ -22,6 +22,7 @@ Use American English everywhere: in identifiers, comments, docstrings, test IDs,
 - Do not add redundant `Final` annotations to module-level `SCREAMING_SNAKE_CASE` constants; Pyright already treats those names as constants.
 - Use `Final` for local variables that are not re-assigned. Note that this is not possible inside loops.
 - When trying to write long string literals that exceed the allowed maximum line length, split them across multiple lines, but *do not* use implicit concatenation. Instead, use the `+` operator.
+- Wrap a string concatenation that spans several lines in its own parentheses, so that its continuation lines don't look like further arguments, e.g. `description=("..." + "...")` with one operand per line. This isn't needed if the concatenation already is the only content of enclosing parentheses, such as the single argument of a call. Existing violations are tracked in #490.
 - Only use `f`-strings if they actually use string interpolation.
 - Prefer `f`-strings over concatenating strings with `+` when text is combined with computed values, even if it looks unusual, e.g. `f"de, {'x' * 2044}"` instead of `"de, " + "x" * 2044`. Splitting long literals with `+` stays as described above.
 - Split function calls with many and/or long arguments across several lines, with one argument per line.
