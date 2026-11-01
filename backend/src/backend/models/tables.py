@@ -173,9 +173,14 @@ class ContentLanguage(SQLModel, table=True):
             f"tag ~ '{CONTENT_LANGUAGE_TAG_PATTERN}'",
             name="ck_content_languages_tag_format",
         ),
+        sa.CheckConstraint(
+            "name <> ''",
+            name="ck_content_languages_name_not_empty",
+        ),
     )
 
     tag: str = Field(primary_key=True)  # Primary language subtag of BCP 47.
+    name: str  # Name of the language in the language itself, as spelled by CLDR.
 
 
 @final
