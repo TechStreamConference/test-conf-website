@@ -72,6 +72,12 @@ class RequestValidationErrorResponseV1(ApiResponseModel):
 @final
 class GlobalsResponseV1(ApiResponseModel):
     footer_text: str
+    language_details: LanguageDetailsV1
+
+
+@final
+class GlobalsNotFoundResponseV1(ApiResponseModel):
+    detail: Literal["Global values not found in the database."] = "Global values not found in the database."
 
 
 @final

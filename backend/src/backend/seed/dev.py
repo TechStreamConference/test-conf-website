@@ -15,8 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.models.content_language_types import ContentLanguageTag
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
-from backend.models.tables import Global
 from backend.models.tables import GlobalKey
+from backend.models.tables import GlobalTranslation
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
 from backend.models.tables import User
@@ -64,7 +64,7 @@ async def seed_dev(session: AsyncSession, *, num_users: int, seed: int) -> None:
     }
 
     _seed_users_table(session, num_users)
-    _seed_globals_table(session)
+    _seed_global_translations_table(session)
     _seed_static_pages_table(session)
     await _seed_events_data(
         session,
@@ -80,14 +80,18 @@ def _seed_users_table(session: AsyncSession, num_users: int) -> None:
         session.add(User())
 
 
-def _seed_globals_table(session: AsyncSession) -> None:
-    for key, value in {
-        GlobalKey.FOOTER_TEXT: (
+def _seed_global_translations_table(session: AsyncSession) -> None:
+    for (key, language), value in {
+        (GlobalKey.FOOTER_TEXT, "de"): (
             "TECH STREAM CONFERENCE – Online-Konferenz mit Vorträgen aus den "
             + "Bereichen Programmierung, Maker-Szene und Spieleentwicklung"
         ),
+        (GlobalKey.FOOTER_TEXT, "en"): (
+            "TECH STREAM CONFERENCE – Online conference with talks on "
+            + "programming, the maker scene and game development"
+        ),
     }.items():
-        session.add(Global(key=key, value=value))
+        session.add(GlobalTranslation(key=key, language_tag=language, value=value))
 
 
 def _seed_static_pages_table(session: AsyncSession) -> None:

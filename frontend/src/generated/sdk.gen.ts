@@ -58,7 +58,7 @@ export const getEventByYearAndSequenceNumberV1 = <ThrowOnError extends boolean =
 /**
  * Get global configuration values
  *
- * Retrieve all global key-value configuration pairs stored in the database.
+ * Retrieve the global configuration values stored in the database in one language. The requested `language` is matched by its primary language subtag (`de-AT` delivers `de`). If it is not available, English is returned instead, or, if that is not available either, the lexicographically first available language.
  */
 export const getGlobalsV1 = <ThrowOnError extends boolean = false>(options?: Options<GetGlobalsV1Data, ThrowOnError>): RequestResult<GetGlobalsV1Responses, GetGlobalsV1Errors, ThrowOnError> => (options?.client ?? client).get<GetGlobalsV1Responses, GetGlobalsV1Errors, ThrowOnError>({ url: '/v1/globals', ...options });
 

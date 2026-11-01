@@ -158,10 +158,11 @@ class GlobalKey(StrEnum):
 
 
 @final
-class Global(SQLModel, table=True):
-    __tablename__ = "globals"  # type: ignore[reportAssignmentType]
+class GlobalTranslation(SQLModel, table=True):
+    __tablename__ = "global_translations"  # type: ignore[reportAssignmentType]
 
     key: GlobalKey = Field(primary_key=True)
+    language_tag: str = Field(foreign_key="content_languages.tag", primary_key=True, ondelete="RESTRICT")
     value: str
 
 
