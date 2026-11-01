@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 from typing import Final
 from typing import Optional
@@ -8,23 +9,34 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import backend.routes.v1.users as users_module
+from backend.database import get_session
 from backend.logging.events_gen import RegionalSettingsReportProcessed
+from backend.main import app
+from backend.models.requests import DisplayLanguageInputV1
 from backend.models.requests import RegionalSettingsDecision
 from backend.models.requests import RegionalSettingsDecisionInputV1
 from backend.models.requests import ReportedRegionalSettingsInputV1
 from backend.models.requests import UserPreferencesInputV1
+from backend.models.responses import NotAuthenticatedResponseV1
+from backend.models.responses import RequestValidationErrorResponseV1
+from backend.models.responses import UnsupportedLanguageTagResponseV1
 from backend.models.tables import Account
+from backend.models.tables import ContentLanguage
 from backend.models.tables import RegionalSettingsSuggestion
 from backend.models.tables import ReportedRegionalSettings
 from backend.models.tables import UserPreferences
 from backend.models.tables import UserSession
+from backend.routes.v1.users import clear_display_language
 from backend.routes.v1.users import decide_regional_settings_change
 from backend.routes.v1.users import report_regional_settings
+from backend.routes.v1.users import set_display_language
 from backend.routes.v1.users import update_preferences
 from backend.session import AuthenticatedSession
+from backend.session import get_current_user
 from backend.utils import utc_now
 
 
@@ -489,3 +501,108 @@ async def test_accepting_a_locale_decision_updates_the_locale_preference() -> No
     assert preferences.locale == "en-US"
     session.delete.assert_awaited_once_with(pending)
     session.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_setting_a_registered_language_upserts_the_preference() -> None:
+    session: Final = _session(Mock(), get_results=(ContentLanguage(tag="de", name="Deutsch"),))
+
+    result: Final = await set_display_language(
+        DisplayLanguageInputV1(language="de"),
+        _authenticated(),
+        session,
+    )
+
+    assert result.model_dump() == {"language": "de"}
+    session.get.assert_awaited_once_with(ContentLanguage, "de")
+    assert "ON CONFLICT (user_id) DO UPDATE" in str(session.execute.await_args_list[0].args[0])
+    assert _executed_statement_params(session, call_index=0) == {"user_id": 42, "language_tag": "de"}
+    session.commit.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_setting_an_unregistered_language_is_rejected() -> None:
+    session: Final = _session(get_results=(None,))
+
+    with pytest.raises(HTTPException) as exc_info:
+        _ = await set_display_language(
+            DisplayLanguageInputV1(language="xx"),
+            _authenticated(),
+            session,
+        )
+
+    assert exc_info.value.status_code == 422
+    assert exc_info.value.detail == UnsupportedLanguageTagResponseV1().detail
+    session.execute.assert_not_awaited()
+    session.commit.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_clearing_the_preferred_display_language_deletes_only_the_current_users_preference() -> None:
+    session: Final = _session(Mock())
+
+    await clear_display_language(_authenticated(), session)
+
+    statement: Final = session.execute.await_args_list[0].args[0]
+    assert str(statement).startswith("DELETE FROM user_display_language_preferences WHERE")
+    assert list(statement.compile().params.values()) == [42]
+    session.commit.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("method", "body"),
+    [
+        pytest.param("PUT", {"language": "de"}, id="set"),
+        pytest.param("DELETE", None, id="clear"),
+    ],
+)
+def test_preferred_display_language_requires_a_login(method: str, body: Optional[dict[str, str]]) -> None:
+    session: Final = _session()
+
+    async def override_session() -> AsyncGenerator[AsyncSession]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    try:
+        response: Final = TestClient(app).request(method, "/v1/users/me/display-language", json=body)
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+
+    assert response.status_code == 401
+    assert response.json() == NotAuthenticatedResponseV1().model_dump()
+    session.commit.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("language", "expected_model"),
+    [
+        pytest.param("xx", UnsupportedLanguageTagResponseV1, id="unregistered"),
+        pytest.param("de-AT", RequestValidationErrorResponseV1, id="region"),
+        pytest.param("DE", RequestValidationErrorResponseV1, id="uppercase"),
+    ],
+)
+def test_setting_a_language_outside_the_registry_documents_its_error(
+    language: str,
+    expected_model: type[UnsupportedLanguageTagResponseV1 | RequestValidationErrorResponseV1],
+) -> None:
+    session: Final = _session(get_results=(None,))
+
+    def override_current_user() -> AuthenticatedSession:
+        return _authenticated()
+
+    async def override_session() -> AsyncGenerator[AsyncSession]:
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    app.dependency_overrides[get_current_user] = override_current_user
+    try:
+        response: Final = TestClient(app).put("/v1/users/me/display-language", json={"language": language})
+    finally:
+        _ = app.dependency_overrides.pop(get_session)
+        _ = app.dependency_overrides.pop(get_current_user)
+
+    # The documented models must describe the whole body.
+    assert response.status_code == 422
+    body: Final = expected_model.model_validate(response.json())
+    assert body.model_dump(mode="json", exclude_unset=True) == response.json()
+    session.commit.assert_not_awaited()

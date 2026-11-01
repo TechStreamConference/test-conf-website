@@ -1,5 +1,6 @@
 from datetime import timedelta
 from typing import Final
+from typing import Optional
 from unittest.mock import AsyncMock
 from unittest.mock import Mock
 from uuid import uuid4
@@ -9,12 +10,14 @@ from fastapi import HTTPException
 from fastapi import Response
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import SQLModel
 
 import backend.routes.v1.auth as auth_module
 from backend.models.responses import RegionalSettingsChangeV1
 from backend.models.tables import Account
 from backend.models.tables import OidcLoginTransaction
 from backend.models.tables import RegionalSettingsSuggestion
+from backend.models.tables import UserDisplayLanguagePreference
 from backend.models.tables import UserPreferences
 from backend.models.tables import UserSession
 from backend.oidc import AuthorizationRequest
@@ -37,6 +40,16 @@ def _session() -> Mock:
     session.get = AsyncMock()
     session.execute = AsyncMock(return_value=Mock(scalar_one_or_none=Mock(return_value=None)))
     return session
+
+
+def _store(session: Mock, *rows: SQLModel) -> None:
+    """Let `session.get` find the given rows by their table, and nothing else."""
+    rows_by_table: Final = {type(row): row for row in rows}
+
+    async def get(table: type[SQLModel], _: object) -> Optional[SQLModel]:
+        return rows_by_table.get(table)
+
+    session.get.side_effect = get
 
 
 def _authenticated(*, user_id: int = 42, session_id: int = 1) -> AuthenticatedSession:
@@ -345,7 +358,7 @@ async def test_callback_creates_user_and_session_and_clears_login_cookie(
 @pytest.mark.asyncio
 async def test_me_maps_current_account() -> None:
     session: Final = _session()
-    session.get.return_value = None
+    _store(session)
 
     result: Final = await me(_authenticated(), session)
 
@@ -355,26 +368,40 @@ async def test_me_maps_current_account() -> None:
         "username": "test-user",
         "regionalSettings": None,
         "regionalSettingsChange": None,
+        "preferredDisplayLanguage": None,
     }
 
 
 @pytest.mark.asyncio
 async def test_me_exposes_stored_preferences() -> None:
     session: Final = _session()
-    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Istanbul", locale="tr-TR")
+    _store(session, UserPreferences(user_id=42, timezone="Europe/Istanbul", locale="tr-TR"))
 
     result: Final = await me(_authenticated(), session)
 
     assert result.regional_settings is not None
     assert result.regional_settings.timezone == "Europe/Istanbul"
     assert result.regional_settings.locale == "tr-TR"
-    session.get.assert_awaited_once_with(UserPreferences, 42)
+    assert result.preferred_display_language is None
+    session.get.assert_any_await(UserPreferences, 42)
+
+
+@pytest.mark.asyncio
+async def test_me_exposes_preferred_display_language_without_regional_settings() -> None:
+    session: Final = _session()
+    _store(session, UserDisplayLanguagePreference(user_id=42, language_tag="de"))
+
+    result: Final = await me(_authenticated(), session)
+
+    assert result.preferred_display_language == "de"
+    assert result.regional_settings is None
+    session.get.assert_any_await(UserDisplayLanguagePreference, 42)
 
 
 @pytest.mark.asyncio
 async def test_me_exposes_pending_regional_settings_change() -> None:
     session: Final = _session()
-    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE")
+    _store(session, UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE"))
     pending: Final = RegionalSettingsSuggestion(session_id=1, timezone="America/New_York", locale=None)
     session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=pending))
 
@@ -389,7 +416,7 @@ async def test_me_exposes_pending_regional_settings_change() -> None:
 @pytest.mark.asyncio
 async def test_me_exposes_pending_locale_change() -> None:
     session: Final = _session()
-    session.get.return_value = UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE")
+    _store(session, UserPreferences(user_id=42, timezone="Europe/Berlin", locale="de-DE"))
     pending: Final = RegionalSettingsSuggestion(session_id=1, timezone=None, locale="en-US")
     session.execute.return_value = Mock(scalar_one_or_none=Mock(return_value=pending))
 
