@@ -5,12 +5,16 @@ import httpx
 import pytest
 
 from backend.config import SETTINGS
+from backend.models.responses import ContentLanguageV1
 from backend.models.responses import ImprintResponseV1
 
 pytestmark: Final = [
     pytest.mark.integration,
     pytest.mark.usefixtures("migrate_and_seed_database"),
 ]
+
+_GERMAN = ContentLanguageV1(language_tag="de", name="Deutsch")
+_ENGLISH = ContentLanguageV1(language_tag="en", name="English")
 
 _DATA_PATH = Path(__file__).resolve().parents[2] / "backend" / "seed" / "data"
 
@@ -26,7 +30,7 @@ async def test_imprint_route_returns_requested_language(language_tag: str) -> No
 
     assert response.status_code == 200
     assert imprint.content == (_DATA_PATH / f"imprint.{language_tag}.md").read_text(encoding="utf-8")
-    assert imprint.language_details.available_languages == ["de", "en"]
+    assert imprint.language_details.available_languages == [_GERMAN, _ENGLISH]
     assert imprint.language_details.language_tag == language_tag
     assert imprint.language_details.is_language_fallback is False
 
@@ -40,7 +44,7 @@ async def test_imprint_route_falls_back_to_english() -> None:
     imprint: Final = ImprintResponseV1.model_validate(response.json())
 
     assert imprint.content == (_DATA_PATH / "imprint.en.md").read_text(encoding="utf-8")
-    assert imprint.language_details.available_languages == ["de", "en"]
+    assert imprint.language_details.available_languages == [_GERMAN, _ENGLISH]
     assert imprint.language_details.language_tag == "en"
     assert imprint.language_details.is_language_fallback is True
 
@@ -83,3 +87,16 @@ async def test_imprint_route_prefers_the_language_parameter_over_accept_language
     assert ImprintResponseV1.model_validate(response.json()).language_details.language_tag == "de"
     assert response.headers["Content-Language"] == "de"
     assert "Accept-Language" not in response.headers.get("Vary", "")
+
+
+@pytest.mark.asyncio
+async def test_imprint_route_names_each_available_language_in_itself() -> None:
+    response: Final = httpx.get(
+        f"{SETTINGS.backend_root_uri}/v1/imprint",
+        params={"language": "en"},
+    ).raise_for_status()
+
+    assert response.json()["languageDetails"]["availableLanguages"] == [
+        {"languageTag": "de", "name": "Deutsch"},
+        {"languageTag": "en", "name": "English"},
+    ]
