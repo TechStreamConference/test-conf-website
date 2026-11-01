@@ -38,9 +38,11 @@ function createEvent(
     return { event, fetchMock, setCookieMock };
 }
 
+// Only the `Request` counts: `event.fetch` ignores `init` when it gets a `Request`.
 function sentHeaders(fetchMock: Mock<typeof fetch>): Headers {
-    const init: RequestInit | undefined = fetchMock.mock.calls[0]?.[1];
-    return new Headers(init?.headers);
+    const input = fetchMock.mock.calls[0]?.[0];
+    expect(input).toBeInstanceOf(Request);
+    return (input as Request).headers;
 }
 
 describe('backendFetch', () => {

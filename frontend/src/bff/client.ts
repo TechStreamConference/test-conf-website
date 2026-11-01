@@ -46,7 +46,13 @@ export function backendFetch(event: RequestEvent): typeof fetch {
             headers.set('accept-language', acceptLanguage);
         }
 
-        const response = await event.fetch(input, { ...init, headers });
+        // `event.fetch` ignores `init` when it gets a `Request`, which is what the generated
+        // client passes, so the headers go into a new `Request` instead.
+        const request = new Request(input instanceof Request ? input : new URL(input, event.url), {
+            ...init,
+            headers
+        });
+        const response = await event.fetch(request);
 
         for (const { name, value, ...options } of parseSetCookie(response)) {
             // `sameSite` is untyped as a plain `string` by the parser; safe to assert
