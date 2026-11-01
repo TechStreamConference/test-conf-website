@@ -14,9 +14,12 @@ from sqlmodel import delete
 
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
+from backend.models.tables import GlobalKey
+from backend.models.tables import GlobalTranslation
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
 from backend.routes.v1.events import get_event_by_year_and_sequence_number
+from backend.routes.v1.globals import get_globals
 from backend.routes.v1.imprint import get_imprint
 
 pytestmark: Final = pytest.mark.integration
@@ -202,3 +205,41 @@ async def test_event_with_several_translations_selects_by_lookup(
     assert event.language_details.available_languages == ["de", "es", "ja"]
     assert event.language_details.language_tag == expected_language
     assert event.language_details.is_language_fallback is expected_fallback
+
+
+@pytest.mark.asyncio
+async def test_globals_without_translations_are_not_found(session: AsyncSession) -> None:
+    _ = await session.execute(delete(GlobalTranslation))
+
+    with pytest.raises(HTTPException) as exc_info:
+        _ = await get_globals(["de"], Response(), session)
+
+    assert exc_info.value.status_code == 404
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("language_ranges", "expected_language", "expected_fallback"),
+    [
+        pytest.param(["JA-jp"], "ja", False, id="regional request"),
+        pytest.param(["de-AT"], "de", False, id="seeded language"),
+        pytest.param(["fr"], "en", True, id="unavailable language"),
+        pytest.param([], "en", False, id="no preference"),
+    ],
+)
+async def test_globals_with_several_translations_select_by_lookup(
+    session: AsyncSession,
+    language_ranges: list[str],
+    expected_language: str,
+    expected_fallback: bool,
+) -> None:
+    session.add(GlobalTranslation(key=GlobalKey.FOOTER_TEXT, language_tag="ja", value="Footer (ja)"))
+    await session.flush()
+
+    response: Final = Response()
+    globals_: Final = await get_globals(language_ranges, response, session)
+
+    assert response.headers["Content-Language"] == expected_language
+    assert globals_.language_details.available_languages == ["de", "en", "ja"]
+    assert globals_.language_details.language_tag == expected_language
+    assert globals_.language_details.is_language_fallback is expected_fallback
