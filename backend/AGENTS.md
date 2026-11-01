@@ -48,6 +48,7 @@ Use American English everywhere: in identifiers, comments, docstrings, test IDs,
 
 - Define module routers as `ROUTER` and include new v1 routers in `backend.routes.v1_api`.
 - Use `Annotated[..., Depends(...)]` for dependencies.
+- Give every content element that a client may need on its own (e.g. a speaker profile) its own route, even if a larger response such as a whole event already contains it. Clients can then fetch a single element, e.g. in another language, without refetching its parent.
 - Give every versioned API endpoint an explicit summary, description where useful, status code, return annotation, and `operation_id`. Versioned API operation IDs must end in `v<digits>`.
 - Every explicitly documented response must provide a response model. The route metadata and response-model naming rules are enforced in `src/test/test_meta.py`.
 
