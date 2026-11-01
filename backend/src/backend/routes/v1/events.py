@@ -15,14 +15,15 @@ from sqlmodel import select
 
 from backend.content_language_selection import CONTENT_LANGUAGE_RESPONSE_HEADERS
 from backend.content_language_selection import get_requested_language_ranges
+from backend.content_language_selection import language_details_v1_from_selection
 from backend.content_language_selection import select_content_language
 from backend.database import get_session
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
-from backend.models.responses import LanguageDetailsV1
 from backend.models.responses import RequestValidationErrorResponseV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
+from backend.models.tables import ContentLanguage
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.utils import create_http_exception
@@ -64,10 +65,14 @@ async def get_current_event(
         .scalar_subquery()
     )
     statement: Final = (
-        select(Event, EventTranslation)
+        select(Event, EventTranslation, col(ContentLanguage.name))
         .join(
             EventTranslation,
             col(EventTranslation.event_id) == col(Event.id),
+        )
+        .join(
+            ContentLanguage,
+            col(ContentLanguage.tag) == col(EventTranslation.language_tag),
         )
         .where(col(Event.id) == current_event_id)
         .order_by(col(EventTranslation.language_tag))
@@ -107,10 +112,14 @@ async def get_event_by_year_and_sequence_number(
         )
 
     statement: Final = (
-        select(Event, EventTranslation)
+        select(Event, EventTranslation, col(ContentLanguage.name))
         .join(
             EventTranslation,
             col(EventTranslation.event_id) == col(Event.id),
+        )
+        .join(
+            ContentLanguage,
+            col(ContentLanguage.tag) == col(EventTranslation.language_tag),
         )
         .where(extract("year", col(Event.start_date)) == year)
         .order_by(
@@ -124,7 +133,7 @@ async def get_event_by_year_and_sequence_number(
 
     current_sequence_number = 0
     last_event_id: Optional[int] = None
-    current_rows: Final[list[Row[tuple[tuple[Event, EventTranslation]]]]] = []
+    current_rows: Final[list[Row[tuple[tuple[Event, EventTranslation, str]]]]] = []
     for row in rows:
         if last_event_id is None or last_event_id != row.Event.id:
             last_event_id = row.Event.id
@@ -153,7 +162,7 @@ async def get_event_by_year_and_sequence_number(
 
 
 def _event_response_v1_from_rows(
-    rows: list[Row[tuple[tuple[Event, EventTranslation]]]],
+    rows: list[Row[tuple[tuple[Event, EventTranslation, str]]]],
     language_ranges: list[str],
     response: Response,
 ) -> EventResponseV1:
@@ -168,6 +177,7 @@ def _event_response_v1_from_rows(
     # row and take all the basic data from that record.
     event: Final = rows[0].Event
     translations_by_language_tag: Final = {row.EventTranslation.language_tag: row.EventTranslation for row in rows}
+    language_names: Final = {row.EventTranslation.language_tag: row.name for row in rows}
 
     selection: Final = select_content_language(language_ranges, translations_by_language_tag)
     translation: Final = translations_by_language_tag[selection.language_tag]
@@ -175,11 +185,7 @@ def _event_response_v1_from_rows(
 
     return EventResponseV1(
         id=event.id,
-        language_details=LanguageDetailsV1(
-            available_languages=selection.available_languages,
-            language_tag=selection.language_tag,
-            is_language_fallback=selection.is_language_fallback,
-        ),
+        language_details=language_details_v1_from_selection(selection, language_names),
         title=translation.title,
         subtitle=translation.subtitle,
         presskit_url=translation.presskit_url,

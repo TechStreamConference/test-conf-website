@@ -11,6 +11,20 @@ export type Bcp47Locale = string;
 export type ContentLanguageTag = string;
 
 /**
+ * ContentLanguageV1
+ */
+export type ContentLanguageV1 = {
+    /**
+     * Language Tag
+     */
+    languageTag: ContentLanguageTag;
+    /**
+     * Name
+     */
+    name: string;
+};
+
+/**
  * DependencyHealthResponseV1
  *
  * Status of the backend's dependencies.
@@ -317,7 +331,7 @@ export type LanguageDetailsV1 = {
     /**
      * Available Languages
      */
-    availableLanguages: Array<ContentLanguageTag>;
+    availableLanguages: Array<ContentLanguageV1>;
     /**
      * Language Tag
      */
