@@ -26,6 +26,7 @@ from backend.models.responses import RegionalSettingsChangeV1
 from backend.models.responses import RegionalSettingsV1
 from backend.models.tables import OidcLoginTransaction
 from backend.models.tables import RegionalSettingsSuggestion
+from backend.models.tables import UserDisplayLanguagePreference
 from backend.models.tables import UserPreferences
 from backend.oidc import LOGIN_TRANSACTION_LIFETIME
 from backend.oidc import create_authorization_request
@@ -249,10 +250,16 @@ async def me(
         )
     )
 
+    # No row means that the user hasn't chosen a display language.
+    display_language_preference: Final = await session.get(UserDisplayLanguagePreference, current_account.user_id)
+
     return MeResponseV1(
         id=current_account.user_id,
         email=current_account.email,
         username=current_account.username,
         regional_settings=regional_settings,
         regional_settings_change=regional_settings_change,
+        preferred_display_language=(
+            None if display_language_preference is None else display_language_preference.language_tag
+        ),
     )

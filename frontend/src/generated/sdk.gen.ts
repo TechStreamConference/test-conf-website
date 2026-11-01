@@ -4,7 +4,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BackendHealthCheckData, BackendHealthCheckResponses, DecideRegionalSettingsChangeV1Data, DecideRegionalSettingsChangeV1Errors, DecideRegionalSettingsChangeV1Responses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Errors, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors, ReportRegionalSettingsV1Data, ReportRegionalSettingsV1Errors, ReportRegionalSettingsV1Responses, UpdateCurrentUserPreferencesV1Data, UpdateCurrentUserPreferencesV1Errors, UpdateCurrentUserPreferencesV1Responses } from './types.gen';
+import type { BackendHealthCheckData, BackendHealthCheckResponses, ClearCurrentUserDisplayLanguageV1Data, ClearCurrentUserDisplayLanguageV1Errors, ClearCurrentUserDisplayLanguageV1Responses, DecideRegionalSettingsChangeV1Data, DecideRegionalSettingsChangeV1Errors, DecideRegionalSettingsChangeV1Responses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Errors, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors, ReportRegionalSettingsV1Data, ReportRegionalSettingsV1Errors, ReportRegionalSettingsV1Responses, SetCurrentUserDisplayLanguageV1Data, SetCurrentUserDisplayLanguageV1Errors, SetCurrentUserDisplayLanguageV1Responses, UpdateCurrentUserPreferencesV1Data, UpdateCurrentUserPreferencesV1Errors, UpdateCurrentUserPreferencesV1Responses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -76,6 +76,27 @@ export const getImprintV1 = <ThrowOnError extends boolean = false>(options?: Opt
  */
 export const updateCurrentUserPreferencesV1 = <ThrowOnError extends boolean = false>(options: Options<UpdateCurrentUserPreferencesV1Data, ThrowOnError>): RequestResult<UpdateCurrentUserPreferencesV1Responses, UpdateCurrentUserPreferencesV1Errors, ThrowOnError> => (options.client ?? client).put<UpdateCurrentUserPreferencesV1Responses, UpdateCurrentUserPreferencesV1Errors, ThrowOnError>({
     url: '/v1/users/me/preferences',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Clear the current user's preferred display language
+ *
+ * Removes the display language that the current user chose, if any.
+ */
+export const clearCurrentUserDisplayLanguageV1 = <ThrowOnError extends boolean = false>(options?: Options<ClearCurrentUserDisplayLanguageV1Data, ThrowOnError>): RequestResult<ClearCurrentUserDisplayLanguageV1Responses, ClearCurrentUserDisplayLanguageV1Errors, ThrowOnError> => (options?.client ?? client).delete<ClearCurrentUserDisplayLanguageV1Responses, ClearCurrentUserDisplayLanguageV1Errors, ThrowOnError>({ url: '/v1/users/me/display-language', ...options });
+
+/**
+ * Set the current user's preferred display language
+ *
+ * Stores the display language that the current user explicitly chose for the website. Every language of the content language registry is accepted.
+ */
+export const setCurrentUserDisplayLanguageV1 = <ThrowOnError extends boolean = false>(options: Options<SetCurrentUserDisplayLanguageV1Data, ThrowOnError>): RequestResult<SetCurrentUserDisplayLanguageV1Responses, SetCurrentUserDisplayLanguageV1Errors, ThrowOnError> => (options.client ?? client).put<SetCurrentUserDisplayLanguageV1Responses, SetCurrentUserDisplayLanguageV1Errors, ThrowOnError>({
+    url: '/v1/users/me/display-language',
     ...options,
     headers: {
         'Content-Type': 'application/json',
