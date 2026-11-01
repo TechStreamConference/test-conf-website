@@ -9,16 +9,23 @@ from typing import NamedTuple
 from typing import Optional
 from typing import final
 
+from fastapi import Cookie
+from fastapi import Depends
 from fastapi import Query
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
+from sqlalchemy.ext.asyncio import AsyncSession
 from werkzeug.datastructures import LanguageAccept
 from werkzeug.http import parse_accept_header
 
 from backend.content_languages import ENGLISH_LANGUAGE_TAG
+from backend.database import get_session
 from backend.models.content_language_types import ContentLanguageTag
 from backend.models.responses import UnsupportedLanguageTagResponseV1
+from backend.models.tables import UserDisplayLanguagePreference
+from backend.session import SESSION_COOKIE_NAME
+from backend.session import find_authenticated_session
 from backend.utils import create_http_exception
 
 # Bounds the work spent on a client-provided language range, independently of
@@ -44,7 +51,14 @@ CONTENT_LANGUAGE_RESPONSE_HEADERS = {
         "schema": {"type": "string"},
     },
     "Vary": {
-        "description": "Contains `Accept-Language` if no `language` query parameter was given.",
+        "description": "Contains `Accept-Language` and `Cookie` if no `language` query parameter was given.",
+        "schema": {"type": "string"},
+    },
+    "Cache-Control": {
+        "description": (
+            "`private` if no `language` query parameter was given and the request belongs to a valid "
+            + "session, since the language may then be the user's stored display language."
+        ),
         "schema": {"type": "string"},
     },
 }
@@ -126,27 +140,36 @@ def parse_accept_language(accept_language: str) -> list[str]:
     return language_ranges[:_MAX_ACCEPT_LANGUAGE_ENTRIES]
 
 
-def get_requested_language_ranges(
+async def get_requested_language_ranges(
     request: Request,
     response: Response,
+    db: Annotated[AsyncSession, Depends(get_session)],
     language: Annotated[
         Optional[str],
         Query(
             description=(
                 "The preferred content language, e.g. `de` or `de-AT`. "
                 + "It is matched by its primary language subtag. "
-                + "Without it, the language is negotiated from the `Accept-Language` header."
+                + "Without it, the display language stored for the logged-in user is preferred, "
+                + "and otherwise the language is negotiated from the `Accept-Language` header."
             ),
         ),
     ] = None,
+    session_token: Annotated[Optional[str], Cookie(alias=SESSION_COOKIE_NAME)] = None,
 ) -> list[str]:
     """
     Return the client’s content language preferences, most preferred first.
 
     An explicit `language` query parameter takes precedence and must match the
-    supported syntax. Otherwise, the preferences come from the `Accept-Language`
-    header, and the response varies by it, even if the request has none. The
-    header’s value is never logged.
+    supported syntax. Otherwise, the display language stored for the user of a
+    valid session is used, and without one, the preferences come from the
+    `Accept-Language` header. Like the query parameter, a stored display language
+    replaces the header instead of being combined with it. A missing or invalid
+    session is treated like an anonymous request.
+
+    Without a `language` query parameter, the response varies by the header and
+    by the session cookie, even if the request has neither, and a response for a
+    valid session is private. The header’s value is never logged.
     """
     if language is not None:
         if not is_supported_language_range(language):
@@ -157,5 +180,13 @@ def get_requested_language_ranges(
         return [language]
 
     response.headers.add_vary_header("Accept-Language")
+    response.headers.add_vary_header("Cookie")
+    authenticated: Final = await find_authenticated_session(response, db, session_token)
+    if authenticated is not None:
+        response.headers["Cache-Control"] = "private"
+        preference: Final = await db.get(UserDisplayLanguagePreference, authenticated.account.user_id)
+        if preference is not None:
+            return [preference.language_tag]
+
     # A header may be split across several field lines, which are combined with commas.
     return parse_accept_language(", ".join(request.headers.getlist("Accept-Language")))

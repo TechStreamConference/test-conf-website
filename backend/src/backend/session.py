@@ -128,13 +128,18 @@ class AuthenticatedSession(NamedTuple):
     session: UserSession
 
 
-async def get_current_user(
+async def find_authenticated_session(
     response: Response,
-    db: Annotated[AsyncSession, Depends(get_session)],
-    session_token: Annotated[Optional[str], Cookie(alias=SESSION_COOKIE_NAME)] = None,
-) -> AuthenticatedSession:
+    db: AsyncSession,
+    session_token: Optional[str],
+) -> Optional[AuthenticatedSession]:
+    """Validate an application session token and return the session it
+    authenticates, or `None` if the token is missing or doesn't belong to an
+    active session. Periodically refreshes the sliding expiry of a valid
+    session and its cookie.
+    """
     if session_token is None:
-        raise create_http_exception(status.HTTP_401_UNAUTHORIZED, NotAuthenticatedResponseV1())
+        return None
 
     token_hash: Final = hash_token(session_token)
     user_session: Final = (
@@ -148,7 +153,7 @@ async def get_current_user(
         or user_session.expires_at < now
         or user_session.absolute_expires_at < now
     ):
-        raise create_http_exception(status.HTTP_401_UNAUTHORIZED, NotAuthenticatedResponseV1())
+        return None
 
     # Guaranteed to exist: a session is only ever created for a user that just
     # logged in, which always has an account.
@@ -156,7 +161,7 @@ async def get_current_user(
         await db.execute(select(Account).where(Account.user_id == user_session.user_id))
     ).scalar_one_or_none()
     if account is None:
-        raise create_http_exception(status.HTTP_401_UNAUTHORIZED, NotAuthenticatedResponseV1())
+        return None
 
     if now - user_session.last_seen_at > _LAST_SEEN_REFRESH_INTERVAL:
         idle_timeout: Final = timedelta(days=SETTINGS.session_idle_timeout_days)
@@ -167,3 +172,14 @@ async def get_current_user(
         _set_session_cookie(response, session_token, max_age=idle_timeout)
 
     return AuthenticatedSession(account=account, session=user_session)
+
+
+async def get_current_user(
+    response: Response,
+    db: Annotated[AsyncSession, Depends(get_session)],
+    session_token: Annotated[Optional[str], Cookie(alias=SESSION_COOKIE_NAME)] = None,
+) -> AuthenticatedSession:
+    authenticated: Final = await find_authenticated_session(response, db, session_token)
+    if authenticated is None:
+        raise create_http_exception(status.HTTP_401_UNAUTHORIZED, NotAuthenticatedResponseV1())
+    return authenticated

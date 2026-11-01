@@ -608,7 +608,7 @@ export type GetCurrentEventV1Data = {
         /**
          * Language
          *
-         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the display language stored for the logged-in user is preferred, and otherwise the language is negotiated from the `Accept-Language` header.
          */
         language?: string | null;
     };
@@ -657,7 +657,7 @@ export type GetEventByYearAndSequenceNumberV1Data = {
         /**
          * Language
          *
-         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the display language stored for the logged-in user is preferred, and otherwise the language is negotiated from the `Accept-Language` header.
          */
         language?: string | null;
     };
@@ -703,7 +703,7 @@ export type GetGlobalsV1Data = {
         /**
          * Language
          *
-         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the display language stored for the logged-in user is preferred, and otherwise the language is negotiated from the `Accept-Language` header.
          */
         language?: string | null;
     };
@@ -743,7 +743,7 @@ export type GetImprintV1Data = {
         /**
          * Language
          *
-         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the display language stored for the logged-in user is preferred, and otherwise the language is negotiated from the `Accept-Language` header.
          */
         language?: string | null;
     };

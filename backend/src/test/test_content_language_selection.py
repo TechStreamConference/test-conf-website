@@ -1,11 +1,13 @@
 from collections.abc import AsyncGenerator
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Final
 from typing import NamedTuple
 from typing import Optional
 from typing import final
 from unittest.mock import AsyncMock
 from unittest.mock import Mock
+from unittest.mock import patch
 
 import pytest
 from fastapi import Request
@@ -13,6 +15,7 @@ from fastapi import Response
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import backend.content_language_selection as content_language_selection_module
 from backend.content_language_selection import CONTENT_LANGUAGE_RESPONSE_HEADERS
 from backend.content_language_selection import ContentLanguageSelection
 from backend.content_language_selection import get_requested_language_ranges
@@ -24,8 +27,13 @@ from backend.main import app
 from backend.models.responses import ImprintPageContentNotFoundResponseV1
 from backend.models.responses import ImprintResponseV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
+from backend.models.tables import Account
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
+from backend.models.tables import UserDisplayLanguagePreference
+from backend.models.tables import UserSession
+from backend.session import AuthenticatedSession
+from backend.utils import utc_now
 
 # Longer than the 2 KiB that are considered, although every entry is supported.
 _OVERSIZED_ACCEPT_LANGUAGE = ", ".join(["de"] * 1000)
@@ -200,12 +208,32 @@ def _page(language_tag: str) -> StaticPage:
     )
 
 
+def _authenticated_session() -> AuthenticatedSession:
+    now: Final = utc_now()
+    return AuthenticatedSession(
+        account=Account(
+            user_id=42,
+            zitadel_user_id="provider-user",
+            email="user@example.com",
+            username="test-user",
+        ),
+        session=UserSession(
+            id=1,
+            user_id=42,
+            token_hash="token-hash",
+            expires_at=now + timedelta(days=1),
+            absolute_expires_at=now + timedelta(days=30),
+        ),
+    )
+
+
 @final
 class _ContentResponse(NamedTuple):
     status_code: int
     body: object
     headers: Mapping[str, str]
     session: AsyncMock
+    find_authenticated_session: AsyncMock
 
 
 def _get(
@@ -214,10 +242,21 @@ def _get(
     *,
     language: Optional[str] = None,
     accept_language: Optional[str | list[str]] = None,
+    logged_in: bool = False,
+    stored_language: Optional[str] = None,
 ) -> _ContentResponse:
-    """Request a content route through the app, with an imprint in the available languages."""
+    """
+    Request a content route through the app, with an imprint in the available languages.
+
+    The request belongs to a valid session if `logged_in` is set, and its user has
+    stored `stored_language` as display language, if given.
+    """
     session: Final = AsyncMock(spec=AsyncSession)
     session.execute.return_value = Mock(scalars=Mock(return_value=[_page(tag) for tag in available_languages]))
+    session.get.return_value = (
+        None if stored_language is None else UserDisplayLanguagePreference(user_id=42, language_tag=stored_language)
+    )
+    find_authenticated_session: Final = AsyncMock(return_value=_authenticated_session() if logged_in else None)
 
     async def override_session() -> AsyncGenerator[AsyncSession]:
         yield session
@@ -228,7 +267,12 @@ def _get(
     headers: Final = [("Accept-Language", line) for line in lines]
     app.dependency_overrides[get_session] = override_session
     try:
-        response: Final = TestClient(app).get(path, params=params, headers=headers)
+        with patch.object(
+            content_language_selection_module,
+            "find_authenticated_session",
+            find_authenticated_session,
+        ):
+            response: Final = TestClient(app).get(path, params=params, headers=headers)
     finally:
         _ = app.dependency_overrides.pop(get_session)
     return _ContentResponse(
@@ -236,11 +280,12 @@ def _get(
         response.json(),
         response.headers,
         session,
+        find_authenticated_session,
     )
 
 
-def _varies_by_accept_language(response: _ContentResponse) -> bool:
-    return "accept-language" in (value.strip().lower() for value in response.headers.get("Vary", "").split(","))
+def _varies_by(response: _ContentResponse, header: str) -> bool:
+    return header.lower() in (value.strip().lower() for value in response.headers.get("Vary", "").split(","))
 
 
 @pytest.mark.parametrize(
@@ -293,8 +338,75 @@ def test_content_language_negotiation_follows_the_behavior_table(
     assert imprint.language_details.language_tag == expected_language
     assert imprint.language_details.is_language_fallback is expected_fallback
     assert response.headers["Content-Language"] == expected_language
-    # The selection depends on the header exactly if no language is given.
-    assert _varies_by_accept_language(response) is (language is None)
+    # The selection depends on the header and the session exactly if no language is given.
+    assert _varies_by(response, "Accept-Language") is (language is None)
+    assert _varies_by(response, "Cookie") is (language is None)
+    assert "Cache-Control" not in response.headers
+
+
+@pytest.mark.parametrize(
+    ("language", "stored_language", "accept_language", "available_languages", "expected_language", "expected_fallback"),
+    [
+        pytest.param(None, "de", "en", ["de", "en"], "de", False, id="stored de overrides en"),
+        pytest.param(None, "de", None, ["de", "en"], "de", False, id="stored de"),
+        pytest.param("en", "de", None, ["de", "en"], "en", False, id="language=en overrides stored de"),
+        pytest.param("fr", "de", None, ["de", "en"], "en", True, id="language=fr overrides stored de"),
+        pytest.param(None, "fr", "de", ["de", "en"], "en", True, id="stored fr overrides de"),
+        pytest.param(None, "fr", None, ["de", "es"], "de", True, id="stored fr without English"),
+        pytest.param(None, None, "fr;q=0.9, de;q=0.8", ["de", "en"], "de", True, id="nothing stored"),
+        pytest.param(None, None, None, ["de", "en"], "en", False, id="nothing stored, no preference"),
+    ],
+)
+def test_content_language_negotiation_prefers_the_stored_display_language(
+    language: Optional[str],
+    stored_language: Optional[str],
+    accept_language: Optional[str],
+    available_languages: list[str],
+    expected_language: str,
+    expected_fallback: bool,
+) -> None:
+    response: Final = _get(
+        "/v1/imprint",
+        available_languages,
+        language=language,
+        accept_language=accept_language,
+        logged_in=True,
+        stored_language=stored_language,
+    )
+
+    assert response.status_code == 200
+    imprint: Final = ImprintResponseV1.model_validate(response.body)
+    assert imprint.content == f"Imprint ({expected_language})"
+    assert imprint.language_details.language_tag == expected_language
+    assert imprint.language_details.is_language_fallback is expected_fallback
+    assert response.headers["Content-Language"] == expected_language
+    assert _varies_by(response, "Accept-Language") is (language is None)
+    assert _varies_by(response, "Cookie") is (language is None)
+    # Only a response that depends on the session must not be stored by shared caches.
+    assert (response.headers.get("Cache-Control") == "private") is (language is None)
+
+
+def test_content_language_negotiation_with_language_parameter_skips_the_session() -> None:
+    response: Final = _get(
+        "/v1/imprint",
+        ["de", "en"],
+        language="en",
+        logged_in=True,
+        stored_language="de",
+    )
+
+    assert response.status_code == 200
+    response.find_authenticated_session.assert_not_awaited()
+    response.session.get.assert_not_awaited()
+
+
+def test_content_language_negotiation_without_session_skips_the_stored_display_language() -> None:
+    response: Final = _get("/v1/imprint", ["de", "en"], accept_language="de")
+
+    assert response.status_code == 200
+    assert response.headers["Content-Language"] == "de"
+    response.find_authenticated_session.assert_awaited_once()
+    response.session.get.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -304,7 +416,8 @@ def test_content_language_negotiation_follows_the_behavior_table(
         pytest.param(2045, [], id="longer than 2 KiB"),
     ],
 )
-def test_requested_language_ranges_bound_the_header_in_bytes(
+@pytest.mark.asyncio
+async def test_requested_language_ranges_bound_the_header_in_bytes(
     padding_length: int,
     expected_language_ranges: list[str],
 ) -> None:
@@ -315,7 +428,10 @@ def test_requested_language_ranges_bound_the_header_in_bytes(
         "headers": [(b"accept-language", f"de, {'ä' * padding_length}".encode("latin-1"))],
     })
 
-    assert get_requested_language_ranges(request, Response()) == expected_language_ranges
+    # Without a session cookie, the database isn’t used.
+    language_ranges: Final = await get_requested_language_ranges(request, Response(), Mock(spec=AsyncSession))
+
+    assert language_ranges == expected_language_ranges
 
 
 def test_content_routes_answer_missing_content_with_not_found() -> None:
