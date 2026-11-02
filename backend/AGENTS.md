@@ -18,6 +18,8 @@ Use American English everywhere: in identifiers, comments, docstrings, test IDs,
 - Prefer PEP 695 `type` statements for named type aliases.
 - Prefer reusable `Annotated` types with Pydantic validators when validation belongs to a semantic type rather than a specific model field.
 - Use `NamedTuple` for small immutable data carriers that do not need dataclass behavior.
+- Model a fixed set of named values as a `StrEnum` with `auto()` members rather than as a union of string literals.
+- Represent durations as `datetime.timedelta` rather than as plain numbers with the unit in their name. Where an API expects a number of seconds, pass `total_seconds()`, **not** `seconds`, which is only the seconds component of the duration.
 - Mark classes that are not intended for inheritance with `@final`.
 - Do not add redundant `Final` annotations to module-level `SCREAMING_SNAKE_CASE` constants; Pyright already treats those names as constants.
 - Use `Final` for local variables that are not re-assigned. Note that this is not possible inside loops.
@@ -38,6 +40,7 @@ Use American English everywhere: in identifiers, comments, docstrings, test IDs,
 ## API models
 
 - Keep request and response contracts precise so the generated frontend client receives accurate types.
+- Document API models for the OpenAPI document: give each model a docstring and each field a `Field(description=...)`.
 - Model fields that must be present or absent together as one nullable nested object, rather than as independently nullable fields.
 - Follow the existing API-version suffix convention for generated request and response model names.
 - Define request and response payloads as Pydantic models and return those models from route functions rather than ad-hoc dictionaries.
