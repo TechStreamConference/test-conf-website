@@ -23,17 +23,61 @@ from backend.main import _code_locations  # type: ignore[reportPrivateUsage]
 from backend.main import _lifespan  # type: ignore[reportPrivateUsage]
 from backend.main import _log_requests  # type: ignore[reportPrivateUsage]
 from backend.main import app
-from backend.main import database_health
+from backend.main import health
+from backend.models.dependency_status import DependencyStatus
+from backend.models.responses import DependencyStatusesV1
+from backend.models.responses import HealthResponseV1
 
 
 @pytest.mark.asyncio
-async def test_database_health_returns_ok() -> None:
-    session: Final = AsyncMock()
+async def test_health_returns_up() -> None:
+    assert await health() == HealthResponseV1(status=DependencyStatus.UP)
 
-    result: Final = await database_health(session)
 
-    assert result == {"ok": True}
-    session.execute.assert_awaited_once()
+def test_dependency_health_returns_200_when_all_dependencies_are_up(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        main_module,
+        "check_dependencies",
+        AsyncMock(
+            return_value=DependencyStatusesV1(database=DependencyStatus.UP, identity_provider=DependencyStatus.UP)
+        ),
+    )
+
+    response: Final = TestClient(app).get("/health/dependencies")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "up",
+        "dependencies": {"database": "up", "identityProvider": "up"},
+    }
+
+
+@pytest.mark.parametrize(
+    ("database", "identity_provider"),
+    [
+        (DependencyStatus.DOWN, DependencyStatus.UP),
+        (DependencyStatus.UP, DependencyStatus.DOWN),
+        (DependencyStatus.DOWN, DependencyStatus.DOWN),
+    ],
+)
+def test_dependency_health_returns_503_when_any_dependency_is_down(
+    monkeypatch: pytest.MonkeyPatch,
+    database: DependencyStatus,
+    identity_provider: DependencyStatus,
+) -> None:
+    monkeypatch.setattr(
+        main_module,
+        "check_dependencies",
+        AsyncMock(return_value=DependencyStatusesV1(database=database, identity_provider=identity_provider)),
+    )
+
+    response: Final = TestClient(app).get("/health/dependencies")
+
+    assert response.status_code == 503
+    assert response.json() == {
+        "status": "down",
+        "dependencies": {"database": database, "identityProvider": identity_provider},
+    }
 
 
 @pytest.mark.asyncio
@@ -58,7 +102,7 @@ async def test_request_middleware_logs_received_and_completed(
 ) -> None:
     request: Final = Mock()
     request.method = "GET"
-    request.url.path = "/health/database"
+    request.url.path = "/health"
     expected_response: Final = Response(status_code=204)
     call_next: Final = AsyncMock(return_value=expected_response)
     log_info: Final = Mock()
@@ -75,10 +119,10 @@ async def test_request_middleware_logs_received_and_completed(
     completed: Final = log_info.call_args_list[1].args[0]
     assert isinstance(received, HttpRequestReceived)
     assert received.method == "GET"
-    assert received.path == "/health/database"
+    assert received.path == "/health"
     assert isinstance(completed, HttpRequestCompleted)
     assert completed.method == "GET"
-    assert completed.path == "/health/database"
+    assert completed.path == "/health"
     assert completed.status_code == 204
     assert completed.duration_ms == 12.34
 

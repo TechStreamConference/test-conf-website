@@ -32,6 +32,14 @@ class BackendCallCompleted(LogEventBase):
 
 
 @final
+class DependencyCheckFailed(LogEventBase):
+    LOG_EVENT_NAME: ClassVar[str] = "health.dependency_check.failed"
+    LOG_BODY: ClassVar[str] = "Dependency health check failed"
+    dependency: str
+    exception_type: str
+
+
+@final
 class HttpRequestCompleted(LogEventBase):
     LOG_EVENT_NAME: ClassVar[str] = "http.request.completed"
     LOG_BODY: ClassVar[str] = "HTTP request completed"
@@ -76,6 +84,7 @@ type LogEvent = (
     ApplicationStarted
     | ApplicationStopping
     | BackendCallCompleted
+    | DependencyCheckFailed
     | HttpRequestCompleted
     | HttpRequestFailed
     | HttpRequestReceived

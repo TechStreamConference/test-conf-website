@@ -4,7 +4,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BackendHealthCheckData, BackendHealthCheckResponses, ClearCurrentUserDisplayLanguageV1Data, ClearCurrentUserDisplayLanguageV1Errors, ClearCurrentUserDisplayLanguageV1Responses, DecideRegionalSettingsChangeV1Data, DecideRegionalSettingsChangeV1Errors, DecideRegionalSettingsChangeV1Responses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Errors, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors, ReportRegionalSettingsV1Data, ReportRegionalSettingsV1Errors, ReportRegionalSettingsV1Responses, SetCurrentUserDisplayLanguageV1Data, SetCurrentUserDisplayLanguageV1Errors, SetCurrentUserDisplayLanguageV1Responses, UpdateCurrentUserPreferencesV1Data, UpdateCurrentUserPreferencesV1Errors, UpdateCurrentUserPreferencesV1Responses } from './types.gen';
+import type { BackendDependencyHealthCheckData, BackendDependencyHealthCheckErrors, BackendDependencyHealthCheckResponses, BackendLivenessCheckData, BackendLivenessCheckResponses, ClearCurrentUserDisplayLanguageV1Data, ClearCurrentUserDisplayLanguageV1Errors, ClearCurrentUserDisplayLanguageV1Responses, DecideRegionalSettingsChangeV1Data, DecideRegionalSettingsChangeV1Errors, DecideRegionalSettingsChangeV1Responses, GetCurrentEventV1Data, GetCurrentEventV1Errors, GetCurrentEventV1Responses, GetCurrentUserV1Data, GetCurrentUserV1Errors, GetCurrentUserV1Responses, GetEventByYearAndSequenceNumberV1Data, GetEventByYearAndSequenceNumberV1Errors, GetEventByYearAndSequenceNumberV1Responses, GetGlobalsV1Data, GetGlobalsV1Errors, GetGlobalsV1Responses, GetImprintV1Data, GetImprintV1Errors, GetImprintV1Responses, LoginCallbackV1Data, LoginCallbackV1Errors, LoginCallbackV1Responses, LoginV1Data, LoginV1Errors, ReportRegionalSettingsV1Data, ReportRegionalSettingsV1Errors, ReportRegionalSettingsV1Responses, SetCurrentUserDisplayLanguageV1Data, SetCurrentUserDisplayLanguageV1Errors, SetCurrentUserDisplayLanguageV1Responses, UpdateCurrentUserPreferencesV1Data, UpdateCurrentUserPreferencesV1Errors, UpdateCurrentUserPreferencesV1Responses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -133,6 +133,15 @@ export const decideRegionalSettingsChangeV1 = <ThrowOnError extends boolean = fa
 });
 
 /**
- * Database Health
+ * Liveness check
+ *
+ * Reports whether the backend process is running, without checking any of its dependencies.
  */
-export const backendHealthCheck = <ThrowOnError extends boolean = false>(options?: Options<BackendHealthCheckData, ThrowOnError>): RequestResult<BackendHealthCheckResponses, unknown, ThrowOnError> => (options?.client ?? client).get<BackendHealthCheckResponses, unknown, ThrowOnError>({ url: '/health/database', ...options });
+export const backendLivenessCheck = <ThrowOnError extends boolean = false>(options?: Options<BackendLivenessCheckData, ThrowOnError>): RequestResult<BackendLivenessCheckResponses, unknown, ThrowOnError> => (options?.client ?? client).get<BackendLivenessCheckResponses, unknown, ThrowOnError>({ url: '/health', ...options });
+
+/**
+ * Dependency health check
+ *
+ * Reports for each dependency of the backend whether it is up or down.
+ */
+export const backendDependencyHealthCheck = <ThrowOnError extends boolean = false>(options?: Options<BackendDependencyHealthCheckData, ThrowOnError>): RequestResult<BackendDependencyHealthCheckResponses, BackendDependencyHealthCheckErrors, ThrowOnError> => (options?.client ?? client).get<BackendDependencyHealthCheckResponses, BackendDependencyHealthCheckErrors, ThrowOnError>({ url: '/health/dependencies', ...options });

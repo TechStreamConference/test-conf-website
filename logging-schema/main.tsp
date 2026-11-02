@@ -99,6 +99,23 @@ namespace LogEvents {
     request_id?: string;
   }
 
+  // ─── Health ───────────────────────────────────────────────────────────────
+
+  /**
+   * Emitted when a dependency of the backend is found to be down during a
+   * health check. Never includes the exception message, which may contain
+   * connection details.
+   */
+  @extension("x-event-name", "health.dependency_check.failed")
+  @extension("x-event-body", "Dependency health check failed")
+  model DependencyCheckFailed {
+    /** Name of the dependency, e.g. `database`. */
+    dependency: string;
+
+    /** Fully qualified name of the exception type, e.g. `TimeoutError`. */
+    exception_type: string;
+  }
+
   // ─── BFF (SvelteKit server-side) ──────────────────────────────────────────
 
   /** Emitted by the BFF after each call to the backend REST API completes. */

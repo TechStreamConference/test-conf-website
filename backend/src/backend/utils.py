@@ -39,6 +39,12 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def qualified_type_name(exception: BaseException) -> str:
+    """Fully qualified name of the exception's type, e.g. `sqlalchemy.exc.IntegrityError`."""
+    exception_type: Final = type(exception)
+    return f"{exception_type.__module__}.{exception_type.__qualname__}"
+
+
 def create_http_exception(status_code: int, body: BaseModel) -> HTTPException:
     """
     Create an `HTTPException` with a detail payload derived from a Pydantic model.
