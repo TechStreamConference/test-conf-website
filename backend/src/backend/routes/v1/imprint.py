@@ -27,10 +27,12 @@ ROUTER = APIRouter()
 @ROUTER.get(
     "/imprint",
     summary="Get the markdown contents of the imprint page",
-    description="Retrieve the markdown contents of the imprint page stored in the database. "
-    + "The requested `language` is matched by its primary language subtag (`de-AT` delivers `de`). "
-    + "If it is not available, English is returned instead, or, if that is not available either, "
-    + "the lexicographically first available language.",
+    description=(
+        "Retrieve the markdown contents of the imprint page stored in the database. "
+        + "The requested `language` is matched by its primary language subtag (`de-AT` delivers `de`). "
+        + "If it is not available, English is returned instead, or, if that is not available either, "
+        + "the lexicographically first available language."
+    ),
     status_code=status.HTTP_200_OK,
     responses={
         status.HTTP_200_OK: {"model": ImprintResponseV1, "headers": CONTENT_LANGUAGE_RESPONSE_HEADERS},
