@@ -63,6 +63,40 @@ async def test_migration_inserts_the_snapshot_of_content_languages(
 
 
 @pytest.mark.asyncio
+async def test_every_content_language_has_a_name(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    async with session_factory() as session:
+        names: Final = list((await session.execute(select(ContentLanguage.name))).scalars())
+
+    assert names
+    assert all(name.strip() for name in names)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("language_tag", "name"),
+    [
+        ("de", "Deutsch"),
+        ("en", "English"),
+        ("fr", "français"),
+        ("ja", "日本語"),
+        ("uk", "українська"),
+        ("yue", "粵語"),
+    ],
+)
+async def test_content_languages_are_named_in_themselves(
+    session_factory: async_sessionmaker[AsyncSession],
+    language_tag: str,
+    name: str,
+) -> None:
+    async with session_factory() as session:
+        language: Final = await session.get_one(ContentLanguage, language_tag)
+
+    assert language.name == name
+
+
+@pytest.mark.asyncio
 @pytest.mark.parametrize("language_tag", ["ja", "fil", "yue", "pt", "uk"])
 async def test_content_can_be_added_in_any_permitted_language(
     session_factory: async_sessionmaker[AsyncSession],
@@ -106,8 +140,18 @@ async def test_content_languages_reject_malformed_tags(
     language_tag: str,
 ) -> None:
     async with session_factory() as session:
-        session.add(ContentLanguage(tag=language_tag))
+        session.add(ContentLanguage(tag=language_tag, name="Name"))
         with pytest.raises(IntegrityError, match="ck_content_languages_tag_format"):
+            await session.flush()
+
+
+@pytest.mark.asyncio
+async def test_content_languages_reject_empty_names(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    async with session_factory() as session:
+        session.add(ContentLanguage(tag="xx", name=""))
+        with pytest.raises(IntegrityError, match="ck_content_languages_name_not_empty"):
             await session.flush()
 
 
