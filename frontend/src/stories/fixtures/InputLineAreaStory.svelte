@@ -10,8 +10,9 @@
         label: string;
         type: InputType;
         maxlength?: number | undefined;
+        step?: number | undefined;
     }
-    let { count, variant, layout, maxlength, label, type }: Props = $props();
+    let { count, variant, layout, maxlength, step, label, type }: Props = $props();
     // use `any` here so that I can write every value here to just display it.
     // the actual type is displayed within the UI.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,11 +38,11 @@
 >
     {#each Array(count) as _, i (i)}
         {#if variant === 'line'}
-            <InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} />
+            <InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} {step} />
         {:else if variant === 'area'}
             <InputArea id={`input-area-${i}`} {label} bind:value {maxlength} />
         {:else}
-            <InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} />
+            <InputLine id={`input-line-${i}`} {label} {type} bind:value {maxlength} {step} />
             <InputArea id={`input-area-${i}`} {label} bind:value {maxlength} />
         {/if}
     {/each}
