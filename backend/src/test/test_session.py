@@ -16,6 +16,7 @@ from backend.models.tables import UserSession
 from backend.oidc import UserClaims
 from backend.session import SESSION_COOKIE_NAME
 from backend.session import create_session
+from backend.session import find_authenticated_session
 from backend.session import find_or_create_user
 from backend.session import get_current_user
 from backend.utils import hash_token
@@ -183,6 +184,24 @@ async def test_create_session_hashes_token_and_sets_secure_cookie(monkeypatch: p
     assert "Secure" in cookie
     assert "SameSite=lax" in cookie
     assert "Path=/" in cookie
+
+
+@pytest.mark.asyncio
+async def test_find_authenticated_session_without_cookie_is_none() -> None:
+    db: Final = _db()
+
+    assert await find_authenticated_session(Response(), db, None) is None
+    db.execute.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+async def test_find_authenticated_session_with_unknown_session_is_none() -> None:
+    db: Final = _db()
+    db.execute.return_value = _result_with_optional(None)
+    response: Final = Response()
+
+    assert await find_authenticated_session(response, db, "session-token") is None
+    assert "set-cookie" not in response.headers
 
 
 @pytest.mark.asyncio
