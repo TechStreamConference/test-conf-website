@@ -3,6 +3,8 @@
 import { faBluesky } from '@fortawesome/free-brands-svg-icons';
 import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 import { faGithub } from '@fortawesome/free-brands-svg-icons';
+import { faDownload } from '@fortawesome/free-solid-svg-icons';
+import { faGlobe } from '@fortawesome/free-solid-svg-icons';
 import { faInstagram } from '@fortawesome/free-brands-svg-icons';
 import { faLinkedin } from '@fortawesome/free-brands-svg-icons';
 import { faMastodon } from '@fortawesome/free-brands-svg-icons';
@@ -26,7 +28,9 @@ export enum SocialNetwork {
     Bluesky = 6,
     X = 7,
     Instagram = 8,
-    LinkedIn = 9
+    LinkedIn = 9,
+    Website = 10, // Not a social network, but the icon for every other link.
+    Download = 11 // Not a social network, but the icon for a link to a file, e.g. a press kit.
 }
 
 interface SocialNetworkIcon {
@@ -68,7 +72,9 @@ export const SOCIAL_NETWORKS: Record<SocialNetwork, SocialNetworkInfo> = {
     [SocialNetwork.Bluesky]: { label: 'Bluesky', icon: toIcon(faBluesky) },
     [SocialNetwork.X]: { label: 'X', icon: toIcon(faXTwitter) },
     [SocialNetwork.Instagram]: { label: 'Instagram', icon: toIcon(faInstagram) },
-    [SocialNetwork.LinkedIn]: { label: 'LinkedIn', icon: toIcon(faLinkedin) }
+    [SocialNetwork.LinkedIn]: { label: 'LinkedIn', icon: toIcon(faLinkedin) },
+    [SocialNetwork.Website]: { label: 'Website', icon: toIcon(faGlobe) },
+    [SocialNetwork.Download]: { label: 'Download', icon: toIcon(faDownload) }
 };
 
 /**
