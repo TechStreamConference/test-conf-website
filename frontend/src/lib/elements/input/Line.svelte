@@ -18,6 +18,7 @@
     import { MaxLengthSeverity } from '$lib/helper/input';
     import { parseDateInputValue } from '$lib/helper/input';
     import { parseInputValue } from '$lib/helper/input';
+    import { toHtmlStep } from '$lib/helper/input';
 
     type Props = Pick<
         HTMLInputAttributes,
@@ -30,7 +31,6 @@
         | 'placeholder'
         | 'readonly'
         | 'required'
-        | 'step'
     > &
         AriaAttributes &
         InputContextProp<T> & {
@@ -38,13 +38,28 @@
             label: string;
             type: T;
             maxlength?: number | undefined;
+            /**
+             * Step size of the input. Measured in whole minutes for `time` and `datetime-local`
+             * (they cannot show seconds), and as in HTML for all other types.
+             */
+            step?: number | undefined;
             value: InputValue<T>;
         };
-    let { id, label, type, maxlength, value = $bindable(), context, ...rest }: Props = $props();
+    let {
+        id,
+        label,
+        type,
+        maxlength,
+        step,
+        value = $bindable(),
+        context,
+        ...rest
+    }: Props = $props();
 
     const validMaxLength: number | undefined = $derived(
         maxlength === undefined ? undefined : clampNumberToInt(maxlength)
     );
+    const htmlStep: number | undefined = $derived(toHtmlStep(type, step));
 
     /**
      * @brief The severity of the current value, or `Normal` if there is no max length.
@@ -94,6 +109,7 @@
         value={formatInputValue(type, value)}
         oninput={handleInput}
         maxlength={validMaxLength}
+        step={htmlStep}
     />
     {#if validMaxLength !== undefined && INPUT_TYPES_WITH_MAX_LENGTH.has(type) && typeof value === 'string'}
         <p
