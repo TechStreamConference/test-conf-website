@@ -33,6 +33,8 @@ describe('social network enum', () => {
         expect(SocialNetwork.X).toBe(7);
         expect(SocialNetwork.Instagram).toBe(8);
         expect(SocialNetwork.LinkedIn).toBe(9);
+        expect(SocialNetwork.Website).toBe(10);
+        expect(SocialNetwork.Download).toBe(11);
     });
 
     it('has a label and an icon for every network', () => {
@@ -40,14 +42,14 @@ describe('social network enum', () => {
             expect(SOCIAL_NETWORKS[option.value].label).toBe(option.label);
             expect(SOCIAL_NETWORKS[option.value].icon.path).not.toBe('');
         }
-        expect(SOCIAL_NETWORK_OPTIONS).toHaveLength(9);
+        expect(SOCIAL_NETWORK_OPTIONS).toHaveLength(11);
     });
 
     it('accepts only known numbers as network', () => {
         expect(isSocialNetwork(1)).toBe(true);
-        expect(isSocialNetwork(9)).toBe(true);
+        expect(isSocialNetwork(11)).toBe(true);
         expect(isSocialNetwork(0)).toBe(false);
-        expect(isSocialNetwork(10)).toBe(false);
+        expect(isSocialNetwork(12)).toBe(false);
     });
 });
 
