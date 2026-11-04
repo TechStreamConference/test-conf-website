@@ -82,7 +82,14 @@
         </div>
     </div>
 
-    <small>{i18n(m.footer_copyright, languageTag, { year: currentYear })}</small>
+    <div class:copyrights={true}>
+        <small>{i18n(m.footer_copyright, languageTag, { year: currentYear })}</small>
+        <div class:icon-copyrights={true}>
+            <small>{i18n(m.footer_iconCopyrightBrands, languageTag)}</small>
+            <small class:separator={true} aria-hidden="true">|</small>
+            <small>{i18n(m.footer_iconCopyrightGeneral, languageTag)}</small>
+        </div>
+    </div>
 </footer>
 
 <style>
@@ -144,6 +151,27 @@
         justify-content: center;
     }
 
+    .copyrights {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        gap: 0.25rem;
+    }
+
+    .icon-copyrights {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        gap: 0.25rem;
+    }
+
+    /* The separator is only needed when the icon copyrights are next to each other. */
+    .separator {
+        display: none;
+    }
+
     small {
         font-size: 0.875rem;
         text-align: center;
@@ -156,6 +184,16 @@
 
         .columns {
             grid-template-columns: repeat(2, 1fr);
+        }
+
+        .icon-copyrights {
+            flex-direction: row;
+
+            gap: 0.75rem;
+        }
+
+        .separator {
+            display: inline;
         }
 
         nav,
