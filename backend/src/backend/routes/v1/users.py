@@ -5,6 +5,7 @@ from uuid import UUID
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
+from sqlalchemy import delete
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
@@ -13,15 +14,21 @@ from sqlmodel import select
 from backend import logging
 from backend.database import get_session
 from backend.logging.events_gen import RegionalSettingsReportProcessed
+from backend.models.requests import DisplayLanguageInputV1
 from backend.models.requests import RegionalSettingsDecision
 from backend.models.requests import RegionalSettingsDecisionInputV1
 from backend.models.requests import ReportedRegionalSettingsInputV1
 from backend.models.requests import UserPreferencesInputV1
+from backend.models.responses import DisplayLanguageResponseV1
 from backend.models.responses import NotAuthenticatedResponseV1
 from backend.models.responses import RegionalSettingsChangeConflictResponseV1
+from backend.models.responses import RequestValidationErrorResponseV1
+from backend.models.responses import UnsupportedLanguageTagResponseV1
 from backend.models.responses import UserPreferencesResponseV1
+from backend.models.tables import ContentLanguage
 from backend.models.tables import RegionalSettingsSuggestion
 from backend.models.tables import ReportedRegionalSettings
+from backend.models.tables import UserDisplayLanguagePreference
 from backend.models.tables import UserPreferences
 from backend.models.tables import UserSession
 from backend.session import AuthenticatedSession
@@ -73,6 +80,71 @@ async def update_preferences(
 
     await session.commit()
     return UserPreferencesResponseV1(timezone=stored.timezone, locale=stored.locale)
+
+
+@ROUTER.put(
+    "/display-language",
+    summary="Set the current user's preferred display language",
+    description=(
+        "Stores the display language that the current user explicitly chose for the website. "
+        + "Every language of the content language registry is accepted."
+    ),
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": NotAuthenticatedResponseV1},
+        # FastAPI rejects a body that doesn't match its type.
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {
+            "model": UnsupportedLanguageTagResponseV1 | RequestValidationErrorResponseV1,
+        },
+    },
+    operation_id="set current user display language v1",
+)
+async def set_display_language(
+    display_language: DisplayLanguageInputV1,
+    authenticated: Annotated[AuthenticatedSession, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> DisplayLanguageResponseV1:
+    # The tag only matches the syntax so far; the foreign key would reject an
+    # unregistered one as well, but only as an unspecific integrity error.
+    if await session.get(ContentLanguage, display_language.language) is None:
+        raise create_http_exception(
+            status.HTTP_422_UNPROCESSABLE_CONTENT,
+            UnsupportedLanguageTagResponseV1(),
+        )
+
+    # The row may not exist yet if the user has never chosen a display language.
+    upsert: Final = pg_insert(UserDisplayLanguagePreference).values(
+        user_id=authenticated.account.user_id,
+        language_tag=display_language.language,
+    )
+    _ = await session.execute(
+        upsert.on_conflict_do_update(
+            index_elements=[col(UserDisplayLanguagePreference.user_id)],
+            set_={"language_tag": upsert.excluded.language_tag},
+        ),
+    )
+    await session.commit()
+    return DisplayLanguageResponseV1(language=display_language.language)
+
+
+@ROUTER.delete(
+    "/display-language",
+    summary="Clear the current user's preferred display language",
+    description="Removes the display language that the current user chose, if any.",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={status.HTTP_401_UNAUTHORIZED: {"model": NotAuthenticatedResponseV1}},
+    operation_id="clear current user display language v1",
+)
+async def clear_display_language(
+    authenticated: Annotated[AuthenticatedSession, Depends(get_current_user)],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> None:
+    _ = await session.execute(
+        delete(UserDisplayLanguagePreference).where(
+            col(UserDisplayLanguagePreference.user_id) == authenticated.account.user_id,
+        ),
+    )
+    await session.commit()
 
 
 @ROUTER.put(

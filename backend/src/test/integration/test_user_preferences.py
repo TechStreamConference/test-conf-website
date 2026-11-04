@@ -4,6 +4,7 @@ from typing import Final
 from typing import Optional
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import select
 
+from backend.models.requests import DisplayLanguageInputV1
 from backend.models.requests import RegionalSettingsDecision
 from backend.models.requests import RegionalSettingsDecisionInputV1
 from backend.models.requests import ReportedRegionalSettingsInputV1
@@ -18,10 +20,14 @@ from backend.models.tables import Account
 from backend.models.tables import RegionalSettingsSuggestion
 from backend.models.tables import ReportedRegionalSettings
 from backend.models.tables import User
+from backend.models.tables import UserDisplayLanguagePreference
 from backend.models.tables import UserPreferences
 from backend.models.tables import UserSession
+from backend.routes.v1.auth import me
+from backend.routes.v1.users import clear_display_language
 from backend.routes.v1.users import decide_regional_settings_change
 from backend.routes.v1.users import report_regional_settings
+from backend.routes.v1.users import set_display_language
 from backend.session import AuthenticatedSession
 from backend.utils import utc_now
 
@@ -337,5 +343,65 @@ async def test_traveling_device_does_not_repeatedly_prompt_and_resyncs_silently_
             preferences: Final = await verification_session.get(UserPreferences, user_session.user_id)
             assert preferences is not None
             assert preferences.timezone == "Europe/Berlin"  # never moved
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_preferred_display_language_flow_against_postgres(migrate_and_seed_database: str) -> None:
+    engine: Final = create_async_engine(migrate_and_seed_database, pool_pre_ping=True)
+    session_factory: Final = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+    try:
+        user_session: Final = await _create_user_with_session(session_factory, token="preferred-language-token")
+        account: Final = Account(
+            user_id=user_session.user_id,
+            zitadel_user_id="preferred-language-test",
+            email="user@example.com",
+            username="test-user",
+        )
+        authenticated: Final = AuthenticatedSession(account=account, session=user_session)
+
+        async def preferred_display_language() -> Optional[str]:
+            async with session_factory() as session:
+                return (await me(authenticated, session)).preferred_display_language
+
+        # Unset until the user chooses one, even without regional settings.
+        assert await preferred_display_language() is None
+
+        for language in ("de", "fil"):
+            async with session_factory() as session:
+                _ = await set_display_language(DisplayLanguageInputV1(language=language), authenticated, session)
+            assert await preferred_display_language() == language
+
+        async with session_factory() as session:
+            with pytest.raises(HTTPException) as exc_info:
+                _ = await set_display_language(DisplayLanguageInputV1(language="xx"), authenticated, session)
+        assert exc_info.value.status_code == 422
+        assert await preferred_display_language() == "fil"
+
+        # Clearing is idempotent.
+        for _ in range(2):
+            async with session_factory() as session:
+                await clear_display_language(authenticated, session)
+            assert await preferred_display_language() is None
+
+        async with session_factory() as verification_session:
+            assert await verification_session.get(UserDisplayLanguagePreference, user_session.user_id) is None
+            assert await verification_session.get(UserPreferences, user_session.user_id) is None
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_preferred_display_language_must_be_registered(migrate_and_seed_database: str) -> None:
+    engine: Final = create_async_engine(migrate_and_seed_database, pool_pre_ping=True)
+    session_factory: Final = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
+    try:
+        user_session: Final = await _create_user_with_session(session_factory, token="unregistered-language-token")
+
+        async with session_factory() as session:
+            with pytest.raises(IntegrityError, match="user_display_language_preferences_language_tag_fkey"):
+                session.add(UserDisplayLanguagePreference(user_id=user_session.user_id, language_tag="xx"))
+                await session.commit()
     finally:
         await engine.dispose()

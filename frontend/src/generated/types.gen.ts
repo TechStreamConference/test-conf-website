@@ -11,6 +11,23 @@ export type Bcp47Locale = string;
 export type ContentLanguageTag = string;
 
 /**
+ * DisplayLanguageInputV1
+ */
+export type DisplayLanguageInputV1 = {
+    language: ContentLanguageTag;
+};
+
+/**
+ * DisplayLanguageResponseV1
+ */
+export type DisplayLanguageResponseV1 = {
+    /**
+     * Language
+     */
+    language: ContentLanguageTag;
+};
+
+/**
  * EmailNotVerifiedResponseV1
  */
 export type EmailNotVerifiedResponseV1 = {
@@ -272,6 +289,10 @@ export type MeResponseV1 = {
      * Regional Settings Change
      */
     regionalSettingsChange: RegionalSettingsChangeV1 | null;
+    /**
+     * Preferred Display Language
+     */
+    preferredDisplayLanguage: ContentLanguageTag | null;
 };
 
 /**
@@ -758,6 +779,74 @@ export type UpdateCurrentUserPreferencesV1Responses = {
 };
 
 export type UpdateCurrentUserPreferencesV1Response = UpdateCurrentUserPreferencesV1Responses[keyof UpdateCurrentUserPreferencesV1Responses];
+
+export type ClearCurrentUserDisplayLanguageV1Data = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/v1/users/me/display-language';
+};
+
+export type ClearCurrentUserDisplayLanguageV1Errors = {
+    /**
+     * Unauthorized
+     */
+    401: NotAuthenticatedResponseV1;
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
+};
+
+export type ClearCurrentUserDisplayLanguageV1Error = ClearCurrentUserDisplayLanguageV1Errors[keyof ClearCurrentUserDisplayLanguageV1Errors];
+
+export type ClearCurrentUserDisplayLanguageV1Responses = {
+    /**
+     * Successful Response
+     */
+    204: void;
+};
+
+export type ClearCurrentUserDisplayLanguageV1Response = ClearCurrentUserDisplayLanguageV1Responses[keyof ClearCurrentUserDisplayLanguageV1Responses];
+
+export type SetCurrentUserDisplayLanguageV1Data = {
+    body: DisplayLanguageInputV1;
+    path?: never;
+    query?: never;
+    url: '/v1/users/me/display-language';
+};
+
+export type SetCurrentUserDisplayLanguageV1Errors = {
+    /**
+     * Unauthorized
+     */
+    401: NotAuthenticatedResponseV1;
+    /**
+     * Response 422 Set Current User Display Language V1
+     *
+     * Unprocessable Content
+     */
+    422: UnsupportedLanguageTagResponseV1 | RequestValidationErrorResponseV1;
+    /**
+     * Internal Server Error
+     */
+    500: InternalServerErrorResponseV1;
+};
+
+export type SetCurrentUserDisplayLanguageV1Error = SetCurrentUserDisplayLanguageV1Errors[keyof SetCurrentUserDisplayLanguageV1Errors];
+
+export type SetCurrentUserDisplayLanguageV1Responses = {
+    /**
+     * Successful Response
+     */
+    200: DisplayLanguageResponseV1;
+};
+
+export type SetCurrentUserDisplayLanguageV1Response = SetCurrentUserDisplayLanguageV1Responses[keyof SetCurrentUserDisplayLanguageV1Responses];
 
 export type ReportRegionalSettingsV1Data = {
     body: ReportedRegionalSettingsInputV1;

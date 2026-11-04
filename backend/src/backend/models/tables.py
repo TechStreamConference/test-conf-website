@@ -65,6 +65,19 @@ class UserPreferences(SQLModel, table=True):
 
 
 @final
+class UserDisplayLanguagePreference(SQLModel, table=True):
+    """The display language a user explicitly chose for the website. No row
+    means that the user hasn't chosen one. Independent of the formatting locale
+    in `UserPreferences`.
+    """
+
+    __tablename__ = "user_display_language_preferences"  # type: ignore[reportAssignmentType]
+
+    user_id: int = Field(foreign_key="users.id", primary_key=True)
+    language_tag: str = Field(foreign_key="content_languages.tag", nullable=False, ondelete="RESTRICT")
+
+
+@final
 class UserSession(SQLModel, table=True):
     __tablename__ = "sessions"  # type: ignore[reportAssignmentType]
 

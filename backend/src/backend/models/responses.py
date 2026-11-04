@@ -190,12 +190,19 @@ class MeResponseV1(ApiResponseModel):
     username: str
     regional_settings: Optional[RegionalSettingsV1]
     regional_settings_change: Optional[RegionalSettingsChangeV1]
+    # Missing if the user hasn't chosen a display language.
+    preferred_display_language: Optional[ContentLanguageTag]
 
 
 @final
 class UserPreferencesResponseV1(ApiResponseModel):
     timezone: IanaTimezone
     locale: Bcp47Locale
+
+
+@final
+class DisplayLanguageResponseV1(ApiResponseModel):
+    language: ContentLanguageTag
 
 
 @final

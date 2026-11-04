@@ -7,6 +7,7 @@ from pydantic import BaseModel
 from pydantic import model_validator
 
 from backend.locales import Bcp47Locale
+from backend.models.content_language_types import ContentLanguageTag
 from backend.timezones import IanaTimezone
 
 
@@ -19,6 +20,11 @@ class RegionalSettingsDecision(StrEnum):
 class UserPreferencesInputV1(BaseModel):
     timezone: IanaTimezone
     locale: Bcp47Locale
+
+
+@final
+class DisplayLanguageInputV1(BaseModel):
+    language: ContentLanguageTag
 
 
 @final
