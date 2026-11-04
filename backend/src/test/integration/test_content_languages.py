@@ -14,6 +14,8 @@ from sqlmodel import select
 from backend.models.tables import ContentLanguage
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
+from backend.models.tables import GlobalKey
+from backend.models.tables import GlobalTranslation
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
 
@@ -105,6 +107,7 @@ async def test_content_can_be_added_in_any_permitted_language(
     async with session_factory() as session:
         session.add(StaticPage(kind=StaticPageKind.IMPRINT, language_tag=language_tag, content="Imprint"))
         session.add(_translation(await _first_event_id(session), language_tag))
+        session.add(GlobalTranslation(key=GlobalKey.FOOTER_TEXT, language_tag=language_tag, value="Footer"))
         await session.flush()
         await session.rollback()
 
@@ -130,6 +133,18 @@ async def test_event_translations_reject_languages_that_are_not_permitted(
     async with session_factory() as session:
         session.add(_translation(await _first_event_id(session), language_tag))
         with pytest.raises(IntegrityError, match="event_translations_language_tag_fkey"):
+            await session.flush()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("language_tag", ["xx", "DE", "de-AT", "und"])
+async def test_global_translations_reject_languages_that_are_not_permitted(
+    session_factory: async_sessionmaker[AsyncSession],
+    language_tag: str,
+) -> None:
+    async with session_factory() as session:
+        session.add(GlobalTranslation(key=GlobalKey.FOOTER_TEXT, language_tag=language_tag, value="Footer"))
+        with pytest.raises(IntegrityError, match="global_translations_language_tag_fkey"):
             await session.flush()
 
 
@@ -160,5 +175,12 @@ async def test_referenced_content_languages_cannot_be_deleted(
     session_factory: async_sessionmaker[AsyncSession],
 ) -> None:
     async with session_factory() as session:
-        with pytest.raises(IntegrityError, match="static_pages_language_tag_fkey|event_translations_language_tag_fkey"):
+        with pytest.raises(
+            IntegrityError,
+            match=(
+                "static_pages_language_tag_fkey"
+                + "|event_translations_language_tag_fkey"
+                + "|global_translations_language_tag_fkey"
+            ),
+        ):
             _ = await session.execute(text("DELETE FROM content_languages WHERE tag = 'de'"))

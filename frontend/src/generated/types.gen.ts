@@ -142,6 +142,16 @@ export type EventResponseV1 = {
 };
 
 /**
+ * GlobalsNotFoundResponseV1
+ */
+export type GlobalsNotFoundResponseV1 = {
+    /**
+     * Detail
+     */
+    detail?: 'Global values not found in the database.';
+};
+
+/**
  * GlobalsResponseV1
  */
 export type GlobalsResponseV1 = {
@@ -149,6 +159,10 @@ export type GlobalsResponseV1 = {
      * Footer Text
      */
     footerText: string;
+    /**
+     * Language Details
+     */
+    languageDetails: LanguageDetailsV1;
 };
 
 /**
@@ -685,11 +699,26 @@ export type GetEventByYearAndSequenceNumberV1Response = GetEventByYearAndSequenc
 export type GetGlobalsV1Data = {
     body?: never;
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Language
+         *
+         * The preferred content language, e.g. `de` or `de-AT`. It is matched by its primary language subtag. Without it, the language is negotiated from the `Accept-Language` header.
+         */
+        language?: string | null;
+    };
     url: '/v1/globals';
 };
 
 export type GetGlobalsV1Errors = {
+    /**
+     * Not Found
+     */
+    404: GlobalsNotFoundResponseV1;
+    /**
+     * Unprocessable Content
+     */
+    422: UnsupportedLanguageTagResponseV1;
     /**
      * Internal Server Error
      */
