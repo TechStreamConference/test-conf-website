@@ -1,34 +1,56 @@
+from collections.abc import Sequence
 from typing import Annotated
 from typing import Final
 from typing import Literal
+from typing import NamedTuple
 from typing import Optional
+from typing import Self
+from typing import final
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Response
 from fastapi import status
-from sqlalchemy import Row
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import col
 from sqlmodel import extract
-from sqlmodel import select
 
 from backend.content_language_selection import CONTENT_LANGUAGE_RESPONSE_HEADERS
 from backend.content_language_selection import get_requested_language_ranges
+from backend.content_language_selection import language_details_v1_from_selection
 from backend.content_language_selection import select_content_language
 from backend.database import get_session
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
-from backend.models.responses import LanguageDetailsV1
 from backend.models.responses import RequestValidationErrorResponseV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
+from backend.models.tables import ContentLanguage
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.utils import create_http_exception
 from backend.utils import utc_now
 
 ROUTER = APIRouter()
+
+
+@final
+class _EventRow(NamedTuple):
+    event: Event
+    translation: EventTranslation
+    language_name: str
+
+    @classmethod
+    def from_tuples(cls, rows: Sequence[tuple[Event, EventTranslation, str]]) -> list[Self]:
+        return [
+            cls(
+                event=event,
+                translation=translation,
+                language_name=language_name,
+            )
+            for (event, translation, language_name) in rows
+        ]
 
 
 @ROUTER.get(
@@ -50,7 +72,7 @@ async def get_current_event(
 ) -> EventResponseV1:
     now: Final = utc_now()
     current_event_id: Final = (
-        select(Event.id)
+        select(col(Event.id))
         .where(
             col(Event.frontpage_spotlight_date).is_not(None),
             col(Event.frontpage_spotlight_date) <= now,
@@ -64,16 +86,19 @@ async def get_current_event(
         .scalar_subquery()
     )
     statement: Final = (
-        select(Event, EventTranslation)
+        select(Event, EventTranslation, col(ContentLanguage.name))
         .join(
             EventTranslation,
             col(EventTranslation.event_id) == col(Event.id),
         )
+        .join(
+            ContentLanguage,
+            col(ContentLanguage.tag) == col(EventTranslation.language_tag),
+        )
         .where(col(Event.id) == current_event_id)
         .order_by(col(EventTranslation.language_tag))
     )
-    rows: Final = list((await session.execute(statement)).all())
-
+    rows: Final = _EventRow.from_tuples((await session.execute(statement)).tuples().all())
     return _event_response_v1_from_rows(rows, language_ranges, response)
 
 
@@ -107,10 +132,14 @@ async def get_event_by_year_and_sequence_number(
         )
 
     statement: Final = (
-        select(Event, EventTranslation)
+        select(Event, EventTranslation, col(ContentLanguage.name))
         .join(
             EventTranslation,
             col(EventTranslation.event_id) == col(Event.id),
+        )
+        .join(
+            ContentLanguage,
+            col(ContentLanguage.tag) == col(EventTranslation.language_tag),
         )
         .where(extract("year", col(Event.start_date)) == year)
         .order_by(
@@ -120,14 +149,14 @@ async def get_event_by_year_and_sequence_number(
             col(EventTranslation.language_tag),
         )
     )
-    rows: Final = list((await session.execute(statement)).all())
+    rows: Final = _EventRow.from_tuples((await session.execute(statement)).tuples().all())
 
     current_sequence_number = 0
     last_event_id: Optional[int] = None
-    current_rows: Final[list[Row[tuple[tuple[Event, EventTranslation]]]]] = []
+    current_rows: Final[list[_EventRow]] = []
     for row in rows:
-        if last_event_id is None or last_event_id != row.Event.id:
-            last_event_id = row.Event.id
+        if last_event_id is None or last_event_id != row.event.id:
+            last_event_id = row.event.id
             if current_sequence_number == sequence_number:
                 return _event_response_v1_from_rows(
                     current_rows,
@@ -153,7 +182,7 @@ async def get_event_by_year_and_sequence_number(
 
 
 def _event_response_v1_from_rows(
-    rows: list[Row[tuple[tuple[Event, EventTranslation]]]],
+    rows: Sequence[_EventRow],
     language_ranges: list[str],
     response: Response,
 ) -> EventResponseV1:
@@ -166,8 +195,12 @@ def _event_response_v1_from_rows(
     # All rows have the same data for the actual event (everything except
     # for things that have to be translated). Thus, we can just take the first
     # row and take all the basic data from that record.
-    event: Final = rows[0].Event
-    translations_by_language_tag: Final = {row.EventTranslation.language_tag: row.EventTranslation for row in rows}
+    event: Final = rows[0].event
+    if event.id is None:
+        # Satisfy the type checker.
+        raise AssertionError("Event ID cannot be None for a fetched event.")
+    translations_by_language_tag: Final = {row.translation.language_tag: row.translation for row in rows}
+    language_names_by_language_tag: Final = {row.translation.language_tag: row.language_name for row in rows}
 
     selection: Final = select_content_language(language_ranges, translations_by_language_tag)
     translation: Final = translations_by_language_tag[selection.language_tag]
@@ -175,11 +208,7 @@ def _event_response_v1_from_rows(
 
     return EventResponseV1(
         id=event.id,
-        language_details=LanguageDetailsV1(
-            available_languages=selection.available_languages,
-            language_tag=selection.language_tag,
-            is_language_fallback=selection.is_language_fallback,
-        ),
+        language_details=language_details_v1_from_selection(selection, language_names_by_language_tag),
         title=translation.title,
         subtitle=translation.subtitle,
         presskit_url=translation.presskit_url,

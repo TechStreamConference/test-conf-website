@@ -6,6 +6,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi import Response
 
+from backend.models.responses import ContentLanguageV1
 from backend.models.responses import ImprintResponseV1
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
@@ -20,9 +21,14 @@ def _page(language_tag: str) -> StaticPage:
     )
 
 
+def _language(language_tag: str) -> ContentLanguageV1:
+    return ContentLanguageV1(language_tag=language_tag, name=f"Language ({language_tag})")
+
+
 def _session_with_pages(pages: list[StaticPage]) -> AsyncMock:
     session: Final = AsyncMock()
-    session.execute.return_value = Mock(scalars=Mock(return_value=pages))
+    rows: Final = [(page, f"Language ({page.language_tag})") for page in pages]
+    session.execute.return_value = Mock(all=Mock(return_value=rows))
     return session
 
 
@@ -35,7 +41,7 @@ async def test_imprint_returns_requested_language() -> None:
 
     assert isinstance(result, ImprintResponseV1)
     assert result.content == "Imprint (de)"
-    assert result.language_details.available_languages == ["de", "en"]
+    assert result.language_details.available_languages == [_language("de"), _language("en")]
     assert result.language_details.language_tag == "de"
     assert result.language_details.is_language_fallback is False
     assert response.headers["Content-Language"] == "de"
@@ -61,7 +67,7 @@ async def test_imprint_falls_back_to_english_when_requested_language_is_missing(
     result: Final = await get_imprint(["fr"], response, session)
 
     assert result.content == "Imprint (en)"
-    assert result.language_details.available_languages == ["de", "en", "es"]
+    assert result.language_details.available_languages == [_language("de"), _language("en"), _language("es")]
     assert result.language_details.language_tag == "en"
     assert result.language_details.is_language_fallback is True
     assert response.headers["Content-Language"] == "en"
@@ -75,7 +81,7 @@ async def test_imprint_falls_back_to_first_language_when_english_is_missing() ->
     result: Final = await get_imprint(["fr"], response, session)
 
     assert result.content == "Imprint (de)"
-    assert result.language_details.available_languages == ["de", "es"]
+    assert result.language_details.available_languages == [_language("de"), _language("es")]
     assert result.language_details.language_tag == "de"
     assert result.language_details.is_language_fallback is True
 
@@ -99,5 +105,5 @@ async def test_imprint_does_not_depend_on_the_order_of_pages() -> None:
     result: Final = await get_imprint(["fr"], response, session)
 
     assert result.content == "Imprint (de)"
-    assert result.language_details.available_languages == ["de", "es"]
+    assert result.language_details.available_languages == [_language("de"), _language("es")]
     assert result.language_details.language_tag == "de"

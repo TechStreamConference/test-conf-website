@@ -37,8 +37,16 @@ class ApiResponseModel(BaseModel):
 
 
 @final
+class ContentLanguageV1(ApiResponseModel):
+    language_tag: ContentLanguageTag
+    # The name of the language in the language itself, e.g. `日本語` for `ja`.
+    name: str
+
+
+@final
 class LanguageDetailsV1(ApiResponseModel):
-    available_languages: list[ContentLanguageTag]
+    # Sorted by language tag.
+    available_languages: list[ContentLanguageV1]
     language_tag: ContentLanguageTag
     is_language_fallback: bool
 

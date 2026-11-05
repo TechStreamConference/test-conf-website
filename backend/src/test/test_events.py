@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import get_session
 from backend.main import app
+from backend.models.responses import ContentLanguageV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import RequestValidationErrorResponseV1
 from backend.models.tables import Event
@@ -63,16 +64,17 @@ def _translation(event_id: int, language_tag: str) -> EventTranslation:
     )
 
 
-def _row(event: Event, translation: EventTranslation) -> Mock:
-    row: Final = Mock()
-    row.Event = event
-    row.EventTranslation = translation
-    return row
+def _language(language_tag: str) -> ContentLanguageV1:
+    return ContentLanguageV1(language_tag=language_tag, name=f"Language ({language_tag})")
 
 
-def _session_with_rows(rows: list[Mock]) -> AsyncMock:
+def _row(event: Event, translation: EventTranslation) -> tuple[Event, EventTranslation, str]:
+    return (event, translation, f"Language ({translation.language_tag})")
+
+
+def _session_with_rows(rows: list[tuple[Event, EventTranslation, str]]) -> AsyncMock:
     session: Final = AsyncMock()
-    session.execute.return_value = Mock(all=Mock(return_value=rows))
+    session.execute.return_value = Mock(tuples=Mock(return_value=Mock(all=Mock(return_value=rows))))
     return session
 
 
@@ -92,7 +94,7 @@ async def test_current_event_returns_spotlighted_event_and_requested_translation
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
-    assert result.language_details.available_languages == ["de", "en"]
+    assert result.language_details.available_languages == [_language("de"), _language("en")]
     assert result.language_details.language_tag == "en"
     assert result.language_details.is_language_fallback is False
     session.execute.assert_awaited_once()
@@ -129,7 +131,7 @@ async def test_event_returns_requested_numbered_event_and_translation() -> None:
 
     assert isinstance(result, EventResponseV1)
     assert result.id == 2
-    assert result.language_details.available_languages == ["de", "en"]
+    assert result.language_details.available_languages == [_language("de"), _language("en")]
     assert result.language_details.language_tag == "en"
     assert result.language_details.is_language_fallback is False
 
@@ -153,7 +155,7 @@ async def test_event_returns_before_processing_later_events() -> None:
 
     assert result.id == 1
     assert result.title == "Title 1 (en)"
-    assert result.language_details.available_languages == ["en"]
+    assert result.language_details.available_languages == [_language("en")]
     assert result.language_details.language_tag == "en"
     assert result.language_details.is_language_fallback is False
 
@@ -213,7 +215,7 @@ async def test_event_matches_regional_requests_and_does_not_depend_on_the_order_
     )
 
     assert result.title == "Title 1 (de)"
-    assert result.language_details.available_languages == ["de", "en", "es"]
+    assert result.language_details.available_languages == [_language("de"), _language("en"), _language("es")]
     assert result.language_details.language_tag == "de"
     assert result.language_details.is_language_fallback is False
 

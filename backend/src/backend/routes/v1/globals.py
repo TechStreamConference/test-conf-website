@@ -12,12 +12,13 @@ from sqlmodel import select
 
 from backend.content_language_selection import CONTENT_LANGUAGE_RESPONSE_HEADERS
 from backend.content_language_selection import get_requested_language_ranges
+from backend.content_language_selection import language_details_v1_from_selection
 from backend.content_language_selection import select_content_language
 from backend.database import get_session
 from backend.models.responses import GlobalsNotFoundResponseV1
 from backend.models.responses import GlobalsResponseV1
-from backend.models.responses import LanguageDetailsV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
+from backend.models.tables import ContentLanguage
 from backend.models.tables import GlobalKey
 from backend.models.tables import GlobalTranslation
 from backend.utils import create_http_exception
@@ -47,10 +48,19 @@ async def get_globals(
     response: Response,
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> GlobalsResponseV1:
-    statement: Final = select(GlobalTranslation).order_by(col(GlobalTranslation.language_tag))
+    statement: Final = (
+        select(GlobalTranslation, col(ContentLanguage.name))
+        .join(
+            ContentLanguage,
+            col(ContentLanguage.tag) == col(GlobalTranslation.language_tag),
+        )
+        .order_by(col(GlobalTranslation.language_tag))
+    )
     values_by_language_tag: Final[defaultdict[str, dict[GlobalKey, str]]] = defaultdict(dict)
-    for translation in (await session.execute(statement)).scalars():
+    language_names: Final[dict[str, str]] = {}
+    for translation, language_name in (await session.execute(statement)).all():
         values_by_language_tag[translation.language_tag][translation.key] = translation.value
+        language_names[translation.language_tag] = language_name
     # A language counts as available only if it has a value for every key.
     complete_values_by_language_tag: Final = {
         language_tag: values for language_tag, values in values_by_language_tag.items() if len(values) == len(GlobalKey)
@@ -68,9 +78,5 @@ async def get_globals(
 
     return GlobalsResponseV1(
         footer_text=values[GlobalKey.FOOTER_TEXT],
-        language_details=LanguageDetailsV1(
-            available_languages=selection.available_languages,
-            language_tag=selection.language_tag,
-            is_language_fallback=selection.is_language_fallback,
-        ),
+        language_details=language_details_v1_from_selection(selection, language_names),
     )
