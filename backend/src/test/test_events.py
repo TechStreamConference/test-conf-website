@@ -68,17 +68,13 @@ def _language(language_tag: str) -> ContentLanguageV1:
     return ContentLanguageV1(language_tag=language_tag, name=f"Language ({language_tag})")
 
 
-def _row(event: Event, translation: EventTranslation) -> Mock:
-    row: Final = Mock()
-    row.Event = event
-    row.EventTranslation = translation
-    row.name = f"Language ({translation.language_tag})"
-    return row
+def _row(event: Event, translation: EventTranslation) -> tuple[Event, EventTranslation, str]:
+    return (event, translation, f"Language ({translation.language_tag})")
 
 
-def _session_with_rows(rows: list[Mock]) -> AsyncMock:
+def _session_with_rows(rows: list[tuple[Event, EventTranslation, str]]) -> AsyncMock:
     session: Final = AsyncMock()
-    session.execute.return_value = Mock(all=Mock(return_value=rows))
+    session.execute.return_value = Mock(tuples=Mock(return_value=Mock(all=Mock(return_value=rows))))
     return session
 
 
