@@ -1,5 +1,6 @@
 import type { DateTimeContext } from '$lib/helper/zoned-date-time';
 import type { DateTimeKind } from '$lib/helper/zoned-date-time';
+import { clampNumberToInt } from '$lib/helper/numbers';
 import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 
 // Share of the max length at which the character counter becomes visible, orange and red.
@@ -52,6 +53,29 @@ export const INPUT_TYPES_WITH_MAX_LENGTH = new Set<InputType>([
     InputType.Tel,
     InputType.Url
 ]);
+
+// The input types whose native `step` is measured in seconds, but whose formatters only show minutes.
+const INPUT_TYPES_WITH_MINUTE_STEP = new Set<InputType>([InputType.Time, InputType.DatetimeLocal]);
+
+const SECONDS_PER_MINUTE = 60;
+
+/**
+ * @brief Converts the `step` prop of an input to the value of the native `step` attribute.
+ *
+ * For `time` and `datetime-local` the prop is measured in whole minutes, because their formatters
+ * cannot show seconds. The native attribute is measured in seconds, so the prop is rounded to an
+ * integer of at least 1 and multiplied by 60. For all other types the prop is passed through.
+ *
+ * @param type the type of the input.
+ * @param step the `step` prop, measured in minutes for `time` and `datetime-local`.
+ * @returns the value for the native `step` attribute, or `undefined` if no step was given.
+ */
+export function toHtmlStep(type: InputType, step: number | undefined): number | undefined {
+    if (step === undefined || !INPUT_TYPES_WITH_MINUTE_STEP.has(type)) {
+        return step;
+    }
+    return clampNumberToInt(step, 1) * SECONDS_PER_MINUTE;
+}
 
 /**
  * @brief this interface defines the value types for each input type.

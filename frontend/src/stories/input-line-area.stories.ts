@@ -15,7 +15,8 @@ const META = {
         label: 'Label',
         layout: 'vertical',
         type: InputType.Text,
-        maxlength: undefined
+        maxlength: undefined,
+        step: undefined
     },
     argTypes: {
         variant: {
@@ -33,6 +34,12 @@ const META = {
         maxlength: {
             control: 'number',
             step: 1,
+            defaultValue: undefined
+        },
+        step: {
+            control: 'number',
+            step: 1,
+            description: 'In minutes for `time` and `datetime-local`, as in HTML for all others.',
             defaultValue: undefined
         }
     }

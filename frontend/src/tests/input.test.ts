@@ -10,6 +10,7 @@ import { isMaxLengthRed } from '$lib/helper/input';
 import { isMaxLengthVisible } from '$lib/helper/input';
 import { parseDateInputValue } from '$lib/helper/input';
 import { parseInputValue } from '$lib/helper/input';
+import { toHtmlStep } from '$lib/helper/input';
 import { InputType } from '$lib/helper/input';
 import { ZonedDateTime } from '$lib/helper/zoned-date-time';
 
@@ -232,5 +233,51 @@ describe('parseDateInputValue', () => {
             locale: 'en-US'
         });
         expect(result.utc()).toBe('2026-09-11T03:30:00.000Z');
+    });
+});
+
+describe('toHtmlStep', () => {
+    it('should be undefined when no step is given', () => {
+        expect(toHtmlStep(InputType.Time, undefined)).toBeUndefined();
+        expect(toHtmlStep(InputType.DatetimeLocal, undefined)).toBeUndefined();
+        expect(toHtmlStep(InputType.Number, undefined)).toBeUndefined();
+    });
+
+    it('should convert the minutes of a time input to seconds', () => {
+        expect(toHtmlStep(InputType.Time, 1)).toBe(60);
+        expect(toHtmlStep(InputType.Time, 5)).toBe(300);
+        expect(toHtmlStep(InputType.Time, 60)).toBe(3600);
+    });
+
+    it('should convert the minutes of a datetime-local input to seconds', () => {
+        expect(toHtmlStep(InputType.DatetimeLocal, 1)).toBe(60);
+        expect(toHtmlStep(InputType.DatetimeLocal, 15)).toBe(900);
+    });
+
+    it('should always return a multiple of 60 for minute based types', () => {
+        for (const step of [0.1, 0.5, 1.4, 2.5, 7]) {
+            expect(Number(toHtmlStep(InputType.Time, step)) % 60).toBe(0);
+            expect(Number(toHtmlStep(InputType.DatetimeLocal, step)) % 60).toBe(0);
+        }
+    });
+
+    it('should round a fractional step to whole minutes', () => {
+        expect(toHtmlStep(InputType.Time, 1.4)).toBe(60);
+        expect(toHtmlStep(InputType.Time, 1.6)).toBe(120);
+    });
+
+    it('should use at least one minute', () => {
+        expect(toHtmlStep(InputType.Time, 0)).toBe(60);
+        expect(toHtmlStep(InputType.Time, 0.4)).toBe(60);
+        expect(toHtmlStep(InputType.DatetimeLocal, -5)).toBe(60);
+    });
+
+    it('should pass the step through for all other types', () => {
+        expect(toHtmlStep(InputType.Number, 1)).toBe(1);
+        expect(toHtmlStep(InputType.Number, 0.5)).toBe(0.5);
+        expect(toHtmlStep(InputType.Date, 7)).toBe(7);
+        expect(toHtmlStep(InputType.Month, 3)).toBe(3);
+        expect(toHtmlStep(InputType.Week, 2)).toBe(2);
+        expect(toHtmlStep(InputType.Text, 10)).toBe(10);
     });
 });
