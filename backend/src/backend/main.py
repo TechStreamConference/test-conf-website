@@ -2,29 +2,29 @@ import time
 import traceback
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Annotated
 from typing import Final
 
-from fastapi import Depends
 from fastapi import FastAPI
 from fastapi import Request
 from fastapi import Response
 from fastapi import status
 from fastapi.responses import JSONResponse
-from sqlalchemy import text
-from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.base import RequestResponseEndpoint
 
 from backend import logging
 from backend.config import SETTINGS
-from backend.database import get_session
+from backend.health import check_dependencies
 from backend.logging.events_gen import ApplicationStarted
 from backend.logging.events_gen import ApplicationStopping
 from backend.logging.events_gen import HttpRequestCompleted
 from backend.logging.events_gen import HttpRequestFailed
 from backend.logging.events_gen import HttpRequestReceived
+from backend.models.dependency_status import DependencyStatus
+from backend.models.responses import DependencyHealthResponseV1
+from backend.models.responses import HealthResponseV1
 from backend.models.responses import InternalServerErrorResponseV1
 from backend.routes import v1_api
+from backend.utils import qualified_type_name
 
 
 @asynccontextmanager
@@ -56,7 +56,7 @@ async def _log_requests(
             HttpRequestFailed(
                 method=request.method,
                 path=request.url.path,
-                exception_type=_qualified_type_name(exception),
+                exception_type=qualified_type_name(exception),
                 exception_stack=_code_locations(exception),
             ),
         )
@@ -67,11 +67,6 @@ async def _log_requests(
         )
     _log_request_completed(request, response.status_code, start)
     return response
-
-
-def _qualified_type_name(exception: BaseException) -> str:
-    exception_type: Final = type(exception)
-    return f"{exception_type.__module__}.{exception_type.__qualname__}"
 
 
 def _code_locations(exception: BaseException) -> str:
@@ -106,7 +101,7 @@ def _code_locations(exception: BaseException) -> str:
         if id(current) in seen:
             break
         seen.add(id(current))
-        locations.append(f"{relation} {_qualified_type_name(current)}")
+        locations.append(f"{relation} {qualified_type_name(current)}")
     return "\n".join(locations)
 
 
@@ -122,9 +117,37 @@ def _log_request_completed(request: Request, status_code: int, start: float) -> 
 
 
 @app.get(
-    "/health/database",
-    operation_id="backend health check",
+    "/health",
+    summary="Liveness check",
+    description="Reports whether the backend process is running, without checking any of its dependencies.",
+    status_code=status.HTTP_200_OK,
+    operation_id="backend liveness check",
 )
-async def database_health(session: Annotated[AsyncSession, Depends(get_session)]) -> dict[str, bool]:
-    _ = await session.execute(text("select 1"))
-    return {"ok": True}
+async def health() -> HealthResponseV1:
+    return HealthResponseV1()
+
+
+@app.get(
+    "/health/dependencies",
+    summary="Dependency health check",
+    description="Reports for each dependency of the backend whether it is up or down.",
+    status_code=status.HTTP_200_OK,
+    responses={
+        status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": DependencyHealthResponseV1,
+            "description": "Returned when at least one dependency is down.",
+        },
+    },
+    operation_id="backend dependency health check",
+)
+async def dependency_health(response: Response) -> DependencyHealthResponseV1:
+    dependencies: Final = await check_dependencies()
+    is_up: Final = all(
+        dependency_status == DependencyStatus.UP for dependency_status in dependencies.model_dump().values()
+    )
+    if not is_up:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+    return DependencyHealthResponseV1(
+        status=DependencyStatus.UP if is_up else DependencyStatus.DOWN,
+        dependencies=dependencies,
+    )

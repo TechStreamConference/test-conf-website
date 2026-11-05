@@ -261,6 +261,8 @@ visibility setting.
       inside the server
 - [ ] `https://<env>.test-conf.de/` redirects to Zitadel login
 - [ ] After login, the frontend is served correctly
-- [ ] `https://<env>.test-conf.de/api/health/database` returns `{"ok": true}`
+- [ ] `https://<env>.test-conf.de/api/health` returns `{"status": "up"}`
+- [ ] `https://<env>.test-conf.de/api/health/dependencies` returns `"status": "up"`
+      with every dependency listed as `"up"`
 - [ ] Merging a PR into `main` triggers the workflow and the running containers
       are updated automatically

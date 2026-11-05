@@ -7,3 +7,8 @@ services:
       - ../.env
     environment:
       DATABASE_HOST: postgres
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')" ]
+      timeout: 5s
+      interval: 10s
+      retries: 10

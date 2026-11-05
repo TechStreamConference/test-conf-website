@@ -11,6 +11,51 @@ export type Bcp47Locale = string;
 export type ContentLanguageTag = string;
 
 /**
+ * DependencyHealthResponseV1
+ *
+ * Status of the backend's dependencies.
+ */
+export type DependencyHealthResponseV1 = {
+    /**
+     * Status
+     *
+     * `up` if and only if all dependencies are up.
+     */
+    status: DependencyStatus;
+    /**
+     * Dependencies
+     *
+     * Status of each dependency.
+     */
+    dependencies: DependencyStatusesV1;
+};
+
+/**
+ * DependencyStatus
+ */
+export type DependencyStatus = 'up' | 'down';
+
+/**
+ * DependencyStatusesV1
+ *
+ * Status of each dependency of the backend.
+ */
+export type DependencyStatusesV1 = {
+    /**
+     * Database
+     *
+     * Whether the PostgreSQL database answers a query.
+     */
+    database: DependencyStatus;
+    /**
+     * Identity Provider
+     *
+     * Whether ZITADEL serves its OpenID Connect discovery document, which every login starts with.
+     */
+    identityProvider: DependencyStatus;
+};
+
+/**
  * DisplayLanguageInputV1
  */
 export type DisplayLanguageInputV1 = {
@@ -173,6 +218,20 @@ export type HttpValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
+};
+
+/**
+ * HealthResponseV1
+ *
+ * Liveness of the backend process, regardless of its dependencies.
+ */
+export type HealthResponseV1 = {
+    /**
+     * Status
+     *
+     * Always `up`, since the backend can only respond while it is running.
+     */
+    status?: 'up';
 };
 
 export type IanaTimezone = string;
@@ -952,22 +1011,43 @@ export type DecideRegionalSettingsChangeV1Responses = {
 
 export type DecideRegionalSettingsChangeV1Response = DecideRegionalSettingsChangeV1Responses[keyof DecideRegionalSettingsChangeV1Responses];
 
-export type BackendHealthCheckData = {
+export type BackendLivenessCheckData = {
     body?: never;
     path?: never;
     query?: never;
-    url: '/health/database';
+    url: '/health';
 };
 
-export type BackendHealthCheckResponses = {
+export type BackendLivenessCheckResponses = {
     /**
-     * Response Backend Health Check
-     *
      * Successful Response
      */
-    200: {
-        [key: string]: boolean;
-    };
+    200: HealthResponseV1;
 };
 
-export type BackendHealthCheckResponse = BackendHealthCheckResponses[keyof BackendHealthCheckResponses];
+export type BackendLivenessCheckResponse = BackendLivenessCheckResponses[keyof BackendLivenessCheckResponses];
+
+export type BackendDependencyHealthCheckData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/health/dependencies';
+};
+
+export type BackendDependencyHealthCheckErrors = {
+    /**
+     * Returned when at least one dependency is down.
+     */
+    503: DependencyHealthResponseV1;
+};
+
+export type BackendDependencyHealthCheckError = BackendDependencyHealthCheckErrors[keyof BackendDependencyHealthCheckErrors];
+
+export type BackendDependencyHealthCheckResponses = {
+    /**
+     * Successful Response
+     */
+    200: DependencyHealthResponseV1;
+};
+
+export type BackendDependencyHealthCheckResponse = BackendDependencyHealthCheckResponses[keyof BackendDependencyHealthCheckResponses];

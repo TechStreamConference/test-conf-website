@@ -13,6 +13,7 @@ from pydantic.alias_generators import to_camel
 
 from backend.locales import Bcp47Locale
 from backend.models.content_language_types import ContentLanguageTag
+from backend.models.dependency_status import DependencyStatus
 from backend.timezones import IanaTimezone
 
 # class name should include the api version since the typescript generator uses the same name.
@@ -78,6 +79,40 @@ class GlobalsResponseV1(ApiResponseModel):
 @final
 class GlobalsNotFoundResponseV1(ApiResponseModel):
     detail: Literal["Global values not found in the database."] = "Global values not found in the database."
+
+
+@final
+class HealthResponseV1(ApiResponseModel):
+    """Liveness of the backend process, regardless of its dependencies."""
+
+    status: Literal[DependencyStatus.UP] = Field(
+        default=DependencyStatus.UP,
+        description="Always `up`, since the backend can only respond while it is running.",
+    )
+
+
+@final
+class DependencyStatusesV1(ApiResponseModel):
+    """Status of each dependency of the backend."""
+
+    database: DependencyStatus = Field(
+        description="Whether the PostgreSQL database answers a query.",
+    )
+    identity_provider: DependencyStatus = Field(
+        description="Whether ZITADEL serves its OpenID Connect discovery document, which every login starts with.",
+    )
+
+
+@final
+class DependencyHealthResponseV1(ApiResponseModel):
+    """Status of the backend's dependencies."""
+
+    status: DependencyStatus = Field(
+        description="`up` if and only if all dependencies are up.",
+    )
+    dependencies: DependencyStatusesV1 = Field(
+        description="Status of each dependency.",
+    )
 
 
 @final

@@ -80,6 +80,34 @@ export function backendCallCompleted(payload: BackendCallCompletedPayload): Back
     };
 }
 
+// ─── DependencyCheckFailed ──────────────────────────────────────────────────
+
+export const DependencyCheckFailedSchema = z.object({
+    dependency: z.string(),
+    exception_type: z.string()
+});
+
+export type DependencyCheckFailedPayload = z.infer<typeof DependencyCheckFailedSchema>;
+
+const _DEPENDENCY_CHECK_FAILED_META = {
+    eventName: 'health.dependency_check.failed',
+    body: 'Dependency health check failed'
+} as const;
+
+export type DependencyCheckFailed = {
+    readonly $meta: typeof _DEPENDENCY_CHECK_FAILED_META;
+    readonly $payload: DependencyCheckFailedPayload;
+};
+
+export function dependencyCheckFailed(
+    payload: DependencyCheckFailedPayload
+): DependencyCheckFailed {
+    return {
+        $meta: _DEPENDENCY_CHECK_FAILED_META,
+        $payload: payload
+    };
+}
+
 // ─── HttpRequestCompleted ──────────────────────────────────────────────────
 
 export const HttpRequestCompletedSchema = z.object({
@@ -201,6 +229,7 @@ export type LogEvent =
     | ApplicationStarted
     | ApplicationStopping
     | BackendCallCompleted
+    | DependencyCheckFailed
     | HttpRequestCompleted
     | HttpRequestFailed
     | HttpRequestReceived
