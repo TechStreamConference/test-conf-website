@@ -2,6 +2,8 @@
     "$schema": "https://inlang.com/schema/inlang-message-format",
     "footer_copyright": "© Tech Stream Conference {year}",
     "footer_eventsHeadline": "All Events",
+    "footer_iconCopyrightBrands": "Brand icons: Font Awesome Free by Fonticons, Inc., CC BY 4.0",
+    "footer_iconCopyrightGeneral": "Other icons: Font Awesome Free by Fonticons, Inc., CC BY 4.0",
     "footer_menuHeadline": "Menu",
     "global_logoBig_alt": "Tech Stream Conference Logo",
     "global_logoSmall_alt": "Tech Stream Conference Logo",

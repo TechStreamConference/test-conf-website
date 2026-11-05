@@ -1,0 +1,33 @@
+/*
+ * Hover effect for everything that looks like a button: the element rises a bit and its shadow grows.
+ * It also reacts to the keyboard focus (`:focus-visible`) and is pressed down on click.
+ *
+ * Usage: put the class `hover-lift` on the element that has the look, e.g. the button or link itself,
+ * or on the direct child of a link or button. In that case, the hover and the focus of the link
+ * or button trigger the effect.
+ *
+ * The colors are not part of it, because the elements differ in them.
+ * The shadows can be replaced with the custom properties `--hover-lift-shadow`, `--hover-lift-shadow-raised`
+ * and `--hover-lift-shadow-pressed`, e.g. with `none` for an element without an area.
+ */
+.hover-lift {
+    box-shadow: var(--hover-lift-shadow, 0 0.4rem 1rem rgba(0, 0, 0, 0.2));
+
+    transition:
+        transform var(--transition-duration),
+        box-shadow var(--transition-duration),
+        background-color var(--transition-duration);
+}
+
+.hover-lift:hover,
+.hover-lift:focus-visible,
+:is(a, button):is(:hover, :focus-visible) > .hover-lift {
+    box-shadow: var(--hover-lift-shadow-raised, 0 0.8rem 1.8rem rgba(0, 0, 0, 0.28));
+    transform: translateY(-0.2rem);
+}
+
+.hover-lift:active,
+:is(a, button):active > .hover-lift {
+    box-shadow: var(--hover-lift-shadow-pressed, 0 0.2rem 0.6rem rgba(0, 0, 0, 0.18));
+    transform: translateY(0);
+}

@@ -6,6 +6,7 @@
     import { getRel } from '$lib/helper/link-options';
     import { LinkTarget } from '$lib/helper/link-options';
     import { LinkVariant } from '$lib/helper/link-options';
+    import '$lib/styles/hover.css';
 
     interface Props extends Omit<HTMLAnchorAttributes, 'href' | 'aria-label' | 'target'> {
         children: Snippet;
@@ -28,6 +29,7 @@
 <!-- eslint-disable svelte/no-navigation-without-resolve -->
 <a
     {...rest}
+    class:hover-lift={true}
     class:menu={variant === LinkVariant.Menu || variant === LinkVariant.Footer}
     class:footer={variant === LinkVariant.Footer}
     class:plain={variant === LinkVariant.Plain}
@@ -57,25 +59,13 @@
         color: var(--white-color);
         text-decoration: none;
         cursor: pointer;
-
-        box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.2);
-
-        transition:
-            transform var(--transition-duration),
-            box-shadow var(--transition-duration),
-            background-color var(--transition-duration);
     }
+    /* The rising and the shadow of the hover effect are in 'src/lib/styles/hover.css' (class 'hover-lift'). */
     a:hover,
     a:focus-visible {
         background-color: var(--primary-color-600);
 
-        box-shadow: 0 0.8rem 1.8rem rgba(0, 0, 0, 0.28);
         outline: none;
-        transform: translateY(-0.2rem);
-    }
-    a:active {
-        transform: translateY(0);
-        box-shadow: 0 0.2rem 0.6rem rgba(0, 0, 0, 0.18);
     }
 
     /* Menu variant: a plain link without the button look, used on the colored header. */
