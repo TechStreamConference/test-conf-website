@@ -26,7 +26,16 @@ vi.mock('$logging', () => ({
     logger: { info: vi.fn() }
 }));
 vi.mock('$bff/v1/globals.server', () => ({
-    loadGlobals: vi.fn(() => Promise.resolve({ footerText: 'Footer text' }))
+    loadGlobals: vi.fn(() =>
+        Promise.resolve({
+            footerText: 'Footer text',
+            languageDetails: {
+                availableLanguages: ['en', 'de'],
+                languageTag: 'en',
+                isLanguageFallback: false
+            }
+        })
+    )
 }));
 vi.mock('$bff/v1/auth.server', () => ({
     getCurrentUser: vi.fn(() => Promise.resolve({ ok: false, status: 401 }))
@@ -48,6 +57,7 @@ interface LayoutData {
     userState: UserState;
     user: MeResponseV1 | null;
     footerText: string;
+    footerTextLanguageTag: string;
 }
 
 /**
@@ -332,6 +342,16 @@ describe('root layout load', () => {
         const data = await runLayoutLoad(createEvent());
 
         expect(data.footerText).toBe('Footer text');
+    });
+
+    it('forwards the language of the footer text independently of the page language', async () => {
+        const event = createEvent();
+        withLanguage(event, 'de');
+
+        const data = await runLayoutLoad(event);
+
+        expect(data.footerTextLanguageTag).toBe('en');
+        expect(data.languageTag).toBe('de');
     });
 
     it('is logged out and has no user when the backend answers with 401', async () => {

@@ -2,6 +2,7 @@ import { getCurrentUser } from '$bff/v1/auth.server';
 import { loadGlobals } from '$bff/v1/globals.server';
 import { GenericBackendError } from '$bff/errors';
 
+import { toLanguageTag } from '$lib/helper/language';
 import { withDefaultLanguage } from '$lib/helper/language';
 import { UserState } from '$lib/helper/menus';
 
@@ -22,6 +23,7 @@ export const load: LayoutServerLoad = async (event) => {
     return withDefaultLanguage(event, userLanguageTag, {
         userState: user.ok ? UserState.LoggedIn : UserState.LoggedOut,
         user: user.ok ? user.data : null,
-        footerText: globals.footerText
+        footerText: globals.footerText,
+        footerTextLanguageTag: toLanguageTag(globals.languageDetails.languageTag)
     });
 };

@@ -26,10 +26,15 @@ const META = {
         ],
         footerText:
             'TECH STREAM CONFERENCE – online conference with talks on programming, maker culture and game development',
+        footerTextLanguageTag: 'en',
         paragraphs: 3
     },
     argTypes: {
         languageTag: {
+            control: 'select',
+            options: ['en', 'de']
+        },
+        footerTextLanguageTag: {
             control: 'select',
             options: ['en', 'de']
         },

@@ -15,9 +15,18 @@
         footerMenu: Menu;
         events: { label: string; url: string }[];
         footerText: string;
+        footerTextLanguageTag: string;
     }
-    const { children, languageTag, userState, headerMenu, footerMenu, events, footerText }: Props =
-        $props();
+    const {
+        children,
+        languageTag,
+        userState,
+        headerMenu,
+        footerMenu,
+        events,
+        footerText,
+        footerTextLanguageTag
+    }: Props = $props();
 </script>
 
 <div>
@@ -25,7 +34,14 @@
     <main>
         {@render children()}
     </main>
-    <Footer {languageTag} {userState} menu={footerMenu} {events} {footerText} />
+    <Footer
+        {languageTag}
+        {userState}
+        menu={footerMenu}
+        {events}
+        {footerText}
+        {footerTextLanguageTag}
+    />
 </div>
 
 <style>

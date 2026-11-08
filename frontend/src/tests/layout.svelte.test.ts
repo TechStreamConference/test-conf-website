@@ -11,7 +11,7 @@ import { UserState } from '$lib/helper/menus';
 
 const FOOTER_TEXT = 'Footer text from the backend';
 
-async function renderPage(languageTag: string) {
+async function renderPage(languageTag: string, footerTextLanguageTag: string = languageTag) {
     // `events` is also the name of a Svelte option, so the props have to be under `props`.
     return await render(BasePage, {
         props: {
@@ -21,7 +21,8 @@ async function renderPage(languageTag: string) {
             headerMenu: MAIN_PAGE_HEADER_MENU,
             footerMenu: MAIN_PAGE_FOOTER_MENU,
             events: [{ label: '2026', url: '/year/2026' }],
-            footerText: FOOTER_TEXT
+            footerText: FOOTER_TEXT,
+            footerTextLanguageTag
         }
     });
 }
@@ -46,5 +47,17 @@ describe('base page language', () => {
 
         await expect.element(screen.getByText('Page content')).toBeVisible();
         await expect.element(screen.getByText(FOOTER_TEXT)).toBeVisible();
+    });
+
+    it('does not set a lang attribute on the footer text when it matches the page language', async () => {
+        const screen = await renderPage('de', 'de');
+
+        expect(screen.getByText(FOOTER_TEXT).element()).not.toHaveAttribute('lang');
+    });
+
+    it('sets the lang attribute on the footer text when it differs from the page language', async () => {
+        const screen = await renderPage('de', 'en');
+
+        expect(screen.getByText(FOOTER_TEXT).element()).toHaveAttribute('lang', 'en');
     });
 });

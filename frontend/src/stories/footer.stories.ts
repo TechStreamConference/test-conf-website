@@ -21,10 +21,15 @@ const META = {
             { label: '2026', url: '/year/2026' }
         ],
         footerText:
-            'TECH STREAM CONFERENCE – online conference with talks on programming, maker culture and game development'
+            'TECH STREAM CONFERENCE – online conference with talks on programming, maker culture and game development',
+        footerTextLanguageTag: 'en'
     },
     argTypes: {
         languageTag: {
+            control: 'select',
+            options: ['en', 'de']
+        },
+        footerTextLanguageTag: {
             control: 'select',
             options: ['en', 'de']
         },
