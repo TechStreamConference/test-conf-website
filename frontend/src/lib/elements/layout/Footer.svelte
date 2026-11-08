@@ -17,8 +17,10 @@
         userState: UserState;
         events: { label: string; url: string }[];
         footerText: string;
+        footerTextLanguageTag: string;
     }
-    const { languageTag, menu, userState, events, footerText }: Props = $props();
+    const { languageTag, menu, userState, events, footerText, footerTextLanguageTag }: Props =
+        $props();
 
     const MENU_HEADLINE_ID = 'footer-menu-headline';
     const EVENTS_HEADLINE_ID = 'footer-events-headline';
@@ -68,7 +70,9 @@
             </ul>
         </nav>
 
-        <p>{footerText}</p>
+        <p {...footerTextLanguageTag !== languageTag ? { lang: footerTextLanguageTag } : {}}>
+            {footerText}
+        </p>
 
         <div class:logo={true}>
             <Link

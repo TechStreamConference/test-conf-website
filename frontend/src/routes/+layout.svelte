@@ -32,6 +32,7 @@
     footerMenu={page.data.footerMenu ?? MAIN_PAGE_FOOTER_MENU}
     events={[]}
     footerText={data.footerText}
+    footerTextLanguageTag={data.footerTextLanguageTag}
 >
     {@render children()}
 </BasePage>
