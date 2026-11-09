@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import col
 from sqlmodel import select
 
+from backend.content_languages import SUPPORTED_DISPLAY_LANGUAGES
 from backend.models.tables import ContentLanguage
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
@@ -184,3 +185,14 @@ async def test_referenced_content_languages_cannot_be_deleted(
             ),
         ):
             _ = await session.execute(text("DELETE FROM content_languages WHERE tag = 'de'"))
+
+
+@pytest.mark.asyncio
+async def test_supported_display_languages_are_registered_content_languages(
+    session_factory: async_sessionmaker[AsyncSession],
+) -> None:
+    async with session_factory() as session:
+        registered: Final = set((await session.execute(select(ContentLanguage.tag))).scalars())
+
+    unregistered: Final = SUPPORTED_DISPLAY_LANGUAGES - registered
+    assert not unregistered, f"Supported display languages that are not registered: {sorted(unregistered)}"
