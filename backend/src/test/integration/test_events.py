@@ -16,6 +16,7 @@ from sqlmodel import delete
 from sqlmodel import select
 
 from backend.config import SETTINGS
+from backend.models.responses import ContentLanguageV1
 from backend.models.responses import EventNotFoundResponseV1
 from backend.models.responses import EventResponseV1
 from backend.models.responses import InvalidSequenceNumberResponseV1
@@ -26,6 +27,10 @@ pytestmark: Final = [
     pytest.mark.integration,
     pytest.mark.usefixtures("migrate_and_seed_database"),
 ]
+
+_GERMAN = ContentLanguageV1(language_tag="de", name="Deutsch")
+_ENGLISH = ContentLanguageV1(language_tag="en", name="English")
+_SPANISH = ContentLanguageV1(language_tag="es", name="español")
 
 
 @pytest_asyncio.fixture
@@ -190,11 +195,11 @@ async def test_event_route_returns_numbered_and_latest_events() -> None:
 
     assert first.id != second.id
     assert first.start_date.year == 2024
-    assert first.language_details.available_languages == ["de"]
+    assert first.language_details.available_languages == [_GERMAN]
     assert first.language_details.language_tag == "de"
     assert first.language_details.is_language_fallback is True  # We asked for English, but only German is available.
 
-    assert second.language_details.available_languages == ["de", "en", "es"]
+    assert second.language_details.available_languages == [_GERMAN, _ENGLISH, _SPANISH]
     assert second.language_details.language_tag == "es"
     assert second.language_details.is_language_fallback is False
     assert latest == second
@@ -232,7 +237,7 @@ async def test_event_route_keeps_events_starting_on_the_same_day_apart(
     ]
     assert [event.id for event in numbered_events] == [event.id for event in events_starting_on_the_same_day]
     for event in numbered_events:
-        assert event.language_details.available_languages == ["de", "en"]
+        assert event.language_details.available_languages == [_GERMAN, _ENGLISH]
     assert responses[2].status_code == 404
 
 
@@ -244,7 +249,7 @@ async def test_event_route_falls_back_to_english() -> None:
     ).raise_for_status()
     event: Final = EventResponseV1.model_validate(response.json())
 
-    assert event.language_details.available_languages == ["de", "en"]
+    assert event.language_details.available_languages == [_GERMAN, _ENGLISH]
     assert event.language_details.language_tag == "en"
     assert event.language_details.is_language_fallback is True
 

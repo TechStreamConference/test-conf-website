@@ -20,10 +20,12 @@ from backend.content_language_selection import CONTENT_LANGUAGE_RESPONSE_HEADERS
 from backend.content_language_selection import ContentLanguageSelection
 from backend.content_language_selection import get_requested_language_ranges
 from backend.content_language_selection import is_supported_language_range
+from backend.content_language_selection import language_details_v1_from_selection
 from backend.content_language_selection import parse_accept_language
 from backend.content_language_selection import select_content_language
 from backend.database import get_session
 from backend.main import app
+from backend.models.responses import ContentLanguageV1
 from backend.models.responses import ImprintPageContentNotFoundResponseV1
 from backend.models.responses import ImprintResponseV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
@@ -165,6 +167,21 @@ def test_select_content_language_requires_an_available_language() -> None:
         _ = select_content_language(["de"], [])
 
 
+def test_language_details_name_the_available_languages_in_the_order_of_the_selection() -> None:
+    selection: Final = select_content_language(["fr"], ["ja", "de", "es"])
+    language_names: Final = {"ja": "日本語", "es": "español", "de": "Deutsch", "en": "English"}
+
+    details: Final = language_details_v1_from_selection(selection, language_names)
+
+    assert details.available_languages == [
+        ContentLanguageV1(language_tag="de", name="Deutsch"),
+        ContentLanguageV1(language_tag="es", name="español"),
+        ContentLanguageV1(language_tag="ja", name="日本語"),
+    ]
+    assert details.language_tag == "de"
+    assert details.is_language_fallback is True
+
+
 @pytest.mark.parametrize(
     ("accept_language", "expected_language_ranges"),
     [
@@ -252,7 +269,9 @@ def _get(
     stored `stored_language` as display language, if given.
     """
     session: Final = AsyncMock(spec=AsyncSession)
-    session.execute.return_value = Mock(scalars=Mock(return_value=[_page(tag) for tag in available_languages]))
+    session.execute.return_value = Mock(
+        all=Mock(return_value=[(_page(tag), f"Language ({tag})") for tag in available_languages]),
+    )
     session.get.return_value = (
         None if stored_language is None else UserDisplayLanguagePreference(user_id=42, language_tag=stored_language)
     )

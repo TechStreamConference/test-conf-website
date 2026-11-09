@@ -4,12 +4,16 @@ import httpx
 import pytest
 
 from backend.config import SETTINGS
+from backend.models.responses import ContentLanguageV1
 from backend.models.responses import GlobalsResponseV1
 
 pytestmark: Final = [
     pytest.mark.integration,
     pytest.mark.usefixtures("migrate_and_seed_database"),
 ]
+
+_GERMAN = ContentLanguageV1(language_tag="de", name="Deutsch")
+_ENGLISH = ContentLanguageV1(language_tag="en", name="English")
 
 _FOOTER_TEXT_PREFIXES = {
     "de": "TECH STREAM CONFERENCE – Online-Konferenz",
@@ -28,7 +32,7 @@ async def test_globals_route_returns_requested_language(language_tag: str) -> No
 
     assert response.status_code == 200
     assert globals_.footer_text.startswith(_FOOTER_TEXT_PREFIXES[language_tag])
-    assert globals_.language_details.available_languages == ["de", "en"]
+    assert globals_.language_details.available_languages == [_GERMAN, _ENGLISH]
     assert globals_.language_details.language_tag == language_tag
     assert globals_.language_details.is_language_fallback is False
 
@@ -42,7 +46,7 @@ async def test_globals_route_falls_back_to_english() -> None:
     globals_: Final = GlobalsResponseV1.model_validate(response.json())
 
     assert globals_.footer_text.startswith(_FOOTER_TEXT_PREFIXES["en"])
-    assert globals_.language_details.available_languages == ["de", "en"]
+    assert globals_.language_details.available_languages == [_GERMAN, _ENGLISH]
     assert globals_.language_details.language_tag == "en"
     assert globals_.language_details.is_language_fallback is True
 

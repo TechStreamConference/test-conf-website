@@ -11,12 +11,13 @@ from sqlmodel import select
 
 from backend.content_language_selection import CONTENT_LANGUAGE_RESPONSE_HEADERS
 from backend.content_language_selection import get_requested_language_ranges
+from backend.content_language_selection import language_details_v1_from_selection
 from backend.content_language_selection import select_content_language
 from backend.database import get_session
 from backend.models.responses import ImprintPageContentNotFoundResponseV1
 from backend.models.responses import ImprintResponseV1
-from backend.models.responses import LanguageDetailsV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
+from backend.models.tables import ContentLanguage
 from backend.models.tables import StaticPage
 from backend.models.tables import StaticPageKind
 from backend.utils import create_http_exception
@@ -47,9 +48,17 @@ async def get_imprint(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> ImprintResponseV1:
     statement: Final = (
-        select(StaticPage).where(col(StaticPage.kind) == StaticPageKind.IMPRINT).order_by(col(StaticPage.language_tag))
+        select(StaticPage, col(ContentLanguage.name))
+        .join(
+            ContentLanguage,
+            col(ContentLanguage.tag) == col(StaticPage.language_tag),
+        )
+        .where(col(StaticPage.kind) == StaticPageKind.IMPRINT)
+        .order_by(col(StaticPage.language_tag))
     )
-    pages_by_language_tag: Final = {page.language_tag: page for page in (await session.execute(statement)).scalars()}
+    rows: Final = (await session.execute(statement)).all()
+    pages_by_language_tag: Final = {page.language_tag: page for page, _ in rows}
+    language_names: Final = {page.language_tag: language_name for page, language_name in rows}
     if not pages_by_language_tag:
         raise create_http_exception(
             status.HTTP_404_NOT_FOUND,
@@ -61,9 +70,5 @@ async def get_imprint(
 
     return ImprintResponseV1(
         content=pages_by_language_tag[selection.language_tag].content,
-        language_details=LanguageDetailsV1(
-            available_languages=selection.available_languages,
-            language_tag=selection.language_tag,
-            is_language_fallback=selection.is_language_fallback,
-        ),
+        language_details=language_details_v1_from_selection(selection, language_names),
     )
