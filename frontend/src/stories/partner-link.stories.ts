@@ -7,7 +7,7 @@ import { LinkTarget } from '$lib/helper/link-options';
 import PartnerLink from '$lib/elements/link/PartnerLink.svelte';
 
 const META = {
-    title: 'Components/PartnerLink',
+    title: 'Components/Links',
     component: PartnerLink,
     args: {
         href: 'https://tech-stream.org',
