@@ -18,8 +18,15 @@ from backend.main import app
 from backend.models import responses
 from backend.models.responses import ApiResponseModel
 from backend.routes import v1_api
+from backend.session import SESSION_COOKIE_NAME
 
 _ENV_EXAMPLE_FILE = Path(__file__).resolve().parents[3] / ".env.example"
+
+_FRONTEND_CONTENT_LANGUAGE_FILE = (
+    Path(__file__).resolve().parents[3] / "frontend" / "src" / "bff" / "content-language.ts"
+)
+
+_FRONTEND_SESSION_COOKIE_NAME_PATTERN = re.compile(r"const SESSION_COOKIE_NAME = '([^']+)';")
 
 _CAMEL_CASE_PATTERN = re.compile(r"[a-z][a-zA-Z0-9]*")
 
@@ -151,6 +158,16 @@ def test_env_example_satisfies_settings(monkeypatch: pytest.MonkeyPatch) -> None
     assert _ENV_EXAMPLE_FILE.is_file(), f"'{_ENV_EXAMPLE_FILE}' does not exist"
 
     Settings(_env_file=_ENV_EXAMPLE_FILE)  # type: ignore[reportCallIssue]
+
+
+def test_frontend_session_cookie_name_matches_backend() -> None:
+    # The frontend ignores the language cookie while a session cookie exists, so it has to know the cookie's name.
+    source: Final = _FRONTEND_CONTENT_LANGUAGE_FILE.read_text(encoding="utf-8")
+
+    match: Final = _FRONTEND_SESSION_COOKIE_NAME_PATTERN.search(source)
+
+    assert match is not None, f"'{_FRONTEND_CONTENT_LANGUAGE_FILE}' does not define SESSION_COOKIE_NAME"
+    assert match.group(1) == SESSION_COOKIE_NAME
 
 
 def test_all_v1_operations_document_internal_server_error() -> None:

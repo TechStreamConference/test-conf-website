@@ -35,9 +35,11 @@ vi.mock('$bff/v1/auth.server', () => ({
 const APP_HTML = path.resolve(import.meta.dirname, '../app.html');
 const HTML_WITH_PLACEHOLDER = '<html lang="%lang%">';
 
-function createEvent(): RequestEvent {
+function createRequestEvent(cookies: Record<string, string> = {}): RequestEvent {
     return {
         locals: {},
+        cookies: { get: (name: string) => cookies[name] },
+        setHeaders: vi.fn(),
         request: new Request('http://localhost/'),
         url: new URL('http://localhost/')
     } as unknown as RequestEvent;
@@ -122,7 +124,7 @@ describe('toLanguageTag', () => {
 describe('withLanguage', () => {
     it('does not accept a tag that is not valid', () => {
         for (const invalidTag of INVALID_TAGS) {
-            const event = createEvent();
+            const event = createRequestEvent();
 
             const data = withLanguage(event, invalidTag);
 
@@ -132,7 +134,7 @@ describe('withLanguage', () => {
     });
 
     it('sets the language of the request and returns it with the data', () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const data = withLanguage(event, 'de', { title: 'Hello' });
 
@@ -141,7 +143,7 @@ describe('withLanguage', () => {
     });
 
     it('returns only the language without data', () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         expect(withLanguage(event, 'de')).toEqual({ languageTag: 'de' });
     });
@@ -149,7 +151,7 @@ describe('withLanguage', () => {
     it('does not change the given data', () => {
         const data = Object.freeze({ title: 'Hello' });
 
-        const result = withLanguage(createEvent(), 'de', data);
+        const result = withLanguage(createRequestEvent(), 'de', data);
 
         expect(data).toEqual({ title: 'Hello' });
         expect(result).not.toBe(data);
@@ -158,7 +160,7 @@ describe('withLanguage', () => {
 
 describe('withDefaultLanguage', () => {
     it('sets the default language of the request when none is set yet', () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const data = withDefaultLanguage(event, undefined, { title: 'Hello' });
 
@@ -167,7 +169,7 @@ describe('withDefaultLanguage', () => {
     });
 
     it('sets the given language of the request when none is set yet', () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const data = withDefaultLanguage(event, 'de-DE');
 
@@ -176,7 +178,7 @@ describe('withDefaultLanguage', () => {
     });
 
     it('keeps the language of the request and returns it in the data when one is already set', () => {
-        const event = createEvent();
+        const event = createRequestEvent();
         withLanguage(event, 'fr');
 
         const data = withDefaultLanguage(event, 'de-DE');
@@ -186,7 +188,7 @@ describe('withDefaultLanguage', () => {
     });
 
     it('keeps the language of the request when one is already set', () => {
-        const event = createEvent();
+        const event = createRequestEvent();
         withLanguage(event, 'de');
 
         withDefaultLanguage(event);
@@ -195,7 +197,7 @@ describe('withDefaultLanguage', () => {
     });
 
     it('returns the language that is already set instead of the default', () => {
-        const event = createEvent();
+        const event = createRequestEvent();
         withLanguage(event, 'de');
 
         expect(withDefaultLanguage(event)).toEqual({ languageTag: 'de' });
@@ -208,7 +210,7 @@ describe('lang attribute of the html', () => {
     });
 
     it('is the default language when no page sets one', async () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const html = await renderHtml(event, async () => {
             await runLayoutLoad(event);
@@ -218,7 +220,7 @@ describe('lang attribute of the html', () => {
     });
 
     it('is the language of the page when it overrides the layout', async () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const html = await renderHtml(event, async () => {
             await runLayoutLoad(event);
@@ -229,7 +231,7 @@ describe('lang attribute of the html', () => {
     });
 
     it('is the language of the page when the layout finishes after the page', async () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const html = await renderHtml(event, async () => {
             withLanguage(event, 'de');
@@ -241,7 +243,7 @@ describe('lang attribute of the html', () => {
 
     it('is safe even when something writes an invalid tag into locals directly', async () => {
         for (const invalidTag of INVALID_TAGS) {
-            const event = createEvent();
+            const event = createRequestEvent();
 
             const html = await renderHtml(event, () => {
                 event.locals.languageTag = invalidTag;
@@ -253,14 +255,14 @@ describe('lang attribute of the html', () => {
     });
 
     it('is the default language when no load function sets one', async () => {
-        const html = await renderHtml(createEvent(), () => Promise.resolve());
+        const html = await renderHtml(createRequestEvent(), () => Promise.resolve());
 
         expect(html).toBe(`<html lang="${DEFAULT_LANGUAGE_TAG}">`);
     });
 
     it('is the default language when the layout load fails', async () => {
         vi.mocked(getCurrentUser).mockResolvedValueOnce({ ok: false, status: 500 });
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const html = await renderHtml(event, async () => {
             await expect(runLayoutLoad(event)).rejects.toBeInstanceOf(GenericBackendError);
@@ -272,7 +274,7 @@ describe('lang attribute of the html', () => {
 
 describe('root layout load', () => {
     it('returns the default language and sets it for the request', async () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const data = await runLayoutLoad(event);
 
@@ -287,7 +289,7 @@ describe('root layout load', () => {
             regionalSettings: { timezone: 'Europe/Berlin', locale: 'de-DE' }
         } as unknown as MeResponseV1;
         vi.mocked(getCurrentUser).mockResolvedValueOnce({ ok: true, data: user });
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const data = await runLayoutLoad(event);
 
@@ -303,13 +305,13 @@ describe('root layout load', () => {
         } as unknown as MeResponseV1;
         vi.mocked(getCurrentUser).mockResolvedValueOnce({ ok: true, data: user });
 
-        const data = await runLayoutLoad(createEvent());
+        const data = await runLayoutLoad(createRequestEvent());
 
         expect(data.languageTag).toBe(DEFAULT_LANGUAGE_TAG);
     });
 
     it('does not overwrite the language a page set before', async () => {
-        const event = createEvent();
+        const event = createRequestEvent();
         withLanguage(event, 'de');
 
         const data = await runLayoutLoad(event);
@@ -319,7 +321,7 @@ describe('root layout load', () => {
     });
 
     it('is overridden by the language data of a page', async () => {
-        const event = createEvent();
+        const event = createRequestEvent();
 
         const layoutData = await runLayoutLoad(event);
         const pageData = withLanguage(event, 'de', { title: 'Hello' });
@@ -329,13 +331,13 @@ describe('root layout load', () => {
     });
 
     it('forwards the footer text of the globals', async () => {
-        const data = await runLayoutLoad(createEvent());
+        const data = await runLayoutLoad(createRequestEvent());
 
         expect(data.footerText).toBe('Footer text');
     });
 
     it('is logged out and has no user when the backend answers with 401', async () => {
-        const data = await runLayoutLoad(createEvent());
+        const data = await runLayoutLoad(createRequestEvent());
 
         expect(data.userState).toBe(UserState.LoggedOut);
         expect(data.user).toBeNull();
@@ -345,7 +347,7 @@ describe('root layout load', () => {
         const user = { id: 1, username: 'alice' } as unknown as MeResponseV1;
         vi.mocked(getCurrentUser).mockResolvedValueOnce({ ok: true, data: user });
 
-        const data = await runLayoutLoad(createEvent());
+        const data = await runLayoutLoad(createRequestEvent());
 
         expect(data.userState).toBe(UserState.LoggedIn);
         expect(data.user).toEqual(user);
@@ -354,6 +356,74 @@ describe('root layout load', () => {
     it('fails on a backend error that is not a 401', async () => {
         vi.mocked(getCurrentUser).mockResolvedValueOnce({ ok: false, status: 500 });
 
-        await expect(runLayoutLoad(createEvent())).rejects.toBeInstanceOf(GenericBackendError);
+        await expect(runLayoutLoad(createRequestEvent())).rejects.toBeInstanceOf(
+            GenericBackendError
+        );
+    });
+});
+
+describe('root layout load with a chosen language', () => {
+    const LOGGED_IN_USER = {
+        id: 1,
+        username: 'alice',
+        regionalSettings: { timezone: 'Europe/Berlin', locale: 'en-US' }
+    } as unknown as MeResponseV1;
+
+    it('uses the chosen language of a logged-out visitor', async () => {
+        const event = createRequestEvent({ language: 'de' });
+
+        const data = await runLayoutLoad(event);
+
+        expect(data.languageTag).toBe('de');
+        expect(event.locals.languageTag).toBe('de');
+    });
+
+    it('ignores a chosen language that is not a UI language', async () => {
+        const data = await runLayoutLoad(createRequestEvent({ language: 'fr' }));
+
+        expect(data.languageTag).toBe(DEFAULT_LANGUAGE_TAG);
+    });
+
+    it('tells caches that the page depends on the Accept-Language header and the cookies', async () => {
+        const event = createRequestEvent();
+
+        await runLayoutLoad(event);
+
+        expect(event.setHeaders).toHaveBeenCalledExactlyOnceWith({
+            vary: 'Accept-Language, Cookie'
+        });
+    });
+
+    it('forbids shared caches to store the page if the chosen language decided its language', async () => {
+        const event = createRequestEvent({ language: 'de' });
+
+        await runLayoutLoad(event);
+
+        expect(event.setHeaders).toHaveBeenCalledExactlyOnceWith({
+            vary: 'Accept-Language, Cookie',
+            'cache-control': 'private'
+        });
+    });
+
+    it('forbids shared caches to store the page for a logged-in user', async () => {
+        vi.mocked(getCurrentUser).mockResolvedValueOnce({ ok: true, data: LOGGED_IN_USER });
+        const event = createRequestEvent({ '__Host-session': 'token' });
+
+        await runLayoutLoad(event);
+
+        expect(event.setHeaders).toHaveBeenCalledExactlyOnceWith({
+            vary: 'Accept-Language, Cookie',
+            'cache-control': 'private'
+        });
+    });
+
+    it('prefers the language of a logged-in user over a left-over choice', async () => {
+        vi.mocked(getCurrentUser).mockResolvedValueOnce({ ok: true, data: LOGGED_IN_USER });
+
+        const data = await runLayoutLoad(
+            createRequestEvent({ language: 'de', '__Host-session': 'token' })
+        );
+
+        expect(data.languageTag).toBe('en-US');
     });
 });

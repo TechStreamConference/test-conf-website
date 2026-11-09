@@ -1,6 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 
 import { backendFetch } from '$bff/client';
+import { getLanguageQuery } from '$bff/content-language';
 import { GenericBackendError } from '$bff/errors';
 
 import type { GlobalsResponseV1 } from '$gen/types.gen';
@@ -17,7 +18,10 @@ import { logger } from '$logging';
  */
 export async function loadGlobals(event: RequestEvent): Promise<GlobalsResponseV1> {
     const start = performance.now();
-    const { data, error, response } = await getGlobalsV1({ fetch: backendFetch(event) });
+    const { data, error, response } = await getGlobalsV1({
+        fetch: backendFetch(event),
+        query: getLanguageQuery(event)
+    });
     logger.info(
         backendCallCompleted({
             operation_id: 'getGlobalsV1',
