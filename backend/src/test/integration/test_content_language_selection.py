@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlmodel import col
 from sqlmodel import delete
 
+from backend.models.responses import ContentLanguageV1
 from backend.models.tables import Event
 from backend.models.tables import EventTranslation
 from backend.models.tables import GlobalKey
@@ -23,6 +24,11 @@ from backend.routes.v1.globals import get_globals
 from backend.routes.v1.imprint import get_imprint
 
 pytestmark: Final = pytest.mark.integration
+
+_GERMAN = ContentLanguageV1(language_tag="de", name="Deutsch")
+_ENGLISH = ContentLanguageV1(language_tag="en", name="English")
+_SPANISH = ContentLanguageV1(language_tag="es", name="español")
+_JAPANESE = ContentLanguageV1(language_tag="ja", name="日本語")
 
 # No seeded event starts in this year.
 _EVENT_YEAR = 2098
@@ -107,7 +113,7 @@ async def test_imprint_with_one_page_delivers_it(session: AsyncSession) -> None:
 
     imprint: Final = await get_imprint(["en-GB"], Response(), session)
 
-    assert imprint.language_details.available_languages == ["de"]
+    assert imprint.language_details.available_languages == [_GERMAN]
     assert imprint.language_details.language_tag == "de"
     assert imprint.language_details.is_language_fallback is True
 
@@ -135,7 +141,7 @@ async def test_imprint_with_several_pages_selects_by_lookup(
     imprint: Final = await get_imprint(language_ranges, response, session)
 
     assert response.headers["Content-Language"] == expected_language
-    assert imprint.language_details.available_languages == ["de", "en", "ja"]
+    assert imprint.language_details.available_languages == [_GERMAN, _ENGLISH, _JAPANESE]
     assert imprint.language_details.language_tag == expected_language
     assert imprint.language_details.is_language_fallback is expected_fallback
 
@@ -169,7 +175,7 @@ async def test_event_with_one_translation_delivers_it(session: AsyncSession) -> 
     )
 
     assert event.title == "Title (ja)"
-    assert event.language_details.available_languages == ["ja"]
+    assert event.language_details.available_languages == [_JAPANESE]
     assert event.language_details.language_tag == "ja"
     assert event.language_details.is_language_fallback is True
 
@@ -202,7 +208,7 @@ async def test_event_with_several_translations_selects_by_lookup(
 
     assert response.headers["Content-Language"] == expected_language
     assert event.title == f"Title ({expected_language})"
-    assert event.language_details.available_languages == ["de", "es", "ja"]
+    assert event.language_details.available_languages == [_GERMAN, _SPANISH, _JAPANESE]
     assert event.language_details.language_tag == expected_language
     assert event.language_details.is_language_fallback is expected_fallback
 
@@ -240,6 +246,6 @@ async def test_globals_with_several_translations_select_by_lookup(
     globals_: Final = await get_globals(language_ranges, response, session)
 
     assert response.headers["Content-Language"] == expected_language
-    assert globals_.language_details.available_languages == ["de", "en", "ja"]
+    assert globals_.language_details.available_languages == [_GERMAN, _ENGLISH, _JAPANESE]
     assert globals_.language_details.language_tag == expected_language
     assert globals_.language_details.is_language_fallback is expected_fallback

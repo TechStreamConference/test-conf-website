@@ -3,6 +3,7 @@
 import re
 from collections.abc import Collection
 from collections.abc import Iterable
+from collections.abc import Mapping
 from typing import Annotated
 from typing import Final
 from typing import NamedTuple
@@ -22,6 +23,8 @@ from werkzeug.http import parse_accept_header
 from backend.content_languages import ENGLISH_LANGUAGE_TAG
 from backend.database import get_session
 from backend.models.content_language_types import ContentLanguageTag
+from backend.models.responses import ContentLanguageV1
+from backend.models.responses import LanguageDetailsV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
 from backend.models.tables import UserDisplayLanguagePreference
 from backend.session import SESSION_COOKIE_NAME
@@ -118,6 +121,21 @@ def select_content_language(
         ENGLISH_LANGUAGE_TAG if ENGLISH_LANGUAGE_TAG in available_languages else sorted_languages[0]
     )
     return ContentLanguageSelection(default_language, sorted_languages, has_unsatisfied_preference)
+
+
+def language_details_v1_from_selection(
+    selection: ContentLanguageSelection,
+    language_names: Mapping[ContentLanguageTag, str],
+) -> LanguageDetailsV1:
+    """Return the language details of a selection, naming each available language as in `language_names`."""
+    return LanguageDetailsV1(
+        available_languages=[
+            ContentLanguageV1(language_tag=language_tag, name=language_names[language_tag])
+            for language_tag in selection.available_languages
+        ],
+        language_tag=selection.language_tag,
+        is_language_fallback=selection.is_language_fallback,
+    )
 
 
 def parse_accept_language(accept_language: str) -> list[str]:
