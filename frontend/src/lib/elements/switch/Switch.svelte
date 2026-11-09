@@ -48,7 +48,8 @@
                 class:selected={item.value === selected}
                 type="button"
                 aria-pressed={item.value === selected}
-                onclick={() => select(item.value)}>{@render item.icon()} {item.label}</button
+                onclick={() => select(item.value)}
+                >{@render item.icon(item.value)} {item.label}</button
             >
         {/each}
     </div>

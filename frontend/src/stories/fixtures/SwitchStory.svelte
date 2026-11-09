@@ -16,22 +16,22 @@
     let selected: Choice = $derived(initialSelected);
 
     const items: SwitchItem<Choice>[] = [
-        { value: 'star', label: 'Star', icon: starIcon },
-        { value: 'heart', label: 'Heart', icon: heartIcon },
-        { value: 'flag', label: 'Flag', icon: flagIcon }
+        { value: 'star', label: 'Star', icon: itemIcon },
+        { value: 'heart', label: 'Heart', icon: itemIcon },
+        { value: 'flag', label: 'Flag', icon: itemIcon }
     ];
 
     const TRIGGER_ICON_SIZE = 35;
 </script>
 
-{#snippet starIcon()}
-    <Star aria-hidden="true" />
-{/snippet}
-{#snippet heartIcon()}
-    <Heart aria-hidden="true" />
-{/snippet}
-{#snippet flagIcon()}
-    <Flag aria-hidden="true" />
+{#snippet itemIcon(choice: Choice)}
+    {#if choice === 'heart'}
+        <Heart aria-hidden="true" />
+    {:else if choice === 'flag'}
+        <Flag aria-hidden="true" />
+    {:else}
+        <Star aria-hidden="true" />
+    {/if}
 {/snippet}
 {#snippet triggerIcon()}
     {#if selected === 'heart'}

@@ -31,17 +31,17 @@
         {
             value: Theme.System,
             label: i18n(m.global_themeSelectSystem, languageTag),
-            icon: systemIcon
+            icon: itemIcon
         },
         {
             value: Theme.Light,
             label: i18n(m.global_themeSelectLight, languageTag),
-            icon: lightIcon
+            icon: itemIcon
         },
         {
             value: Theme.Dark,
             label: i18n(m.global_themeSelectDark, languageTag),
-            icon: darkIcon
+            icon: itemIcon
         }
     ]);
 
@@ -55,14 +55,14 @@
     }
 </script>
 
-{#snippet systemIcon()}
-    <SunMoon aria-hidden="true" />
-{/snippet}
-{#snippet lightIcon()}
-    <Sun aria-hidden="true" />
-{/snippet}
-{#snippet darkIcon()}
-    <Moon aria-hidden="true" />
+{#snippet itemIcon(theme: Theme)}
+    {#if theme === Theme.Light}
+        <Sun aria-hidden="true" />
+    {:else if theme === Theme.Dark}
+        <Moon aria-hidden="true" />
+    {:else}
+        <SunMoon aria-hidden="true" />
+    {/if}
 {/snippet}
 {#snippet triggerIcon()}
     {#if currentTheme === Theme.Dark}

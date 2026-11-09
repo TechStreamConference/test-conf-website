@@ -22,6 +22,7 @@
     "dependencies": {
         "@fortawesome/free-brands-svg-icons": "^7.3.1",
         "@fortawesome/free-solid-svg-icons": "^7.3.1",
+        "flag-icons": "^7.6.0",
         "luxon": "^3.7.2",
         "set-cookie-parser": "^3.1.2",
         "zod": "^4.6.5"
