@@ -13,6 +13,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import backend.routes.v1.users as users_module
+from backend.content_languages import SUPPORTED_DISPLAY_LANGUAGES
 from backend.database import get_session
 from backend.logging.events_gen import RegionalSettingsReportProcessed
 from backend.main import app
@@ -25,7 +26,6 @@ from backend.models.responses import NotAuthenticatedResponseV1
 from backend.models.responses import RequestValidationErrorResponseV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
 from backend.models.tables import Account
-from backend.models.tables import ContentLanguage
 from backend.models.tables import RegionalSettingsSuggestion
 from backend.models.tables import ReportedRegionalSettings
 from backend.models.tables import UserPreferences
@@ -504,29 +504,31 @@ async def test_accepting_a_locale_decision_updates_the_locale_preference() -> No
 
 
 @pytest.mark.asyncio
-async def test_setting_a_registered_language_upserts_the_preference() -> None:
-    session: Final = _session(Mock(), get_results=(ContentLanguage(tag="de", name="Deutsch"),))
+@pytest.mark.parametrize("language", sorted(SUPPORTED_DISPLAY_LANGUAGES))
+async def test_setting_a_supported_language_upserts_the_preference(language: str) -> None:
+    session: Final = _session(Mock())
 
     result: Final = await set_display_language(
-        DisplayLanguageInputV1(language="de"),
+        DisplayLanguageInputV1(language=language),
         _authenticated(),
         session,
     )
 
-    assert result.model_dump() == {"language": "de"}
-    session.get.assert_awaited_once_with(ContentLanguage, "de")
+    assert result.model_dump() == {"language": language}
+    session.get.assert_not_awaited()
     assert "ON CONFLICT (user_id) DO UPDATE" in str(session.execute.await_args_list[0].args[0])
-    assert _executed_statement_params(session, call_index=0) == {"user_id": 42, "language_tag": "de"}
+    assert _executed_statement_params(session, call_index=0) == {"user_id": 42, "language_tag": language}
     session.commit.assert_awaited_once()
 
 
 @pytest.mark.asyncio
-async def test_setting_an_unregistered_language_is_rejected() -> None:
-    session: Final = _session(get_results=(None,))
+@pytest.mark.parametrize("language", ["ja", "fil", "xx"])
+async def test_setting_an_unsupported_language_is_rejected(language: str) -> None:
+    session: Final = _session()
 
     with pytest.raises(HTTPException) as exc_info:
         _ = await set_display_language(
-            DisplayLanguageInputV1(language="xx"),
+            DisplayLanguageInputV1(language=language),
             _authenticated(),
             session,
         )
