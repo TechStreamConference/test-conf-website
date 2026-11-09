@@ -12,6 +12,7 @@ from sqlmodel import col
 from sqlmodel import select
 
 from backend import logging
+from backend.content_languages import SUPPORTED_DISPLAY_LANGUAGES
 from backend.database import get_session
 from backend.logging.events_gen import RegionalSettingsReportProcessed
 from backend.models.requests import DisplayLanguageInputV1
@@ -25,7 +26,6 @@ from backend.models.responses import RegionalSettingsChangeConflictResponseV1
 from backend.models.responses import RequestValidationErrorResponseV1
 from backend.models.responses import UnsupportedLanguageTagResponseV1
 from backend.models.responses import UserPreferencesResponseV1
-from backend.models.tables import ContentLanguage
 from backend.models.tables import RegionalSettingsSuggestion
 from backend.models.tables import ReportedRegionalSettings
 from backend.models.tables import UserDisplayLanguagePreference
@@ -87,7 +87,7 @@ async def update_preferences(
     summary="Set the current user's preferred display language",
     description=(
         "Stores the display language that the current user explicitly chose for the website. "
-        + "Every language of the content language registry is accepted."
+        + "Only the supported display languages are accepted."
     ),
     status_code=status.HTTP_200_OK,
     responses={
@@ -104,9 +104,9 @@ async def set_display_language(
     authenticated: Annotated[AuthenticatedSession, Depends(get_current_user)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> DisplayLanguageResponseV1:
-    # The tag only matches the syntax so far; the foreign key would reject an
-    # unregistered one as well, but only as an unspecific integrity error.
-    if await session.get(ContentLanguage, display_language.language) is None:
+    # The tag only matches the syntax so far. The supported languages are
+    # registered, which the foreign key relies on.
+    if display_language.language not in SUPPORTED_DISPLAY_LANGUAGES:
         raise create_http_exception(
             status.HTTP_422_UNPROCESSABLE_CONTENT,
             UnsupportedLanguageTagResponseV1(),

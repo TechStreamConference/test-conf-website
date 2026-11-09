@@ -368,16 +368,22 @@ async def test_preferred_display_language_flow_against_postgres(migrate_and_seed
         # Unset until the user chooses one, even without regional settings.
         assert await preferred_display_language() is None
 
-        for language in ("de", "fil"):
+        for language in ("de", "en"):
             async with session_factory() as session:
                 _ = await set_display_language(DisplayLanguageInputV1(language=language), authenticated, session)
             assert await preferred_display_language() == language
 
-        async with session_factory() as session:
-            with pytest.raises(HTTPException) as exc_info:
-                _ = await set_display_language(DisplayLanguageInputV1(language="xx"), authenticated, session)
-        assert exc_info.value.status_code == 422
-        assert await preferred_display_language() == "fil"
+        # A registered language that the user interface isn't translated into is rejected like an unregistered one.
+        for unsupported_language in ("ja", "xx"):
+            async with session_factory() as session:
+                with pytest.raises(HTTPException) as exc_info:
+                    _ = await set_display_language(
+                        DisplayLanguageInputV1(language=unsupported_language),
+                        authenticated,
+                        session,
+                    )
+            assert exc_info.value.status_code == 422
+            assert await preferred_display_language() == "en"
 
         # Clearing is idempotent.
         for _ in range(2):

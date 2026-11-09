@@ -93,7 +93,7 @@ export const clearCurrentUserDisplayLanguageV1 = <ThrowOnError extends boolean =
 /**
  * Set the current user's preferred display language
  *
- * Stores the display language that the current user explicitly chose for the website. Every language of the content language registry is accepted.
+ * Stores the display language that the current user explicitly chose for the website. Only the supported display languages are accepted.
  */
 export const setCurrentUserDisplayLanguageV1 = <ThrowOnError extends boolean = false>(options: Options<SetCurrentUserDisplayLanguageV1Data, ThrowOnError>): RequestResult<SetCurrentUserDisplayLanguageV1Responses, SetCurrentUserDisplayLanguageV1Errors, ThrowOnError> => (options.client ?? client).put<SetCurrentUserDisplayLanguageV1Responses, SetCurrentUserDisplayLanguageV1Errors, ThrowOnError>({
     url: '/v1/users/me/display-language',
