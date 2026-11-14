@@ -37,7 +37,28 @@ Rules for every revisions table:
 - The database rejects `UPDATE` and `DELETE` on revisions tables with a trigger. The anonymization of erasure requests (section 9) is the only exception.
 - The current state is read through views, or through one shared query helper. Routes never read a revisions table directly, and a test checks this.
 
-This applies to administrators, event contributors, participation blocks, talks and the consumption of registration tokens. Events, their translations and global values follow when their in-place modifications are removed (section 9). Until then, in-place modifications remain in these places: `users.label`, sessions, user preferences, events, translations and global values.
+This applies to administrators, event contributors, participation blocks, talks and the consumption of registration tokens. Events, global values and static pages follow when their in-place modifications are removed (section 9, see the example below). Until then, in-place modifications remain in these places: `users.label`, sessions, user preferences, events, translations, global values and static pages.
+
+### Translations
+
+Translated content is stored per revision. A translation table is a child of the revisions table. Its primary key is the identity ID, the revision and the language tag, and a composite foreign key points to the revisions table.
+
+- Every new revision contains the complete set of translation rows. Rows that did not change are copied. A revision is therefore a consistent snapshot of the content in all languages, and one request writes one revision for all languages.
+- The token of such content (section 8) is the latest revision number. Two changes of different languages at the same time conflict, and the second one has to reload.
+- Rules that concern the whole set, such as "every supported display language is present", are checked on the complete set of the new revision.
+
+Events show how this looks. The existing `events` table becomes the identity table, and everything mutable moves to the revisions:
+
+```text
+events                    id PK, created_at, created_by, source
+event_revisions           event_id, revision (PK), dates, URLs, visibility dates,
+                          created_at, created_by, source
+event_translations        event_id, revision, language_tag (PK), translated fields
+                          FK (event_id, revision) -> event_revisions
+                          FK language_tag -> content_languages.tag
+```
+
+Events have no approval workflow, so `event_revisions` has no `status` column. Other tables keep pointing at `events.id`, which never changes. Global values and static pages work the same way: the identity is the `GlobalKey` or the page kind, and the revision row carries nothing but the actor and timestamp next to its translations.
 
 ## 3. Users, accounts and virtual users
 
@@ -242,7 +263,7 @@ Several people can change the same data, for example two owners who demote each 
 
 Tokens are integers. There is one strategy, and a feature does not choose its own.
 
-- For one entity, the token is the number of its latest revision.
+- For one entity, the token is the number of its latest revision. This includes its translations, because they belong to the same revision.
 - For an aggregate that is guarded as a whole, the token is the highest `change_id` among the guarded rows. A table that needs such a token has a `change_id` column from a sequence. Because rows are insert-only, no counter is ever updated. For example, the version of the administrator list is the highest `change_id` of `administrator_revisions`.
 - The token goes into the `ETag` response header, written as a quoted integer. It only reveals how many changes were made.
 
