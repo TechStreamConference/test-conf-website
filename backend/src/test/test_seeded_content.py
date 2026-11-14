@@ -1,4 +1,4 @@
-"""Every seeder has to provide the static content in all supported display languages."""
+"""Every seeder has to provide the translated content in all supported display languages."""
 
 from collections import defaultdict
 from collections.abc import Awaitable
@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.content_languages import SUPPORTED_DISPLAY_LANGUAGES
 from backend.models.tables import Event
+from backend.models.tables import EventTranslation
 from backend.models.tables import GlobalKey
 from backend.models.tables import GlobalTranslation
 from backend.models.tables import StaticPage
@@ -70,3 +71,19 @@ async def test_seeders_provide_every_global_value_in_all_supported_languages(see
     for key in GlobalKey:
         missing = SUPPORTED_DISPLAY_LANGUAGES - languages_by_key[key]
         assert not missing, f"The global value {key} is not seeded in the supported languages {sorted(missing)}."
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("seeder", _SEEDERS.values(), ids=_SEEDERS.keys())
+async def test_seeders_provide_every_event_in_all_supported_languages(seeder: _Seeder) -> None:
+    added: Final = await _seed(seeder)
+    languages_by_event_id: Final[defaultdict[int, set[str]]] = defaultdict(set)
+    for row in added:
+        if isinstance(row, EventTranslation):
+            languages_by_event_id[row.event_id].add(row.language_tag)
+    event_ids: Final = {row.id for row in added if isinstance(row, Event) and row.id is not None}
+
+    assert event_ids == languages_by_event_id.keys(), "Every seeded event needs at least one translation."
+    for event_id in event_ids:
+        missing = SUPPORTED_DISPLAY_LANGUAGES - languages_by_event_id[event_id]
+        assert not missing, f"The event {event_id} is not seeded in the supported languages {sorted(missing)}."
