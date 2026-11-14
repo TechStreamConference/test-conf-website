@@ -1,6 +1,5 @@
 import time
 from collections.abc import AsyncGenerator
-from pathlib import Path
 from typing import Final
 
 import httpx
@@ -17,8 +16,10 @@ from backend.config import SETTINGS
 from backend.seed.cli import Environment
 from backend.seed.cli import _run  # type: ignore[reportPrivateUsage]
 
-_POSTGRES = PostgresContainer("postgres:16-alpine")
-_MIGRATIONS_PATH = Path(__file__).resolve().parents[3] / "alembic"
+from .database import MIGRATIONS_PATH
+from .database import POSTGRES_IMAGE
+
+_POSTGRES = PostgresContainer(POSTGRES_IMAGE)
 _MAX_BACKEND_REACHABILITY_ATTEMPTS = 5
 _BACKEND_REACHABILITY_RETRY_DELAY_SECONDS = 1.0
 
@@ -57,7 +58,7 @@ async def migrate_and_seed_database(backend_is_reachable: bool) -> AsyncGenerato
     try:
         database_url: Final = _POSTGRES.get_connection_url(driver="psycopg")
         alembic_config: Final = Config()
-        alembic_config.set_main_option("script_location", str(_MIGRATIONS_PATH))
+        alembic_config.set_main_option("script_location", str(MIGRATIONS_PATH))
         alembic_config.set_main_option("sqlalchemy.url", database_url)
         command.upgrade(alembic_config, "head")
 

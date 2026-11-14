@@ -178,7 +178,7 @@ async def test_current_event_route_returns_not_found_when_no_event_is_applicable
 async def test_event_route_returns_numbered_and_latest_events() -> None:
     first_response: Final = httpx.get(
         f"{SETTINGS.backend_root_uri}/v1/event/2024/1",
-        params={"language": "en"},
+        params={"language": "es"},
     ).raise_for_status()
     second_response: Final = httpx.get(
         f"{SETTINGS.backend_root_uri}/v1/event/2024/2",
@@ -195,9 +195,10 @@ async def test_event_route_returns_numbered_and_latest_events() -> None:
 
     assert first.id != second.id
     assert first.start_date.year == 2024
-    assert first.language_details.available_languages == [_GERMAN]
-    assert first.language_details.language_tag == "de"
-    assert first.language_details.is_language_fallback is True  # We asked for English, but only German is available.
+    assert first.language_details.available_languages == [_GERMAN, _ENGLISH]
+    assert first.language_details.language_tag == "en"
+    # We asked for Spanish, but only German and English are available.
+    assert first.language_details.is_language_fallback is True
 
     assert second.language_details.available_languages == [_GERMAN, _ENGLISH, _SPANISH]
     assert second.language_details.language_tag == "es"
