@@ -39,6 +39,14 @@ Rules for every revisions table:
 
 This applies to administrators, event contributors, participation blocks, talks and the consumption of registration tokens. Events, global values and static pages follow when their in-place modifications are removed (section 9, see the example below). Until then, in-place modifications remain in these places: `users.label`, sessions, user preferences, events, translations, global values and static pages.
 
+### Views in the code
+
+SQLModel, SQLAlchemy and Alembic do not manage views, so the views of this document are handled by hand:
+
+- A migration creates a view with plain SQL (`CREATE VIEW`, and `DROP VIEW` in the downgrade). Changing a view needs a new hand-written migration, because Alembic does not notice a changed view.
+- The code maps a view as a read-only class that declares the identity ID as its primary key, and marks it as a view, for example with `info={"is_view": True}`.
+- An `include_object` hook in `alembic/env.py` skips objects marked as views. Otherwise, autogenerate would try to create them as tables.
+
 ### Translations
 
 Translated content is stored per revision. A translation table is a child of the revisions table. Its primary key is the identity ID, the revision and the language tag, and a composite foreign key points to the revisions table.
