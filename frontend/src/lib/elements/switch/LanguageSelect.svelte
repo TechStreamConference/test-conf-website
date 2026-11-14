@@ -1,8 +1,12 @@
 <script lang="ts">
+    import { pushState } from '$app/navigation';
+    import { page } from '$app/state';
+
     import type { SwitchItem } from '$lib/elements/switch/switch-item';
     import { i18n } from '$lib/helper/translate';
     import { languageTagToFlagCountryCode } from '$lib/helper/language-flag';
     import { nativeLanguageName } from '$lib/helper/language-flag';
+    import { withLanguagePrefix } from '$lib/helper/language-url';
     import Switch from '$lib/elements/switch/Switch.svelte';
 
     import { locales } from '$paraglide/runtime';
@@ -13,7 +17,6 @@
     }
     const { languageTag }: Props = $props();
 
-    // Only changes the local selection for now; actually switching the page's language needs backend wiring that does not exist yet.
     let selectedLanguageTag: string = $derived(languageTag);
 
     const items: SwitchItem<string>[] = locales.map((tag) => ({
@@ -23,11 +26,24 @@
     }));
 
     /**
-     * @brief Selects a language.
+     * @brief Stores the chosen language in a cookie and updates the browser URL to its localized form
+     * (e.g. `/de`), so it stays linkable. This does not reload or re-fetch the page.
      * @param tag the newly selected language tag.
      */
-    function selectLanguage(tag: string): void {
+    async function selectLanguage(tag: string): Promise<void> {
         selectedLanguageTag = tag;
+
+        await fetch('/language', {
+            method: 'PUT',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ language: tag })
+        });
+
+        // There is no fixed SvelteKit route for a language-prefixed path to resolve against: a hook
+        // strips the prefix again before the path reaches the router.
+        // eslint-disable-next-line svelte/no-navigation-without-resolve
+        pushState(withLanguagePrefix(page.url.pathname, tag) + page.url.search, {});
     }
 </script>
 

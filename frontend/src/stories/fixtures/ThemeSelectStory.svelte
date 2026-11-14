@@ -1,5 +1,5 @@
 <script lang="ts">
-    import ThemeSelect from '$lib/elements/theme/ThemeSelect.svelte';
+    import ThemeSelect from '$lib/elements/switch/ThemeSelect.svelte';
 
     interface Props {
         languageTag: string;

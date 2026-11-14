@@ -1,5 +1,5 @@
 <script lang="ts">
-    import LanguageSelect from '$lib/elements/language/LanguageSelect.svelte';
+    import LanguageSelect from '$lib/elements/switch/LanguageSelect.svelte';
 
     interface Props {
         languageTag: string;
