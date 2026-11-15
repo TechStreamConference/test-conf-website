@@ -16,6 +16,10 @@ declare global {
         }
         interface PageData {
             languageTag?: LanguageTag;
+            // True if `languageTag` is a fallback the backend picked on its own, not a language the
+            // visitor actually chose. A page sets this via its own page data, so it does not have to be
+            // threaded through every layout component; read it via `page.data`, like `languageTag` itself.
+            isLanguageFallback?: boolean;
             headerMenu?: Menu;
             footerMenu?: Menu;
         }

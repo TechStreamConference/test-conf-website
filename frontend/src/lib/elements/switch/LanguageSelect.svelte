@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { pushState } from '$app/navigation';
+    import { goto } from '$app/navigation';
     import { page } from '$app/state';
 
     import type { SwitchItem } from '$lib/elements/switch/switch-item';
@@ -17,7 +17,16 @@
     }
     const { languageTag }: Props = $props();
 
-    let selectedLanguageTag: string = $derived(languageTag);
+    // Whether `languageTag` is such a fallback. A page sets this via its own page data (not a prop, so it
+    // does not have to be threaded through every layout component), once it knows its own backend call
+    // fell back. We cannot tell a real `en` choice apart from a fallback to `en` by the tag value alone, so
+    // this has to be an explicit flag rather than something guessed from `languageTag` itself.
+    const isLanguageFallback = $derived(page.data.isLanguageFallback ?? false);
+
+    // No option is marked as selected for a fallback, since the visitor did not actually choose it.
+    let selectedLanguageTag: string | undefined = $derived(
+        isLanguageFallback ? undefined : languageTag
+    );
 
     const items: SwitchItem<string>[] = locales.map((tag) => ({
         value: tag,
@@ -56,7 +65,7 @@
     ></span>
 {/snippet}
 {#snippet triggerIcon()}
-    {@const code = languageTagToFlagCountryCode(selectedLanguageTag)}
+    {@const code = languageTagToFlagCountryCode(languageTag)}
     <span
         class:fi={true}
         class:fi-de={code === 'de'}
