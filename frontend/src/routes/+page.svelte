@@ -1,5 +1,6 @@
 <script lang="ts">
     import Headline from '$lib/elements/text/Headline.svelte';
+    import InlineLink from '$lib/elements/link/InlineLink.svelte';
     import Paragraph from '$lib/elements/text/Paragraph.svelte';
     import SubHeadline from '$lib/elements/text/SubHeadline.svelte';
 </script>
@@ -13,7 +14,8 @@
     </Paragraph>
     <Paragraph>
         The page around this text is the base page: a sticky header, this content area that
-        stretches and a footer that always stays at the bottom.
+        stretches and a footer that always stays at the bottom. The source code for this website is
+        on <InlineLink href="https://github.com/TechStreamConference/test-conf-website" aria-label="Source code of this website on GitHub (opens in a new tab)">GitHub</InlineLink>.
     </Paragraph>
 </article>
 
