@@ -23,6 +23,7 @@ Guide for how to work in this repo (Frontend of TestConf).
 11. **No tabs.** Indentation always uses 4 space characters, never the tab character.
 12. **One configurable story per component.** A component gets a single Storybook story. Make that story configurable (`args` and `argTypes` with controls, e.g. a select for the language or a radio for an enum) instead of writing one story per variant. Everything that can be changed through the props should be adjustable in the story.
 13. **Alias imports inside `src`.** Everything is imported absolutely via an alias (e.g. `$lib/...`) whenever possible, not via a relative path (`./...`, `../...`). The only exception: inside the stories, the Svelte files that belong to the story itself (e.g. `./fixtures/LinkStory.svelte`) may be imported relatively. Follow the import order in `style.md`.
+14. **Documentation.** A doc comment only explains the code it is attached to — not why it is called, which feature it belongs to, other global/background context or any context on information about how the decisions were made.
 
 ## Completion Workflow
 
