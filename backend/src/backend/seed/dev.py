@@ -43,15 +43,15 @@ class EventSpec(NamedTuple):
 # Most years have one entry (the default), but a year may appear multiple times
 # (multiple events) or not at all (no event that year).
 _EVENTS: list[EventSpec] = [
-    EventSpec(2022, ["de"]),
+    EventSpec(2022, ["de", "en"]),
     EventSpec(2023, ["de", "en"]),
-    EventSpec(2024, ["de"]),  # Two events in 2024.
+    EventSpec(2024, ["de", "en"]),  # Two events in 2024.
     EventSpec(2024, ["de", "en", "es"]),
     # 2025: no event
     EventSpec(2026, ["de", "en"]),
     EventSpec(2027, ["de", "en", "es"]),
     EventSpec(2028, ["de", "en"]),  # Two events in 2028.
-    EventSpec(2028, ["de"]),
+    EventSpec(2028, ["de", "en"]),
     EventSpec(2029, ["de", "en"]),
 ]
 
