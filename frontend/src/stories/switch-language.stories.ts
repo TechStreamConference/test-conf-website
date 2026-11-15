@@ -24,3 +24,17 @@ const META = {
 export default META;
 type Story = StoryObj<typeof META>;
 export const Language: Story = {};
+
+// `isLanguageFallback` is not a prop (see `LanguageSelect.svelte`): it is read from `page.data`, so this
+// story mocks it via SvelteKit's Storybook state instead of an arg.
+export const LanguageFallback: Story = {
+    parameters: {
+        sveltekit_experimental: {
+            state: {
+                page: {
+                    data: { isLanguageFallback: true }
+                }
+            }
+        }
+    }
+};

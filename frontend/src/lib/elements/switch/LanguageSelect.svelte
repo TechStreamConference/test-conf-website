@@ -65,7 +65,7 @@
     ></span>
 {/snippet}
 {#snippet triggerIcon()}
-    {@const code = languageTagToFlagCountryCode(languageTag)}
+    {@const code = languageTagToFlagCountryCode(selectedLanguageTag ?? languageTag)}
     <span
         class:fi={true}
         class:fi-de={code === 'de'}
