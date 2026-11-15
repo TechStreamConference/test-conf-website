@@ -26,8 +26,8 @@
     }));
 
     /**
-     * @brief Stores the chosen language in a cookie and updates the browser URL to its localized form
-     * (e.g. `/de`), so it stays linkable. This does not reload or re-fetch the page.
+     * @brief Stores the chosen language in a cookie, then soft-navigates to its localized URL (e.g. `/de`):
+     * the browser does not reload, but `load` functions run again so texts update to the new language.
      * @param tag the newly selected language tag.
      */
     async function selectLanguage(tag: string): Promise<void> {
@@ -43,7 +43,10 @@
         // There is no fixed SvelteKit route for a language-prefixed path to resolve against: a hook
         // strips the prefix again before the path reaches the router.
         // eslint-disable-next-line svelte/no-navigation-without-resolve
-        pushState(withLanguagePrefix(page.url.pathname, tag) + page.url.search, {});
+        await goto(withLanguagePrefix(page.url.pathname, tag) + page.url.search, {
+            invalidateAll: true,
+            noScroll: true
+        });
     }
 </script>
 
