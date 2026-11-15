@@ -7,6 +7,7 @@ import { env } from '$env/dynamic/private';
 
 import { DEFAULT_LANGUAGE_TAG } from '$lib/helper/language';
 import { toLanguageTag } from '$lib/helper/language';
+import { stripLanguagePrefix } from '$lib/helper/language-url';
 
 import { applicationStarted } from '$logging/events.gen';
 import { applicationStopping } from '$logging/events.gen';
@@ -36,6 +37,7 @@ process.on('SIGTERM', () => {
 export const handle: Handle = async ({ event, resolve }) => {
     const start = performance.now();
     logger.info(httpRequestReceived({ method: event.request.method, path: event.url.pathname }));
+    event.locals.urlLanguageTag = stripLanguagePrefix(event.url.pathname).languageCode;
     // The `load` functions have run when the html is rendered. Without a language there (e.g. an error
     // page after a failed `load`) the default applies.
     const response = await resolve(event, {

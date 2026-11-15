@@ -8,6 +8,11 @@ declare global {
         // interface Error {}
         interface Locals {
             languageTag?: string;
+            // The language found in the URL path (e.g. `de` for `/de/imprint`), stripped by `reroute` in
+            // `hooks.ts`. Any ISO 639 code, not only one of this site's UI languages. Only valid for the
+            // current request, not persisted. `handle` always sets this, so it is not optional itself;
+            // its value is `undefined` when the path has no language prefix.
+            urlLanguageTag: string | undefined;
         }
         interface PageData {
             languageTag?: LanguageTag;
