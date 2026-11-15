@@ -22,8 +22,12 @@ function createCookies(values: Record<string, string> = {}): Cookies {
     } as unknown as Cookies;
 }
 
-function createRequestEvent(cookies: Cookies): RequestEvent {
-    return { cookies, setHeaders: vi.fn() } as unknown as RequestEvent;
+function createRequestEvent(cookies: Cookies, urlLanguageTag?: string): RequestEvent {
+    return {
+        cookies,
+        setHeaders: vi.fn(),
+        locals: { urlLanguageTag }
+    } as unknown as RequestEvent;
 }
 
 describe('getLanguageCookie', () => {
@@ -86,6 +90,27 @@ describe('getExplicitLanguage', () => {
         const event = createRequestEvent(
             createCookies({ [LANGUAGE_COOKIE_NAME]: 'de', [SESSION_COOKIE_NAME]: 'token' })
         );
+
+        expect(getExplicitLanguage(event)).toBeUndefined();
+    });
+
+    it('prefers the language in the URL over the cookie', () => {
+        const event = createRequestEvent(createCookies({ [LANGUAGE_COOKIE_NAME]: 'de' }), 'fr');
+
+        expect(getExplicitLanguage(event)).toBe('fr');
+    });
+
+    it('falls back to the cookie without a language in the URL', () => {
+        const event = createRequestEvent(
+            createCookies({ [LANGUAGE_COOKIE_NAME]: 'de' }),
+            undefined
+        );
+
+        expect(getExplicitLanguage(event)).toBe('de');
+    });
+
+    it('ignores the language in the URL while a session exists, same as the cookie', () => {
+        const event = createRequestEvent(createCookies({ [SESSION_COOKIE_NAME]: 'token' }), 'fr');
 
         expect(getExplicitLanguage(event)).toBeUndefined();
     });

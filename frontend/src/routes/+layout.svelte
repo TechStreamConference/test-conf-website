@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import 'flag-icons/css/flag-icons.min.css';
 
     import { page } from '$app/state';
 

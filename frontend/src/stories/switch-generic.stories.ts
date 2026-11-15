@@ -2,25 +2,25 @@ import type { ComponentProps } from 'svelte';
 import type { Meta } from '@storybook/sveltekit';
 import type { StoryObj } from '@storybook/sveltekit';
 
-import ThemeSelectStory from './fixtures/ThemeSelectStory.svelte';
+import SwitchStory from './fixtures/SwitchStory.svelte';
 
 const META = {
-    title: 'Components/Theme',
-    component: ThemeSelectStory,
+    title: 'Components/Select',
+    component: SwitchStory,
     parameters: {
         layout: 'fullscreen'
     },
     args: {
-        languageTag: 'en'
+        selected: 'star'
     },
     argTypes: {
-        languageTag: {
+        selected: {
             control: 'select',
-            options: ['en', 'de']
+            options: ['star', 'heart', 'flag']
         }
     }
-} satisfies Meta<ComponentProps<typeof ThemeSelectStory>>;
+} satisfies Meta<ComponentProps<typeof SwitchStory>>;
 
 export default META;
 type Story = StoryObj<typeof META>;
-export const ThemeSelect: Story = {};
+export const Generic: Story = {};

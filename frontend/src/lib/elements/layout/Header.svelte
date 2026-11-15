@@ -7,11 +7,12 @@
 
     import { getEntries } from '$lib/helper/menus';
     import { i18n } from '$lib/helper/translate';
+    import LanguageSelect from '$lib/elements/switch/LanguageSelect.svelte';
     import Link from '$lib/elements/link/Link.svelte';
     import { LinkTarget } from '$lib/helper/link-options';
     import { LinkVariant } from '$lib/helper/link-options';
     import LogoSmall from '$lib/elements/img/LogoSmall.svelte';
-    import ThemeSelect from '$lib/elements/theme/ThemeSelect.svelte';
+    import ThemeSelect from '$lib/elements/switch/ThemeSelect.svelte';
 
     import { m } from '$paraglide/messages';
 
@@ -90,6 +91,7 @@
         </nav>
 
         <div class:controls={true}>
+            <LanguageSelect {languageTag} />
             <ThemeSelect {languageTag} />
         </div>
     </div>

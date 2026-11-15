@@ -1,32 +1,25 @@
-<script lang="ts">
-    import { onMount } from 'svelte';
-    import Hourglass from '@lucide/svelte/icons/hourglass';
-    import Moon from '@lucide/svelte/icons/moon';
-    import Sun from '@lucide/svelte/icons/sun';
-    import SunMoon from '@lucide/svelte/icons/sun-moon';
+<script lang="ts" generics="T">
+    import type { Snippet } from 'svelte';
 
-    import { getTheme } from '$lib/helper/light-dark';
-    import { i18n } from '$lib/helper/translate';
-    import { setTheme } from '$lib/helper/light-dark';
-    import { Theme } from '$lib/helper/light-dark';
-
-    import { m } from '$paraglide/messages';
+    import type { SwitchItem } from '$lib/elements/switch/switch-item';
 
     interface Props {
-        languageTag: string;
+        items: SwitchItem<T>[];
+        selected: T | undefined;
+        onSelect: (value: T) => void;
+        triggerIcon: Snippet;
+        'aria-label': string;
     }
-    const { languageTag }: Props = $props();
+    const { items, selected, onSelect, triggerIcon, 'aria-label': ariaLabel }: Props = $props();
 
-    const SUMMARY_ICON_SIZE = 35;
-
-    onMount(() => {
-        currentTheme = getTheme();
-    });
-
-    let currentTheme: Theme | undefined = $state(undefined);
     let isOpen: boolean = $state(false);
     let options: HTMLDivElement | undefined = $state(undefined);
 
+    /**
+     * @brief Scrolls the open options into view. On small screens they open below the trigger and push the
+     * content down, so a scrollable parent does not clip them.
+     * @param event the toggle event of the `<details>` element.
+     */
     function handleToggle(event: Event): void {
         const details = event.currentTarget;
         if (details instanceof HTMLDetailsElement && details.open) {
@@ -34,48 +27,31 @@
         }
     }
 
-    function selectTheme(theme: Theme): void {
-        setTheme(theme);
+    /**
+     * @brief Selects an item and closes the options.
+     * @param value the value of the selected item.
+     */
+    function select(value: T): void {
+        onSelect(value);
         isOpen = false;
-        currentTheme = theme;
     }
 </script>
 
 <details bind:open={isOpen} ontoggle={handleToggle}>
-    <summary aria-label={i18n(m.global_themeSelect_aria, languageTag)}>
-        {#if currentTheme === Theme.Dark}
-            <Moon size={SUMMARY_ICON_SIZE} aria-hidden="true" />
-        {:else if currentTheme === Theme.Light}
-            <Sun size={SUMMARY_ICON_SIZE} aria-hidden="true" />
-        {:else if currentTheme === Theme.System}
-            <SunMoon size={SUMMARY_ICON_SIZE} aria-hidden="true" />
-        {:else}
-            <Hourglass size={SUMMARY_ICON_SIZE} aria-hidden="true" />
-        {/if}
+    <summary aria-label={ariaLabel}>
+        {@render triggerIcon()}
     </summary>
 
     <div bind:this={options}>
-        <button
-            class:selected={currentTheme === Theme.System}
-            type="button"
-            aria-pressed={currentTheme === Theme.System}
-            onclick={() => selectTheme(Theme.System)}
-            ><SunMoon aria-hidden="true" /> {i18n(m.global_themeSelectSystem, languageTag)}</button
-        >
-        <button
-            class:selected={currentTheme === Theme.Light}
-            type="button"
-            aria-pressed={currentTheme === Theme.Light}
-            onclick={() => selectTheme(Theme.Light)}
-            ><Sun aria-hidden="true" /> {i18n(m.global_themeSelectLight, languageTag)}</button
-        >
-        <button
-            class:selected={currentTheme === Theme.Dark}
-            type="button"
-            aria-pressed={currentTheme === Theme.Dark}
-            onclick={() => selectTheme(Theme.Dark)}
-            ><Moon aria-hidden="true" /> {i18n(m.global_themeSelectDark, languageTag)}</button
-        >
+        {#each items as item (item.value)}
+            <button
+                class:selected={item.value === selected}
+                type="button"
+                aria-pressed={item.value === selected}
+                onclick={() => select(item.value)}
+                >{@render item.icon(item.value)} {item.label}</button
+            >
+        {/each}
     </div>
 </details>
 

@@ -13,7 +13,7 @@ const VARIANT_VALUES = Object.values(SocialIconVariant).filter(
 );
 
 const META = {
-    title: 'Components/SocialIcon',
+    title: 'Components/Links',
     component: SocialIcon,
     args: {
         network: SocialNetwork.Twitch,

@@ -1,7 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
 
-import type { Locale } from '$paraglide/runtime';
-
 import { getLanguageCookie } from '$lib/helper/language-cookie.server';
 
 // Mirrors `SESSION_COOKIE_NAME` in the backend's `session.py`.
@@ -12,14 +10,19 @@ const SESSION_COOKIE_NAME = '__Host-session';
  * The backend stores the language of a logged-in user and picks it by itself.
  * A language that we send to the backend would replace the stored one, so we return nothing for a logged-in user.
  *
+ * The language in the URL (e.g. `de` for `/de/imprint`) wins over the cookie, since it is the more specific,
+ * more recent choice; unlike the cookie, it only applies to this one request and is never persisted here.
+ * It does not have to be one of this site's UI languages: the backend falls back gracefully if it has no
+ * content for it.
+ *
  * @param event the request event
- * @returns the chosen UI language, or undefined if the backend negotiates the language
+ * @returns the chosen language, or undefined if the backend negotiates the language
  */
-export function getExplicitLanguage(event: RequestEvent): Locale | undefined {
+export function getExplicitLanguage(event: RequestEvent): string | undefined {
     if (event.cookies.get(SESSION_COOKIE_NAME) !== undefined) {
         return undefined;
     }
-    return getLanguageCookie(event.cookies);
+    return event.locals.urlLanguageTag ?? getLanguageCookie(event.cookies);
 }
 
 /**
@@ -32,7 +35,7 @@ export function getExplicitLanguage(event: RequestEvent): Locale | undefined {
  * @param event the request event
  * @returns a query with the `language` parameter, or an empty query
  */
-export function getLanguageQuery(event: RequestEvent): { language?: Locale } {
+export function getLanguageQuery(event: RequestEvent): { language?: string } {
     const language = getExplicitLanguage(event);
     return language === undefined ? {} : { language };
 }
