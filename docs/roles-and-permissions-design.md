@@ -13,7 +13,7 @@ Authentication and sessions are defined in `authentication-session-design.md`. T
 | Item | Decision |
 | --- | --- |
 | Roles | Owner, Admin, Speaker and Team Member. They are not exclusive. A user may have none. |
-| Implication | Owner implies Admin. There are no other implications. |
+| Implication | Owner implies Admin. A response without any roles implies a regular, logged-in user (which is not a dedicated role of itself). There are no other implications. |
 | Stored roles | Only Admin and Owner, in one table. |
 | Derived roles | Speaker and Team Member are derived from current event contributor entries. |
 | Evaluation | Roles are computed again on every request. They are never stored in the session or in ZITADEL groups. |
