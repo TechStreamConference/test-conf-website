@@ -131,7 +131,7 @@ Roles are derived from the database on every request:
 - Admin and owner come from `current_administrators`.
 - Speaker and team member come from the views of section 5 and the block state.
 
-`GET /v1/auth/me` returns the effective roles as flags in a nested object, e.g. `roles: {owner, admin, speaker, teamMember}`. The `admin` flag is also true for owners. Routes are guarded by FastAPI dependencies for each role and for combinations of roles. For changes, the authoritative check happens inside the transaction (section 8).
+`GET /v1/auth/me` returns the effective roles as flags in a nested object, e.g. `roles: {owner, admin, speaker, teamMember}`. The `admin` flag is also true for owners. Next to `roles`, it returns `participationBlocked`, so that the frontend can tell a blocked user apart from a user without a role. This is not a role, because it takes rights away and does not affect admin rights. Routes are guarded by FastAPI dependencies for each role and for combinations of roles. For changes, the authoritative check happens inside the transaction (section 8).
 
 ## 5. Event contributors
 
@@ -210,14 +210,64 @@ participation_block_revisions
   created_at, created_by, source
 ```
 
-A user is blocked if the latest row has status `blocked`. A blocked user can't apply, edit, copy an entry or submit talks, and the speaker and team member flags are false. Entries and talks that were published stay published. Admins can unblock a user at any time.
+A user is blocked if the latest row has status `blocked`. A blocked user can't apply, edit, copy an entry or submit talks, and the speaker and team member flags are false. `GET /v1/auth/me` returns the block state as `participationBlocked` (section 4). A block doesn't affect admin rights. Entries and talks that were published stay published. Admins can unblock a user at any time.
 
 ### Talks
 
 Talks follow the same pattern: a talk identity plus revisions. A talk can have several speakers, so the speakers are stored in a separate table that belongs to a talk revision.
 
 - Only speakers can submit talks. A talk needs a current speaker entry for its event, and the submitter must not be blocked.
+- Speakers can only submit talks of the format `talk`. Panels are created and edited only by admins.
 - The visibility of a talk does not depend on the status of the entry of its speaker. Removing or blocking someone does not hide talks that were published. An admin unpublishes a talk explicitly, which is a new talk revision.
+
+### Formats and speaker roles
+
+Each talk revision has a format. The format decides which roles its speakers can have:
+
+| Format | Roles | Speakers |
+| --- | --- | --- |
+| `talk` | `presenter` | At least one presenter. |
+| `panel` | `moderator`, `panelist` | Any number of moderators and panelists, including none. A panel in planning not have any assigned persons yet. |
+
+```text
+talk_revisions
+  talk_id, revision   PK
+  format              NOT NULL, enum: talk | panel
+  ...
+  UNIQUE (talk_id, revision, format)
+
+talk_revision_speakers
+  talk_id, revision, format   FK -> talk_revisions (talk_id, revision, format)
+  contributor_id              FK -> event_contributors.id, a contributor of kind speaker
+  role                        NOT NULL, enum: presenter | moderator | panelist
+  position                    NOT NULL, the display order
+  PK (talk_id, revision, contributor_id)
+  CHECK (   (format = 'talk'  AND role = 'presenter')
+         OR (format = 'panel' AND role IN ('moderator', 'panelist')))
+```
+
+- `format` is repeated in the speakers table so that the `CHECK` constraint can see it. The composite foreign key keeps both copies equal. The database therefore rejects a role that doesn't fit the format, such as a presenter of a panel.
+- The primary key gives each person exactly one role per talk revision.
+- Changing a role or the order of the speakers is a new talk revision.
+- "At least one presenter" spans several rows, so the database can't check it. The backend checks it in the transaction that writes the revision.
+- A new format is a new enum value plus a new branch of the `CHECK` constraint.
+
+In the backend, the table classes are used only inside the talks module. The rest of the backend and the API work with a discriminated union that can't express an invalid combination:
+
+```python
+class Talk(BaseModel):
+    format: Literal["talk"]
+    presenters: NonEmptyList[ContributorRef]
+
+class Panel(BaseModel):
+    format: Literal["panel"]
+    moderators: list[ContributorRef]
+    panelists: list[ContributorRef]
+
+type TalkContent = Annotated[Talk | Panel, Field(discriminator="format")]
+```
+
+The talks module has one function that turns a revision and its speaker rows into `TalkContent`, and one for the opposite direction. Reading raises an error on rows that don't fit and never repairs them. The API exposes the same union, so the generated frontend types can't express invalid combinations either.
 
 ### Public visibility
 
@@ -232,7 +282,7 @@ A current entry is not automatically public. Visibility per event is controlled 
 | Edit an own entry (new revision) | The contributor, not blocked |
 | Copy an entry to another event | Speaker, not blocked |
 | Submit a talk | Speaker with a current entry for that event, not blocked |
-| Create stubs, approve, decline, remove from an event, block, unpublish talks | Admin |
+| Create stubs, approve, decline, remove from an event, block, unpublish talks, create and edit panels | Admin |
 | Create virtual users, labels and registration links | Admin |
 | Promote or demote admins | Owner |
 | Promote to owner, demote another owner | Owner |
