@@ -4,9 +4,9 @@ Tech Stream Conference website · FastAPI + SvelteKit + ZITADEL
 
 ## Scope
 
-This document defines the roles of the website, how they are stored and derived, how admins and event contributors (speakers and team members) are modeled, how a virtual user is linked to an account, and how concurrent changes are guarded. It also states the direction for the audit trail and for notifications.
+This document defines the roles of the website, how they are stored and derived, how admins and event contributors (speakers and team members) are modeled, how a virtual user is linked to an account, and which locks guard changes of permissions.
 
-Authentication and sessions are defined in `authentication-session-design.md`. This document builds on it.
+Authentication and sessions are defined in `authentication-session-design.md`. Versioned data, the protocol that guards concurrent changes and the audit trail are defined in `versioned-data-and-concurrency-design.md`. This document builds on both.
 
 ## 1. Decisions
 
@@ -17,60 +17,11 @@ Authentication and sessions are defined in `authentication-session-design.md`. T
 | Stored roles | Only Admin and Owner, in one table. |
 | Derived roles | Speaker and Team Member are derived from current event contributor entries. |
 | Evaluation | Roles are computed again on every request. They are never stored in the session or in ZITADEL groups. |
-| Versioned data | An identity table plus an insert-only revisions table. Rows are never updated or deleted (section 2). |
-| Concurrency | Every change of shared data carries an `If-Match` token. Locks are taken first, then authorization and token are checked, then the change is written (section 8). |
-| Audit trail | Implicit in the data wherever possible. Separate tables only where needed. |
+| Authorization of changes | Checked again inside the transaction of each change, under the lock of the permission (section 7). |
 
-## 2. Versioned data
+## 2. Users, accounts and virtual users
 
-Data that changes over time is stored in two tables:
-
-- An *identity* table with one immutable row per thing, for example one speaker of one event.
-- A *revisions* table with the primary key (identity ID, revision). The revision starts at 1.
-
-Rules for every revisions table:
-
-- Rows are insert-only. Nothing is ever updated or deleted. Every change, including a change of status, is a new row with the next revision number. The latest row is the current state. Revision numbers are never reused.
-- A revision row is a complete snapshot. A change of status copies the content of the revision it refers to, together with its child rows such as translations.
-- If the identity already is an existing row, such as a user or an account, no identity table is added. The revisions reference that row directly.
-- Every row records who created it and when: `created_by` (references `users`) and `created_at`. A change by a seeder or another automatic process has `created_by` NULL and `source` set to `system`. All other rows have `source` set to `user`. A check constraint keeps `created_by` and `source` consistent.
-- The database rejects `UPDATE` and `DELETE` on revisions tables with a trigger. The anonymization of erasure requests (section 9) is the only exception.
-- The current state is read through views, or through one shared query helper. Routes never read a revisions table directly, and a test checks this.
-
-This applies to administrators, event contributors, participation blocks, talks and the consumption of registration tokens. Events, global values and static pages follow when their in-place modifications are removed (section 9, see the example below). Until then, in-place modifications remain in these places: `users.label`, sessions, user preferences, events, translations, global values and static pages.
-
-### Views in the code
-
-SQLModel, SQLAlchemy and Alembic do not manage views, so the views of this document are handled by hand:
-
-- A migration creates a view with plain SQL (`CREATE VIEW`, and `DROP VIEW` in the downgrade). Changing a view needs a new hand-written migration, because Alembic does not notice a changed view.
-- The code maps a view as a read-only class that declares the identity ID as its primary key, and marks it as a view, for example with `info={"is_view": True}`.
-- An `include_object` hook in `alembic/env.py` skips objects marked as views. Otherwise, autogenerate would try to create them as tables.
-
-### Translations
-
-Translated content is stored per revision. A translation table is a child of the revisions table. Its primary key is the identity ID, the revision and the language tag, and a composite foreign key points to the revisions table.
-
-- Every new revision contains the complete set of translation rows. Rows that did not change are copied. A revision is therefore a consistent snapshot of the content in all languages, and one request writes one revision for all languages.
-- The token of such content (section 8) is the latest revision number. Two changes of different languages at the same time conflict, and the second one has to reload.
-- Rules that concern the whole set, such as "every supported display language is present", are checked on the complete set of the new revision.
-
-Events show how this looks. The existing `events` table becomes the identity table, and everything mutable moves to the revisions:
-
-```text
-events                    id PK, created_at, created_by, source
-event_revisions           event_id, revision (PK), dates, URLs, visibility dates,
-                          created_at, created_by, source
-event_translations        event_id, revision, language_tag (PK), translated fields
-                          FK (event_id, revision) -> event_revisions
-                          FK language_tag -> content_languages.tag
-```
-
-Events have no approval workflow, so `event_revisions` has no `status` column. Other tables keep pointing at `events.id`, which never changes. Global values and static pages work the same way: the identity is the `GlobalKey` or the page kind, and the revision row carries nothing but the actor and timestamp next to its translations.
-
-## 3. Users, accounts and virtual users
-
-A `users` row is only an identifier. A user who can log in additionally has a row in `accounts`. A user without an account is a *virtual user*. Admins can create virtual users, create contributor entries for them, and invite the person to register (section 7).
+A `users` row is only an identifier. A user who can log in additionally has a row in `accounts`. A user without an account is a *virtual user*. Admins can create virtual users, create contributor entries for them, and invite the person to register (section 6).
 
 `users` gets a nullable `label`:
 
@@ -78,7 +29,7 @@ A `users` row is only an identifier. A user who can log in additionally has a ro
 - It is the primary name that admins see for a user. If an admin sets it to null, admins see the username of the account instead. A virtual user without a label has no name to show, so the interface falls back to the user ID.
 - Whether admins should see both can be decided later.
 
-## 4. Roles
+## 3. Roles
 
 | Role | How a user gets it |
 | --- | --- |
@@ -100,19 +51,19 @@ administrator_revisions
   change_id         NOT NULL, UNIQUE, generated from a sequence
   status            NOT NULL, enum: active | removed
   permission_level  NOT NULL, enum: admin | owner
-  created_at, created_by, source     as described in section 2
+  created_at, created_by, source     as described in versioned-data-and-concurrency-design.md
 ```
 
 - `permission_level` accepts only `admin` and `owner`, and each row has exactly one level. The latest row per user is the current state, so a user is never an owner without being an admin.
 - A `removed` row ends the admin rights. It carries the level that the user had.
-- `change_id` grows with every row of the table. The highest value is the version of the whole administrator list (section 8).
+- `change_id` grows with every row of the table. The highest value is the version of the whole administrator list, which guards changes of administrators (section 7).
 - The table references `accounts`, so only users who can log in can be admins.
 - The view `current_administrators` returns the active admins and owners with their level.
 
 Rules:
 
 - Only owners manage administrators. An owner can promote any user with an account to admin or owner, and can demote admins and other owners.
-- An owner can never demote or remove themselves. The transaction also checks, under the lock of section 8, that at least one active owner remains. Together, this guarantees that at least one owner always exists.
+- An owner can never demote or remove themselves. The transaction also checks, under the lock of section 7, that at least one active owner remains. Together, this guarantees that at least one owner always exists.
 
 ### Seeding the initial owners
 
@@ -129,11 +80,11 @@ Owners are created by the seeders. There is no "first user becomes owner" rule.
 Roles are derived from the database on every request:
 
 - Admin and owner come from `current_administrators`.
-- Speaker and team member come from the views of section 5 and the block state.
+- Speaker and team member come from the views of section 4 and the block state.
 
-`GET /v1/auth/me` returns the effective roles as flags in a nested object, e.g. `roles: {owner, admin, speaker, teamMember}`. The `admin` flag is also true for owners. Next to `roles`, it returns `participationBlocked`, so that the frontend can tell a blocked user apart from a user without a role. This is not a role, because it takes rights away and does not affect admin rights. Routes are guarded by FastAPI dependencies for each role and for combinations of roles. For changes, the authoritative check happens inside the transaction (section 8).
+`GET /v1/auth/me` returns the effective roles as flags in a nested object, e.g. `roles: {owner, admin, speaker, teamMember}`. The `admin` flag is also true for owners. Next to `roles`, it returns `participationBlocked`, so that the frontend can tell a blocked user apart from a user without a role. This is not a role, because it takes rights away and does not affect admin rights. Routes are guarded by FastAPI dependencies for each role and for combinations of roles. For changes, the authoritative check happens inside the transaction (section 7).
 
-## 5. Event contributors
+## 4. Event contributors
 
 A contributor is a speaker or a team member of one event. Both kinds have the same profile fields and the same approval workflow, so they share the same tables.
 
@@ -210,7 +161,7 @@ participation_block_revisions
   created_at, created_by, source
 ```
 
-A user is blocked if the latest row has status `blocked`. A blocked user can't apply, edit, copy an entry or submit talks, and the speaker and team member flags are false. `GET /v1/auth/me` returns the block state as `participationBlocked` (section 4). A block doesn't affect admin rights. Entries and talks that were published stay published. Admins can unblock a user at any time.
+A user is blocked if the latest row has status `blocked`. A blocked user can't apply, edit, copy an entry or submit talks, and the speaker and team member flags are false. `GET /v1/auth/me` returns the block state as `participationBlocked` (section 3). A block doesn't affect admin rights. Entries and talks that were published stay published. Admins can unblock a user at any time.
 
 ### Talks
 
@@ -227,7 +178,7 @@ Each talk revision has a format. The format decides which roles its speakers can
 | Format | Roles | Speakers |
 | --- | --- | --- |
 | `talk` | `presenter` | At least one presenter. |
-| `panel` | `moderator`, `panelist` | Any number of moderators and panelists, including none. A panel in planning not have any assigned persons yet. |
+| `panel` | `moderator`, `panelist` | Any number of moderators and panelists, including none. A panel in planning may not have any assigned persons yet. |
 
 ```text
 talk_revisions
@@ -273,7 +224,7 @@ The talks module has one function that turns a revision and its speaker rows int
 
 A current entry is not automatically public. Visibility per event is controlled by the dates of the event.
 
-## 6. Permissions
+## 5. Permissions
 
 | Action | Required |
 | --- | --- |
@@ -287,7 +238,7 @@ A current entry is not automatically public. Visibility per event is controlled 
 | Promote or demote admins | Owner |
 | Promote to owner, demote another owner | Owner |
 
-## 7. Registration links
+## 6. Registration links
 
 An admin can invite the person behind a virtual user to register. The registration creates an account for the existing user, so entries created earlier belong to the new account.
 
@@ -313,29 +264,9 @@ registration_invitation_consumptions
   - If there is no account and no token, a new user is created as today.
 - Merging two users is not supported. It may be added later as a manual admin action with a detailed selection of what to merge.
 
-## 8. Concurrency control
+## 7. Authorization of changes
 
-Several people can change the same data, for example two owners who demote each other. Every change of shared data therefore has to prove that it was made on the current state.
-
-### Version tokens
-
-Tokens are integers. There is one strategy, and a feature does not choose its own.
-
-- For one entity, the token is the number of its latest revision. This includes its translations, because they belong to the same revision.
-- For an aggregate that is guarded as a whole, the token is the highest `change_id` among the guarded rows. A table that needs such a token has a `change_id` column from a sequence. Because rows are insert-only, no counter is ever updated. For example, the version of the administrator list is the highest `change_id` of `administrator_revisions`.
-- The token goes into the `ETag` response header, written as a quoted integer. It only reveals how many changes were made.
-
-### Protocol
-
-1. When the backend returns data that can be changed, it sends its token in the `ETag` response header.
-2. A change request (`PUT`, `PATCH` or `DELETE`) sends the token back in the `If-Match` request header. A missing header is answered with `428 Precondition Required`.
-3. The token captures everything that the change must be guarded against, not only the data that is changed. For the owner list, it is the version of the whole administrator list.
-4. The backend runs the change in one transaction, in this order: take the locks, check the authorization, compare the token, write the change.
-5. If the state changed, the transaction is rolled back and the backend answers `412 Precondition Failed` with a versioned error response. The frontend tells the user that the data was modified in the meantime and asks them to reload and apply the change again.
-
-Not guarded are idempotent settings of a single user, such as the display language, the preferences and the regional settings decisions: the last write wins.
-
-### Authorization inside the transaction
+Concurrent changes are guarded by the protocol of `versioned-data-and-concurrency-design.md`: a version token in `If-Match`, and one transaction that takes the locks, checks the authorization, compares the token and writes the change. Changes of administrators and owners are guarded against the version of the whole administrator list.
 
 A FastAPI dependency may reject obviously unauthorized requests early, but its result is not trusted for a change. Otherwise, an owner could pass the dependency, be demoted by another owner, and still execute the change.
 
@@ -349,34 +280,9 @@ Every change that depends on a permission takes the lock that serializes changes
 
 Locks are always taken in this order: administrators, user, contributor. This avoids deadlocks.
 
-### Creating new entries
+A new contributor is created with `INSERT ... ON CONFLICT DO NOTHING` on `event_contributors`, using the unique key (user, event, kind). The transaction then locks that row and adds the revision.
 
-Locking a row that does not exist yet does nothing, so creation needs a lock on something that exists:
+## 8. Follow-up work
 
-- A new contributor is created with `INSERT ... ON CONFLICT DO NOTHING` on `event_contributors`, using the unique key (user, event, kind). The transaction then locks that row and adds the revision. Two simultaneous applications therefore wait for each other, and the second one sees the first.
-- If there is no identity table, a new row takes an advisory lock derived from its natural key.
-- The primary key of every revisions table is the final protection. Two inserts with the same revision number cannot both succeed.
-
-### Open question
-
-PostgreSQL uses MVCC (multi-version concurrency control: readers and writers work in parallel on row versions). Its stricter isolation levels (`REPEATABLE READ`, `SERIALIZABLE`) with retries could guard the compare-and-write step without explicit locks. They cannot span the time between reading and changing, because the user's think time crosses HTTP requests. They are therefore at most a complement to the tokens. Evaluate this and either adopt it or rule it out as overkill.
-
-## 9. Audit trail
-
-The audit trail is for observation. It never contains data that decides what the site shows.
-
-- Where possible, it is implicit in the data: insert-only revisions, and the actor and timestamp on every row (section 2).
-- Where that is not possible, separate audit tables are used. The data is spread across the tables of the features, and each table stays the single source of truth for its own data.
-- The goal is to remove the remaining in-place modifications (section 2), so that full differences and the actor are always available.
-- Erasure requests are handled by anonymizing personal data far enough that a person cannot be identified by fingerprinting. Audit data may be deleted for that if necessary. This is the only case that changes insert-only rows.
-
-The mechanism is decided in its own epic.
-
-## 10. Notifications
-
-Users are told about decisions that concern them, such as the approval or decline of an entry, the removal from an event, a block, and the creation of a stub. The backend gets a notification system with a bell icon in the interface. Each user chooses per notification type whether it also sends an email. The backend does not send emails yet, so this needs email support and texts in the display language of the user. It is a separate epic. Until it exists, nobody is notified.
-
-## 11. Follow-up work
-
-- Epics: roles and permissions, registration links, optimistic concurrency, notifications and audit trail.
-- Add the `If-Match` requirement to the acceptance criteria of the routes that change events and global values.
+- Epics: roles and permissions, and registration links.
+- Users are told about decisions that concern them, such as the approval or decline of an entry, the removal from an event, a block, and the creation of a stub. This is planned in the notifications epic. Until it exists, nobody is notified.
