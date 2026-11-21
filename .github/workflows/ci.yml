@@ -97,7 +97,7 @@ jobs:
       - name: Compute Playwright cache key
         id: playwright-cache-key
         if: matrix.project-part == 'frontend' && matrix.command == 'test'
-        uses: ./.github/actions/playwright-cache-key
+        uses: $/.github/actions/playwright-cache-key
 
       # The fill-caches workflow saves this cache on `main`. `--with-deps` also installs
       # system packages with apt. They aren't cached.

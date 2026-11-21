@@ -34,7 +34,7 @@ jobs:
 
       - name: Compute Playwright cache key
         id: playwright-cache-key
-        uses: ./.github/actions/playwright-cache-key
+        uses: $/.github/actions/playwright-cache-key
 
       - name: Restore Playwright browsers
         id: restore
