@@ -26,7 +26,7 @@ A `users` row is only an identifier. A user who can log in additionally has a ro
 `users` gets a nullable `label`:
 
 - The label is visible to admins only. It is never shown on the public site.
-- It is the primary name that admins see for a user. If an admin sets it to null, admins see the username of the account instead. A virtual user without a label has no name to show, so the interface falls back to the user ID.
+- It is the primary name that admins see for a user. If an admin sets it to null, admins see the username of the account instead. A virtual user without a label has no name to show, so the interface falls back to the user ID. *Note: The endpoint which is used by admins to create a new virtual user shall enforce setting a label.*
 - Whether admins should see both can be decided later.
 
 ## 3. Roles
