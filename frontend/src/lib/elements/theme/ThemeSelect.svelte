@@ -60,22 +60,28 @@
             type="button"
             aria-pressed={currentTheme === Theme.System}
             onclick={() => selectTheme(Theme.System)}
-            ><SunMoon aria-hidden="true" /> {i18n(m.global_themeSelectSystem, languageTag)}</button
         >
+            <SunMoon aria-hidden="true" />
+            {i18n(m.global_themeSelectSystem, languageTag)}
+        </button>
         <button
             class:selected={currentTheme === Theme.Light}
             type="button"
             aria-pressed={currentTheme === Theme.Light}
             onclick={() => selectTheme(Theme.Light)}
-            ><Sun aria-hidden="true" /> {i18n(m.global_themeSelectLight, languageTag)}</button
         >
+            <Sun aria-hidden="true" />
+            {i18n(m.global_themeSelectLight, languageTag)}
+        </button>
         <button
             class:selected={currentTheme === Theme.Dark}
             type="button"
             aria-pressed={currentTheme === Theme.Dark}
             onclick={() => selectTheme(Theme.Dark)}
-            ><Moon aria-hidden="true" /> {i18n(m.global_themeSelectDark, languageTag)}</button
         >
+            <Moon aria-hidden="true" />
+            {i18n(m.global_themeSelectDark, languageTag)}
+        </button>
     </div>
 </details>
 
