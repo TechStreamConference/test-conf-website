@@ -23,7 +23,10 @@ vi.mock('$gen/sdk.gen', () => ({
 }));
 
 function createRequestEvent(cookies: Record<string, string>): RequestEvent {
-    return { cookies: { get: (name: string) => cookies[name] } } as unknown as RequestEvent;
+    return {
+        cookies: { get: (name: string) => cookies[name] },
+        locals: { urlLanguageTag: undefined }
+    } as unknown as RequestEvent;
 }
 
 describe('loadGlobals', () => {

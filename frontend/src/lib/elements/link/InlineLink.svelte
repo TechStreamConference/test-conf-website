@@ -2,8 +2,12 @@
     import type { HTMLAnchorAttributes } from 'svelte/elements';
     import type { Snippet } from 'svelte';
 
+    import { page } from '$app/state';
+
     import { DEFAULT_LINK_TARGET } from '$lib/helper/link-options';
     import { getRel } from '$lib/helper/link-options';
+    import { stripLanguagePrefix } from '$lib/helper/language-url';
+    import { withLanguagePrefix } from '$lib/helper/language-url';
     import { LinkTarget } from '$lib/helper/link-options';
 
     interface Props extends Omit<HTMLAnchorAttributes, 'href' | 'aria-label' | 'target'> {
@@ -20,10 +24,21 @@
         rel: relName,
         ...rest
     }: Props = $props();
+
+    // Keeps the current URL's language prefix (e.g. `/de`) on an internal link, so navigating stays in the
+    // same language. An external link (not starting with `/`) is left alone, and nothing is injected if
+    // the current URL has no language prefix either.
+    const localizedHref: string = $derived.by(() => {
+        if (!href.startsWith('/')) {
+            return href;
+        }
+        const { languageCode } = stripLanguagePrefix(page.url.pathname);
+        return languageCode === undefined ? href : withLanguagePrefix(href, languageCode);
+    });
 </script>
 
 <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-<a {...rest} {href} {target} aria-label={ariaLabel} rel={getRel(target, relName)}>
+<a {...rest} href={localizedHref} {target} aria-label={ariaLabel} rel={getRel(target, relName)}>
     {@render children()}
 </a>
 
