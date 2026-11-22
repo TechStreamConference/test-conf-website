@@ -74,7 +74,7 @@ def _row(event: Event, translation: EventTranslation) -> tuple[Event, EventTrans
 
 def _session_with_rows(rows: list[tuple[Event, EventTranslation, str]]) -> AsyncMock:
     session: Final = AsyncMock()
-    session.execute.return_value = Mock(tuples=Mock(return_value=Mock(all=Mock(return_value=rows))))
+    session.execute.return_value = Mock(all=Mock(return_value=rows))
     return session
 
 

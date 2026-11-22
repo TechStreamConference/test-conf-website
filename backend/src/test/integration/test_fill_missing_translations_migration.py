@@ -62,7 +62,7 @@ def _event_titles(connection: sa.Connection, event_id: int) -> dict[str, str]:
         sa.text("SELECT language_tag, title FROM event_translations WHERE event_id = :event_id"),
         {"event_id": event_id},
     )
-    return dict(rows.tuples().all())
+    return dict(rows.all())
 
 
 def _insert_footer_text(connection: sa.Connection, *languages: str) -> None:
@@ -77,7 +77,7 @@ def _insert_footer_text(connection: sa.Connection, *languages: str) -> None:
 
 def _footer_texts(connection: sa.Connection) -> dict[str, str]:
     rows: Final = connection.execute(sa.text("SELECT language_tag, value FROM global_translations"))
-    return dict(rows.tuples().all())
+    return dict(rows.all())
 
 
 def test_missing_event_translations_are_copied_from_english_or_the_first_language(

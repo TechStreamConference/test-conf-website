@@ -98,7 +98,7 @@ async def get_current_event(
         .where(col(Event.id) == current_event_id)
         .order_by(col(EventTranslation.language_tag))
     )
-    rows: Final = _EventRow.from_tuples((await session.execute(statement)).tuples().all())
+    rows: Final = _EventRow.from_tuples((await session.execute(statement)).all())
     return _event_response_v1_from_rows(rows, language_ranges, response)
 
 
@@ -149,7 +149,7 @@ async def get_event_by_year_and_sequence_number(
             col(EventTranslation.language_tag),
         )
     )
-    rows: Final = _EventRow.from_tuples((await session.execute(statement)).tuples().all())
+    rows: Final = _EventRow.from_tuples((await session.execute(statement)).all())
 
     current_sequence_number = 0
     last_event_id: Optional[int] = None
