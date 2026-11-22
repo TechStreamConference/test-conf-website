@@ -42,23 +42,22 @@ A user who has logged in has no role, but may apply as a speaker while the call 
 
 ### Administrators
 
-The identity is the account, so there is no separate identity table.
+Administrators are the versioned entity `administrator` with the workflow `AUTO_PUBLISH`. The identity is the account, so no identity table is generated.
 
 ```text
 administrator_revisions
   user_id           PK, FK -> accounts.user_id
   revision          PK
   change_id         NOT NULL, UNIQUE, generated from a sequence
-  status            NOT NULL, enum: active | removed
   permission_level  NOT NULL, enum: admin | owner
-  created_at, created_by, source     as described in versioned-data-and-concurrency-design.md
+  state, action, created_at, created_by     as described in versioned-data-and-concurrency-design.md
 ```
 
-- `permission_level` accepts only `admin` and `owner`, and each row has exactly one level. The latest row per user is the current state, so a user is never an owner without being an admin.
-- A `removed` row ends the admin rights. It carries the level that the user had.
+- `permission_level` accepts only `admin` and `owner`, and each revision has exactly one level. The latest revision per user is the current state, so a user is never an owner without being an admin.
+- A `Published` revision grants the rights of its level. A `Removed` revision ends the admin rights and carries the level that the user had.
 - `change_id` grows with every row of the table. The highest value is the version of the whole administrator list, which guards changes of administrators (section 7).
 - The table references `accounts`, so only users who can log in can be admins.
-- The view `current_administrators` returns the active admins and owners with their level.
+- The default view `administrators` returns the active admins and owners with their level.
 
 Rules:
 
@@ -72,55 +71,53 @@ Owners are created by the seeders. There is no "first user becomes owner" rule.
 - The seeders read a list of ZITADEL user IDs with their level from the root `.env`, e.g. `id:owner,id:admin`. The development and the production seeder use separate lists.
 - Only the seeder that runs needs its list. The backend does not read the lists, so they are read by the seeder code and are not part of the application `Settings`. A seeder fails with a clear error if its list is missing or empty.
 - The seeder creates the `users` and `accounts` rows. `email` and `username` stay `NOT NULL`, so the seeder writes placeholders that are unique per account, derived from the ZITADEL user ID: `<id>@placeholder.invalid` (`.invalid` is a reserved top-level domain that never resolves) and `pending-<id>`. The first login overwrites them.
-- The first revision of each seeded administrator has `created_by` NULL and `source` `system`, because nobody granted it.
+- The first revision of each seeded administrator has `created_by` NULL, because nobody granted it.
 - Seeders only add rows. They never demote or remove an owner or admin. They can be run again safely.
 
 ### Roles on every request
 
 Roles are derived from the database on every request:
 
-- Admin and owner come from `current_administrators`.
+- Admin and owner come from the view `administrators`.
 - Speaker and team member come from the views of section 4 and the block state.
 
 `GET /v1/auth/me` returns the effective roles as flags in a nested object, e.g. `roles: {owner, admin, speaker, teamMember}`. The `admin` flag is also true for owners. Next to `roles`, it returns `participationBlocked`, so that the frontend can tell a blocked user apart from a user without a role. This is not a role, because it takes rights away and does not affect admin rights. Routes are guarded by FastAPI dependencies for each role and for combinations of roles. For changes, the authoritative check happens inside the transaction (section 7).
 
 ## 4. Event contributors
 
-A contributor is a speaker or a team member of one event. Both kinds have the same profile fields and the same approval workflow, so they share the same tables.
+A contributor is a speaker or a team member of one event. Both kinds have the same profile fields and the same approval workflow, so they share one versioned entity, `event_contributor`, with the workflow `REVIEW_AND_APPROVE`.
 
 ```text
-event_contributors                       identity
+event_contributor_identities
   id           PK
   user_id      NOT NULL, FK -> users.id
-  event_id     NOT NULL, FK -> events.id
+  event_id     NOT NULL, FK -> event_identities.id
   kind         NOT NULL, enum: speaker | team_member
-  created_at, created_by, source
   UNIQUE (user_id, event_id, kind)
 
 event_contributor_revisions
-  contributor_id   PK, FK -> event_contributors.id
+  contributor_id   PK, FK -> event_contributor_identities.id
   revision         PK
-  status           NOT NULL, enum: pending | approved | declined | withdrawn | removed
-  copied_from      NULL, FK -> event_contributors.id; set if the entry was copied from another event
+  copied_from      NULL, FK -> event_contributor_identities.id; set if the entry was copied from another event
   ... profile fields (identical for both kinds)
-  created_at, created_by, source
+  state, action, created_at, created_by
 ```
 
 Child tables, such as the translations of the profile, include the contributor ID and the revision in their keys.
 
 ### State
 
-The status of the latest revision of a contributor tells what happened last. The current state is derived:
+The state of the latest revision of a contributor tells what happened last. The current state is derived:
 
 | Question | Answer |
 | --- | --- |
-| Is there a pending change? | The latest revision has status `pending`. Older pending revisions were superseded by it. |
-| Is there a current entry? | There is an `approved` revision, and no `removed` revision with a higher number. |
-| What does the public site show? | The content of the highest `approved` revision of a current entry. |
+| Is there a pending change? | The latest revision has the state `Pending`. Older pending revisions were superseded by it. |
+| Is there a current entry? | The contributor is in the default view `event_contributors`: there is an `Approved` revision, and no `Removed` revision with a higher number. |
+| What does the public site show? | The content of the highest `Approved` revision of a current entry. |
 
-Declining or withdrawing a pending change therefore leaves the current entry untouched. Removing someone ends the entry, and a later application can start a new one on the same contributor. Required profile fields may be empty while a revision is pending. They are validated when it is approved.
+Rejecting or withdrawing a pending change therefore leaves the current entry untouched. Removing someone ends the entry, and a later application can start a new one on the same contributor. Required profile fields may be empty while a revision is in the state `Draft` or `Pending`. They are validated when it is approved.
 
-The views `current_event_contributors` (current entries with their approved revision) and `pending_event_contributor_revisions` provide this state.
+The default view `event_contributors` provides the current entries. The pending changes come from a query helper of the contributors module.
 
 ### Operations
 
@@ -128,48 +125,47 @@ Three operations are kept apart:
 
 | Operation | Who | Effect |
 | --- | --- | --- |
-| Withdraw a pending change | The applicant | A new revision with status `withdrawn`. A current entry stays as it is. |
-| Remove someone from an event | An admin | A new revision with status `removed`. The person loses that entry. They lose the role only if they have no other current entry of that kind. |
+| Withdraw a pending change | The applicant | A new revision with the state `Draft` and the action `withdrawn`. A current entry stays as it is. |
+| Remove someone from an event | An admin | A new revision with the state `Removed`. The person loses that entry. They lose the role only if they have no other current entry of that kind. |
 | Block someone from participating | An admin | A new participation block revision (see below). It applies to all events and both kinds. |
 
 The other changes:
 
 | Action | Effect |
 | --- | --- |
-| Apply as a speaker | The user creates the contributor if needed and adds a pending revision. Only possible while the call for papers of that event is open, while the user is not blocked, and if there is neither a pending change nor a current entry. Needs an account. |
-| Stub | An admin creates a pending revision for any user, including a virtual user. This is the only way to create a team member entry. Admins are not bound to the call-for-papers window. |
-| Edit | The applicant adds a new pending revision with the changed content. This also replaces an earlier pending revision. It is allowed outside the call-for-papers window. A blocked user can't edit. |
-| Approve | An admin adds an `approved` revision that copies the pending one. Admins may approve their own entries. |
-| Decline | An admin adds a `declined` revision that copies the pending one. The applicant may apply again. |
-| Admin edit | An admin chooses for each change whether it is added as `approved` or as `pending`. |
-| Copy to another event | A speaker copies their current entry to another event. The new contributor gets an `approved` revision 1 with `copied_from` set. Only possible while the call for papers of the target event is open, while the user is not blocked, and if the target has neither a pending change nor a current entry. Team members cannot do this. An admin does it for them. |
+| Apply as a speaker | The user creates the contributor if needed and adds a `Pending` revision. Only possible while the call for papers of that event is open, while the user is not blocked, and if there is neither a pending change nor a current entry. Needs an account. |
+| Stub | An admin creates a `Pending` revision for any user, including a virtual user. This is the only way to create a team member entry. Admins are not bound to the call-for-papers window. |
+| Edit | The applicant adds a new `Pending` revision with the changed content. This also replaces an earlier pending revision. It is allowed outside the call-for-papers window. A blocked user can't edit. |
+| Approve | An admin adds an `Approved` revision that copies the pending one. Admins may approve their own entries. |
+| Reject | An admin adds a `Rejected` revision that copies the pending one. The applicant may apply again. |
+| Admin edit | An admin chooses for each change whether it is added as `Approved` or as `Pending`. |
+| Copy to another event | A speaker copies their current entry to another event. The new contributor gets an `Approved` revision 1 with `copied_from` set. Only possible while the call for papers of the target event is open, while the user is not blocked, and if the target has neither a pending change nor a current entry. Team members cannot do this. An admin does it for them. |
 
 A call for papers is open only if its start and end are set and the current time lies between them. A missing date counts as closed.
 
-There is no restore. An admin brings an entry back by adding a new `approved` revision.
+There is no separate restore. An admin brings an entry back by adding a new `Approved` revision.
 
 ### Participation blocks
 
-The identity is the user, so there is no separate identity table.
+Participation blocks are the versioned entity `participation_block` with the workflow `AUTO_PUBLISH`. The identity is the user, so no identity table is generated.
 
 ```text
 participation_block_revisions
   user_id     PK, FK -> users.id
   revision    PK
-  status      NOT NULL, enum: blocked | unblocked
   note        NULL, internal text for admins
-  created_at, created_by, source
+  state, action, created_at, created_by
 ```
 
-A user is blocked if the latest row has status `blocked`. A blocked user can't apply, edit, copy an entry or submit talks, and the speaker and team member flags are false. `GET /v1/auth/me` returns the block state as `participationBlocked` (section 3). A block doesn't affect admin rights. Entries and talks that were published stay published. Admins can unblock a user at any time.
+Blocking adds a `Published` revision, unblocking a `Removed` one. A user is blocked if they are in the default view `participation_blocks`. A blocked user can't apply, edit, copy an entry or submit talks, and the speaker and team member flags are false. `GET /v1/auth/me` returns the block state as `participationBlocked` (section 3). A block doesn't affect admin rights. Entries and talks that were published stay published. Admins can unblock a user at any time.
 
 ### Talks
 
-Talks follow the same pattern: a talk identity plus revisions. A talk can have several speakers, so the speakers are stored in a separate table that belongs to a talk revision.
+Talks are the versioned entity `talk` with the workflow `REVIEW_AND_APPROVE`. A talk can have several speakers, so the speakers are stored in a child table of the talk revision.
 
 - Only speakers can submit talks. A talk needs a current speaker entry for its event, and the submitter must not be blocked.
-- Speakers can only submit talks of the format `talk`. Panels are created and edited only by admins.
-- The visibility of a talk does not depend on the status of the entry of its speaker. Removing or blocking someone does not hide talks that were published. An admin unpublishes a talk explicitly, which is a new talk revision.
+- Speakers can only submit talks of the format `talk`. Panels are created and edited only by admins, who may add them directly as `Approved`.
+- The visibility of a talk does not depend on the state of the entry of its speaker. Removing or blocking someone does not hide talks that were published. An admin unpublishes a talk explicitly with a `Removed` revision.
 
 ### Formats and speaker roles
 
@@ -187,9 +183,9 @@ talk_revisions
   ...
   UNIQUE (talk_id, revision, format)
 
-talk_revision_speakers
+talk_speakers
   talk_id, revision, format   FK -> talk_revisions (talk_id, revision, format)
-  contributor_id              FK -> event_contributors.id, a contributor of kind speaker
+  contributor_id              FK -> event_contributor_identities.id, a contributor of kind speaker
   role                        NOT NULL, enum: presenter | moderator | panelist
   position                    NOT NULL, the display order
   PK (talk_id, revision, contributor_id)
@@ -203,7 +199,7 @@ talk_revision_speakers
 - "At least one presenter" spans several rows, so the database can't check it. The backend checks it in the transaction that writes the revision.
 - A new format is a new enum value plus a new branch of the `CHECK` constraint.
 
-In the backend, the table classes are used only inside the talks module. The rest of the backend and the API work with a discriminated union that can't express an invalid combination:
+In the backend, the generated tables and views are used only inside the talks module. The rest of the backend and the API work with a discriminated union that can't express an invalid combination:
 
 ```python
 class Talk(BaseModel):
@@ -233,7 +229,7 @@ A current entry is not automatically public. Visibility per event is controlled 
 | Edit an own entry (new revision) | The contributor, not blocked |
 | Copy an entry to another event | Speaker, not blocked |
 | Submit a talk | Speaker with a current entry for that event, not blocked |
-| Create stubs, approve, decline, remove from an event, block, unpublish talks, create and edit panels | Admin |
+| Create stubs, approve, reject, remove from an event, block, unpublish talks, create and edit panels | Admin |
 | Create virtual users, labels and registration links | Admin |
 | Promote or demote admins | Owner |
 | Promote to owner, demote another owner | Owner |
@@ -246,7 +242,7 @@ An admin can invite the person behind a virtual user to register. The registrati
 registration_invitations
   token_hash     PK, SHA-256 of the token
   user_id        NOT NULL, FK -> users.id, a user without an account
-  created_at, created_by, source
+  created_at, created_by
   expires_at     NOT NULL
 
 registration_invitation_consumptions
@@ -275,14 +271,14 @@ Every change that depends on a permission takes the lock that serializes changes
 | Guarded state | Lock | Taken exclusively by | Taken shared by |
 | --- | --- | --- | --- |
 | Admin and owner rights | Transaction-scoped advisory lock named `administrators` | Every change of `administrator_revisions` | Every change that needs the admin or owner role |
-| One contributor | The row in `event_contributors`, `FOR UPDATE` | Every new revision of that contributor | |
+| One contributor | The row in `event_contributor_identities`, `FOR UPDATE` | Every new revision of that contributor | |
 | Block state of a user | The row in `users`, `FOR UPDATE` | Blocking and unblocking | Changes by that user as a participant (`FOR SHARE`) |
 
 Locks are always taken in this order: administrators, user, contributor. This avoids deadlocks.
 
-A new contributor is created with `INSERT ... ON CONFLICT DO NOTHING` on `event_contributors`, using the unique key (user, event, kind). The transaction then locks that row and adds the revision.
+A new contributor is created with `INSERT ... ON CONFLICT DO NOTHING` on `event_contributor_identities`, using the unique key (user, event, kind). The transaction then locks that row and adds the revision.
 
 ## 8. Follow-up work
 
 - Epics: roles and permissions, and registration links.
-- Users are told about decisions that concern them, such as the approval or decline of an entry, the removal from an event, a block, and the creation of a stub. This is planned in the notifications epic. Until it exists, nobody is notified.
+- Users are told about decisions that concern them, such as the approval or rejection of an entry, the removal from an event, a block, and the creation of a stub. This is planned in the notifications epic. Until it exists, nobody is notified.
