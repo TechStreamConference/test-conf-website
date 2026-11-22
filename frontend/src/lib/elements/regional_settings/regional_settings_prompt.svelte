@@ -34,24 +34,24 @@
             <p>
                 This device is now using {pending.change.timezone}. Currently set to {pending
                     .current.timezone} for displayed times.
-                <button type="button" onclick={() => decide('timezone', 'accept')}
-                    >Use {pending.change.timezone}</button
-                >
-                <button type="button" onclick={() => decide('timezone', 'keep')}
-                    >Keep {pending.current.timezone}</button
-                >
+                <button type="button" onclick={() => decide('timezone', 'accept')}>
+                    Use {pending.change.timezone}
+                </button>
+                <button type="button" onclick={() => decide('timezone', 'keep')}>
+                    Keep {pending.current.timezone}
+                </button>
             </p>
         {/if}
         {#if pending.change.locale}
             <p>
                 This device now formats dates and numbers using {pending.change.locale}. Currently
                 set to {pending.current.locale}. (This does not change the website's language.)
-                <button type="button" onclick={() => decide('locale', 'accept')}
-                    >Use {pending.change.locale}</button
-                >
-                <button type="button" onclick={() => decide('locale', 'keep')}
-                    >Keep {pending.current.locale}</button
-                >
+                <button type="button" onclick={() => decide('locale', 'accept')}>
+                    Use {pending.change.locale}
+                </button>
+                <button type="button" onclick={() => decide('locale', 'keep')}>
+                    Keep {pending.current.locale}
+                </button>
             </p>
         {/if}
     </div>

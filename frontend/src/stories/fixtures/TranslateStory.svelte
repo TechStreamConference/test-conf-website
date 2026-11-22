@@ -18,11 +18,11 @@
 </script>
 
 {#if message === 'footer_copyright'}
-    <button type="button"
-        >{i18n(MESSAGES[message], languageTag, {
+    <button type="button">
+        {i18n(MESSAGES[message], languageTag, {
             year
-        })}</button
-    >
+        })}
+    </button>
 {:else}
     <button type="button">{i18n(MESSAGES[message], languageTag)}</button>
 {/if}
